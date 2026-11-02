@@ -2,7 +2,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { sendOk } from "../lib/response";
-import { idParams, requestIdField, timeRangeSchema, versionField } from "../lib/schemas";
+import { idParams, timeRangeSchema, versionField } from "../lib/schemas";
 import { currentUser } from "../middleware/auth";
 import { parseOrThrow } from "../middleware/validate";
 import { chargingReservationService } from "../services/ChargingReservationService";
@@ -17,14 +17,13 @@ export const findSlotsSchema = z.object({
     targetBattery: z.number().int().min(1).max(100),
   }),
 });
-export const confirmChargingSchema = z.object({ requestId: requestIdField, slotOptionId: z.string().min(1) });
+export const confirmChargingSchema = z.object({ slotOptionId: z.string().min(1) });
 export const rescheduleOptionsSchema = z.object({ timeRange: timeRangeSchema });
 export const confirmRescheduleSchema = z.object({
-  requestId: requestIdField,
   optionId: z.string().min(1),
   expectedVersion: versionField,
 });
-export const cancelChargingSchema = z.object({ requestId: requestIdField, expectedVersion: versionField });
+export const cancelChargingSchema = z.object({ expectedVersion: versionField });
 
 export const chargingReservationController = {
   /** POST /api/charging-reservations/search */
@@ -38,12 +37,8 @@ export const chargingReservationController = {
 
   /** POST /api/charging-reservations */
   async confirm(req: Request, res: Response): Promise<void> {
-    const { requestId, slotOptionId } = req.body;
-    sendOk(
-      res,
-      await chargingReservationService.confirmChargingReservation(requestId, currentUser(req).id, slotOptionId),
-      201,
-    );
+    const { slotOptionId } = req.body;
+    sendOk(res, await chargingReservationService.confirmChargingReservation(currentUser(req).id, slotOptionId), 201);
   },
 
   /** GET /api/charging-reservations/:id */
@@ -67,11 +62,8 @@ export const chargingReservationController = {
   /** POST /api/charging-reservations/:id/reschedule/confirm */
   async confirmReschedule(req: Request, res: Response): Promise<void> {
     const { id } = parseOrThrow(idParams, req.params);
-    const { requestId, optionId, expectedVersion } = req.body;
-    sendOk(
-      res,
-      await chargingReservationService.confirmReschedule(requestId, currentUser(req).id, id, optionId, expectedVersion),
-    );
+    const { optionId, expectedVersion } = req.body;
+    sendOk(res, await chargingReservationService.confirmReschedule(currentUser(req).id, id, optionId, expectedVersion));
   },
 
   /** GET /api/charging-reservations/:id/cancellation-check */
@@ -83,7 +75,7 @@ export const chargingReservationController = {
   /** POST /api/charging-reservations/:id/cancel */
   async cancel(req: Request, res: Response): Promise<void> {
     const { id } = parseOrThrow(idParams, req.params);
-    const { requestId, expectedVersion } = req.body;
-    sendOk(res, await chargingReservationService.cancelReservation(requestId, currentUser(req).id, id, expectedVersion));
+    const { expectedVersion } = req.body;
+    sendOk(res, await chargingReservationService.cancelReservation(currentUser(req).id, id, expectedVersion));
   },
 };

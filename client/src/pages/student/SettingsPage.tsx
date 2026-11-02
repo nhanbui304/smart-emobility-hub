@@ -1,5 +1,5 @@
 // Owner: Bùi Quang Nhân – Customize Interface Mode, Sign Out
-import { ThemePreference } from "@hub/shared";
+import type { ThemePreference } from "../../types";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { PageHeader } from "../../components/PageHeader";
@@ -7,9 +7,9 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 
 const OPTIONS: Array<{ value: ThemePreference; label: string; hint: string }> = [
-  { value: ThemePreference.LIGHT, label: "Sáng", hint: "Luôn dùng giao diện sáng" },
-  { value: ThemePreference.DARK, label: "Tối", hint: "Luôn dùng giao diện tối" },
-  { value: ThemePreference.SYSTEM, label: "Theo hệ thống", hint: "Tự đổi theo thiết bị" },
+  { value: "LIGHT", label: "Sáng", hint: "Luôn dùng giao diện sáng" },
+  { value: "DARK", label: "Tối", hint: "Luôn dùng giao diện tối" },
+  { value: "SYSTEM", label: "Theo hệ thống", hint: "Tự đổi theo thiết bị" },
 ];
 
 export function SettingsPage() {

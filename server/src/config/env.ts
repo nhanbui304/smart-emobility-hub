@@ -4,9 +4,6 @@ import "dotenv/config";
 export const env = {
   port: Number(process.env.PORT ?? 3000),
   databaseUrl: process.env.DATABASE_URL ?? "./data/dev.db",
-  jwtSecret: process.env.JWT_SECRET ?? "doi-chuoi-nay-khi-trien-khai",
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "8h",
-  clientOrigin: process.env.CLIENT_ORIGIN ?? "http://localhost:5173",
+  sessionSecret: process.env.SESSION_SECRET ?? "doi-chuoi-nay-khi-trien-khai",
   simulatorEnabled: (process.env.SIMULATOR_ENABLED ?? "true") !== "false",
-  isTest: process.env.NODE_ENV === "test" || process.env.VITEST === "true",
 };

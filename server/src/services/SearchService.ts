@@ -1,5 +1,5 @@
 // Owner: Ngô Minh Triết – UC01 Find Suitable Hub and Mobility Option
-import type { VehicleType } from "@hub/shared";
+import type { VehicleType } from "../constants";
 import { notImplemented } from "../lib/errors";
 
 export interface SearchCriteria {

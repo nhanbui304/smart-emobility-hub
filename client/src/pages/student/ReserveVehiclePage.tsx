@@ -26,11 +26,11 @@ export function ReserveVehiclePage() {
         todo={[
           "Lấy danh sách xe có thể đặt: vehicleApi.reservableVehicles(hubId)",
           "Chọn xe → prepareReservation → màn hình xác nhận (hạn nhận xe)",
-          "Xác nhận → confirmReservation(newRequestId(), ...); giữ requestId khi bấm thử lại",
+          "Xác nhận → vehicleApi.confirmReservation(hubId, vehicleId); xe vừa bị người khác đặt thì báo lỗi rõ ràng",
         ]}
       />
       {loading && <Spinner />}
-      <ErrorMessage error={error} onRetry={reload} />
+      <ErrorMessage error={error} onRetry={() => void reload()} />
       <ul className="space-y-2">
         {hub?.vehicles.map((v) => (
           <li key={v.id}>

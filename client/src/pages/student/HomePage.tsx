@@ -1,8 +1,7 @@
 // Owner: Ngô Minh Triết – UC01 Find Suitable Hub and Mobility Option
-// Danh sách Hub (View Hub and Resource Status) do Lê Quốc Linh làm – đã chạy thật, cập nhật real-time.
+// Danh sách Hub (View Hub and Resource Status) do Lê Quốc Linh làm – đã chạy thật, tự tải lại mỗi 3 giây.
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { SocketEvents, type HubStatus, type HubStatusUpdatedPayload } from "@hub/shared";
 import { hubApi } from "../../api/hubs";
 import { vehicleApi } from "../../api/vehicle";
 import { Button } from "../../components/Button";
@@ -11,7 +10,7 @@ import { ErrorMessage } from "../../components/ErrorMessage";
 import { Spinner } from "../../components/Spinner";
 import { useAuth } from "../../context/AuthContext";
 import { useAsync } from "../../hooks/useAsync";
-import { useSocketEvent } from "../../hooks/useSocket";
+import type { HubStatus } from "../../types";
 
 const PURPOSES = [
   { value: "RENT_VEHICLE", label: "Thuê xe" },
@@ -21,8 +20,7 @@ const PURPOSES = [
 
 export function HomePage() {
   const { user } = useAuth();
-  const { data: hubs, setData: setHubs, loading, error, reload } = useAsync(() => hubApi.list(), []);
-  useSocketEvent<HubStatusUpdatedPayload>(SocketEvents.HUB_STATUS_UPDATED, (p) => setHubs(p.hubs));
+  const { data: hubs, loading, error, reload } = useAsync(() => hubApi.list(), [], { refreshEveryMs: 3000 });
 
   const [purpose, setPurpose] = useState<(typeof PURPOSES)[number]["value"]>("RENT_VEHICLE");
   const [searchError, setSearchError] = useState<unknown>(null);
@@ -76,9 +74,11 @@ export function HomePage() {
           </Link>
         </div>
         {loading && !hubs && <Spinner />}
-        <ErrorMessage error={error} onRetry={reload} />
+        <ErrorMessage error={error} onRetry={() => void reload()} />
         <ul className="space-y-3">
-          {hubs?.map((hub) => <HubRow key={hub.id} hub={hub} />)}
+          {hubs?.map((hub) => (
+            <HubRow key={hub.id} hub={hub} />
+          ))}
         </ul>
       </section>
     </div>

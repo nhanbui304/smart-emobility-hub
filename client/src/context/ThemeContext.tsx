@@ -1,7 +1,7 @@
 // Owner: Bùi Quang Nhân – Customize Interface Mode
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { ThemePreference } from "@hub/shared";
 import { authApi } from "../api/auth";
+import type { ThemePreference } from "../types";
 import { useAuth } from "./AuthContext";
 
 const THEME_KEY = "hub.theme";
@@ -21,7 +21,7 @@ function systemPrefersDark(): boolean {
 
 function readStored(): ThemePreference {
   const v = localStorage.getItem(THEME_KEY);
-  return v === "LIGHT" || v === "DARK" || v === "SYSTEM" ? v : ThemePreference.SYSTEM;
+  return v === "LIGHT" || v === "DARK" || v === "SYSTEM" ? v : "SYSTEM";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -46,8 +46,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  const resolved: "LIGHT" | "DARK" =
-    preference === ThemePreference.SYSTEM ? (systemDark ? "DARK" : "LIGHT") : preference;
+  const resolved: "LIGHT" | "DARK" = preference === "SYSTEM" ? (systemDark ? "DARK" : "LIGHT") : preference;
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", resolved === "DARK");

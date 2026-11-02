@@ -1,6 +1,5 @@
 // Owner: Ngô Minh Triết – UC11 Handle Operational Incident
 import { Router } from "express";
-import { Role } from "@hub/shared";
 import {
   handlingPlanSchema,
   incidentController,
@@ -11,7 +10,7 @@ import { requireAuth, requireRole } from "../middleware/auth";
 import { validateBody } from "../middleware/validate";
 
 export const incidentRoutes = Router();
-incidentRoutes.use(requireAuth, requireRole(Role.OPERATOR));
+incidentRoutes.use(requireAuth, requireRole("OPERATOR"));
 
 incidentRoutes.post("/", validateBody(reportIncidentSchema), incidentController.report);
 incidentRoutes.post("/:id/handling-plan", validateBody(handlingPlanSchema), incidentController.handlingPlan);

@@ -1,10 +1,11 @@
 // Owner: Bùi Quang Nhân – Register Student Account, Sign In, Sign Out, Customize Interface Mode
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { ThemePreference, enumValues } from "@hub/shared";
+import { THEME_PREFERENCES } from "../constants";
 import { sendOk } from "../lib/response";
 import { currentUser } from "../middleware/auth";
 import { authService } from "../services/AuthService";
+import type { AuthUser } from "../types/dto";
 
 export const registerSchema = z.object({
   email: z.email("Email không hợp lệ."),
@@ -18,27 +19,40 @@ export const loginSchema = z.object({
 });
 
 export const themeSchema = z.object({
-  themePreference: z.enum(enumValues(ThemePreference)),
+  themePreference: z.enum(THEME_PREFERENCES),
 });
 
+/** Lưu người dùng vào phiên đăng nhập (tạo phiên mới để tránh dùng lại phiên cũ). */
+function startSession(req: Request, user: AuthUser): Promise<void> {
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => {
+      if (err) return reject(err);
+      req.session.user = { id: user.id, role: user.role };
+      resolve();
+    });
+  });
+}
+
 export const authController = {
-  /** POST /api/auth/register */
+  /** POST /api/auth/register – đăng ký xong thì đăng nhập luôn */
   async register(req: Request, res: Response): Promise<void> {
-    sendOk(res, await authService.register(req.body), 201);
+    const { email, password, fullName } = req.body;
+    const user = await authService.register(email, password, fullName);
+    await startSession(req, user);
+    sendOk(res, user, 201);
   },
 
   /** POST /api/auth/login */
   async login(req: Request, res: Response): Promise<void> {
-    sendOk(res, await authService.login(req.body));
+    const { email, password } = req.body;
+    const user = await authService.login(email, password);
+    await startSession(req, user);
+    sendOk(res, user);
   },
 
-  /**
-   * POST /api/auth/logout
-   * JWT không lưu phía server: client xóa token là đăng xuất. Endpoint giữ lại để đúng luồng Sign Out
-   * và để sau này có thể thêm danh sách token bị thu hồi.
-   */
-  logout(_req: Request, res: Response): void {
-    sendOk(res, { loggedOut: true });
+  /** POST /api/auth/logout */
+  logout(req: Request, res: Response): void {
+    req.session.destroy(() => sendOk(res, { loggedOut: true }));
   },
 
   /** GET /api/auth/me */

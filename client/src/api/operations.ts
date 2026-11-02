@@ -10,6 +10,5 @@ export const operationsApi = {
     api.get<unknown>("/charging-schedules/context", params),
   proposeSchedule: (body: Record<string, unknown>) => api.post<unknown>("/charging-schedules/proposals", body),
   captureSnapshot: (body: Record<string, unknown>) => api.post<unknown>("/simulations/snapshots", body),
-  startSimulation: (requestId: string, scenarioDraftId: string) =>
-    api.post<unknown>("/simulations/runs", { requestId, scenarioDraftId }),
+  startSimulation: (scenarioDraftId: string) => api.post<unknown>("/simulations/runs", { scenarioDraftId }),
 };

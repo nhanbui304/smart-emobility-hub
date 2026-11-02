@@ -1,6 +1,5 @@
 // Owner: Lê Quốc Linh – View Hub and Resource Status (luồng mẫu cho cả nhóm)
 import { and, eq, gt, inArray, lte } from "drizzle-orm";
-import { ParkingAllocationStatus } from "@hub/shared";
 import {
   chargingPorts,
   hubs,
@@ -13,60 +12,51 @@ import {
   type ParkingSlot,
   type SharedVehicle,
 } from "../db/schema";
-import { db, type DbOrTx } from "../lib/db";
+import { db } from "../lib/db";
 
-/** Các trạng thái phân bổ chỗ đỗ đang chiếm chỗ. */
-const ACTIVE_ALLOCATION_STATUSES = [
-  ParkingAllocationStatus.HELD,
-  ParkingAllocationStatus.CONFIRMED,
-  ParkingAllocationStatus.IN_USE,
-];
-
+/** Repository CHỈ truy cập dữ liệu, không chứa nghiệp vụ. */
 export const hubRepository = {
-  findAll(conn: DbOrTx = db): Hub[] {
-    return conn.select().from(hubs).orderBy(hubs.name).all();
+  findAll(): Hub[] {
+    return db.select().from(hubs).orderBy(hubs.name).all();
   },
 
-  findById(id: string, conn: DbOrTx = db): Hub | undefined {
-    return conn.select().from(hubs).where(eq(hubs.id, id)).get();
+  findById(id: string): Hub | undefined {
+    return db.select().from(hubs).where(eq(hubs.id, id)).get();
   },
 
-  listSlots(hubId?: string, conn: DbOrTx = db): ParkingSlot[] {
-    const q = conn.select().from(parkingSlots);
-    return hubId ? q.where(eq(parkingSlots.hubId, hubId)).all() : q.all();
+  listSlots(): ParkingSlot[] {
+    return db.select().from(parkingSlots).all();
   },
 
-  listVehicles(hubId?: string, conn: DbOrTx = db): SharedVehicle[] {
-    const q = conn.select().from(sharedVehicles);
-    return hubId ? q.where(eq(sharedVehicles.hubId, hubId)).orderBy(sharedVehicles.code).all() : q.all();
+  listVehicles(hubId?: string): SharedVehicle[] {
+    if (hubId) {
+      return db.select().from(sharedVehicles).where(eq(sharedVehicles.hubId, hubId)).orderBy(sharedVehicles.code).all();
+    }
+    return db.select().from(sharedVehicles).all();
   },
 
   /** Cổng sạc kèm hubId (lấy qua vị trí đỗ chứa cổng). */
-  listPortsWithHub(conn: DbOrTx = db): Array<ChargingPort & { hubId: string }> {
-    return conn
+  listPortsWithHub(): Array<ChargingPort & { hubId: string }> {
+    const rows = db
       .select({ port: chargingPorts, hubId: parkingSlots.hubId })
       .from(chargingPorts)
       .innerJoin(parkingSlots, eq(chargingPorts.slotId, parkingSlots.id))
-      .all()
-      .map((row) => ({ ...row.port, hubId: row.hubId }));
+      .all();
+    return rows.map((row) => ({ ...row.port, hubId: row.hubId }));
   },
 
-  /** Phân bổ chỗ đỗ đang có hiệu lực tại thời điểm `at`. */
-  listActiveAllocationsAt(at: Date, conn: DbOrTx = db): ParkingAllocation[] {
-    return conn
+  /** Phân bổ chỗ đỗ đang chiếm chỗ (giữ tạm / đã xác nhận / đang dùng) tại thời điểm `at`. */
+  listActiveAllocationsAt(at: Date): ParkingAllocation[] {
+    return db
       .select()
       .from(parkingAllocations)
       .where(
         and(
-          inArray(parkingAllocations.status, ACTIVE_ALLOCATION_STATUSES),
+          inArray(parkingAllocations.status, ["HELD", "CONFIRMED", "IN_USE"]),
           lte(parkingAllocations.startTime, at),
           gt(parkingAllocations.endTime, at),
         ),
       )
       .all();
-  },
-
-  touch(hubId: string, at: Date, conn: DbOrTx = db): void {
-    conn.update(hubs).set({ lastUpdatedAt: at }).where(eq(hubs.id, hubId)).run();
   },
 };

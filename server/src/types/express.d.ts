@@ -1,12 +1,9 @@
-import type { Role } from "@hub/shared";
+import "express-session";
+import type { Role } from "../constants";
 
-declare global {
-  namespace Express {
-    interface Request {
-      /** Gắn bởi middleware requireAuth. studentId/operatorId LUÔN lấy từ đây. */
-      user?: { id: string; role: Role };
-    }
+declare module "express-session" {
+  interface SessionData {
+    /** Người dùng đang đăng nhập. studentId / operatorId LUÔN lấy từ đây. */
+    user?: { id: string; role: Role };
   }
 }
-
-export {};

@@ -19,10 +19,13 @@ export function MyReservationsPage() {
       <StubNotice
         owner="Lê Quốc Linh"
         useCases="View My Reservations"
-        todo={["Hiện thực MyReservationsService.getMyReservations", "Hiển thị 3 nhóm, mỗi mục có StatusBadge và thời gian"]}
+        todo={[
+          "Hiện thực MyReservationsService.getMyReservations",
+          "Hiển thị 3 nhóm, mỗi mục có StatusBadge và thời gian",
+        ]}
       />
       {loading && <Spinner />}
-      <ErrorMessage error={error} onRetry={reload} />
+      <ErrorMessage error={error} onRetry={() => void reload()} />
     </div>
   );
 }

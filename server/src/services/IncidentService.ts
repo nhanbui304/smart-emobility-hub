@@ -1,9 +1,9 @@
 // Owner: Ngô Minh Triết – UC11 Handle Operational Incident
-import type { ImpactLevel, ResourceType } from "@hub/shared";
+import type { ImpactLevel, ResourceType } from "../constants";
 import type { Incident } from "../db/schema";
 import { notImplemented } from "../lib/errors";
 
-// operatorId (tham số cuối) lấy từ phiên đăng nhập, dùng cho runIdempotent và ghi vết người thao tác.
+// operatorId (tham số cuối) lấy từ phiên đăng nhập, dùng để ghi vết người thao tác.
 
 export interface AffectedScope {
   resourceType: ResourceType;
@@ -28,7 +28,6 @@ export interface ResolutionResult {
 export const incidentService = {
   /** UC11 bước 1–3: ghi nhận sự cố cho một tài nguyên. */
   async reportIncident(
-    requestId: string,
     resourceId: string,
     description: string,
     impactLevel: ImpactLevel,
@@ -39,18 +38,12 @@ export const incidentService = {
   },
 
   /** UC11 bước 4–6: xử lý các đặt chỗ bị ảnh hưởng, thông báo sinh viên (emitToUser). */
-  async processHandlingPlan(
-    requestId: string,
-    incidentId: string,
-    handlingPlan: HandlingPlan,
-    operatorId: string,
-  ): Promise<Incident> {
+  async processHandlingPlan(incidentId: string, handlingPlan: HandlingPlan, operatorId: string): Promise<Incident> {
     throw notImplemented("IncidentService.processHandlingPlan (UC11)");
   },
 
   /** UC11 bước 7: xác nhận đã khắc phục. */
   async verifyResolution(
-    requestId: string,
     incidentId: string,
     resolutionResult: ResolutionResult,
     operatorId: string,

@@ -1,6 +1,5 @@
 // Owner: Nguyễn Hoàng Nhân – UC13 Manage Smart Charging Schedule
 import { Router } from "express";
-import { Role } from "@hub/shared";
 import {
   applyPlanSchema,
   chargingScheduleController as c,
@@ -11,7 +10,7 @@ import { requireAuth, requireRole } from "../middleware/auth";
 import { validateBody } from "../middleware/validate";
 
 export const chargingScheduleRoutes = Router();
-chargingScheduleRoutes.use(requireAuth, requireRole(Role.OPERATOR));
+chargingScheduleRoutes.use(requireAuth, requireRole("OPERATOR"));
 
 chargingScheduleRoutes.get("/context", c.context);
 chargingScheduleRoutes.post("/proposals", validateBody(proposalSchema), c.propose);

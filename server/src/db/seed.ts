@@ -6,14 +6,6 @@
  */
 import bcrypt from "bcryptjs";
 import { count, eq } from "drizzle-orm";
-import {
-  ChargingPortStatus,
-  ConnectorType,
-  Role,
-  SlotStatus,
-  VehicleStatus,
-  VehicleType,
-} from "@hub/shared";
 import { closeDb, db } from "../lib/db";
 import * as s from "./schema";
 
@@ -49,10 +41,9 @@ async function main() {
     bcrypt.hash("student123", 10),
   ]);
 
-  db.transaction((tx) => {
+  db.transaction(() => {
     // Xóa dữ liệu cũ (con trước, cha sau để không vướng khóa ngoại)
     for (const table of [
-      s.requestLogs,
       s.simulationRuns,
       s.chargingPlans,
       s.redistributionItems,
@@ -72,16 +63,16 @@ async function main() {
       s.hubs,
       s.users,
     ]) {
-      tx.delete(table).run();
+      db.delete(table).run();
     }
 
     // Tài khoản demo
-    tx.insert(s.users)
+    db.insert(s.users)
       .values({
         email: "operator@hub.local",
         passwordHash: operatorHash,
         fullName: "Nhân viên vận hành",
-        role: Role.OPERATOR,
+        role: "OPERATOR",
       })
       .run();
     const students = [
@@ -89,17 +80,17 @@ async function main() {
       { email: "student2@hub.local", fullName: "Trần Thị Bình", plate: "59-X2 678.90" },
     ];
     for (const st of students) {
-      const user = tx
+      const user = db
         .insert(s.users)
-        .values({ email: st.email, passwordHash: studentHash, fullName: st.fullName, role: Role.STUDENT })
+        .values({ email: st.email, passwordHash: studentHash, fullName: st.fullName, role: "STUDENT" })
         .returning()
         .get();
-      tx.insert(s.privateVehicles)
+      db.insert(s.privateVehicles)
         .values({
           ownerId: user.id,
           plate: st.plate,
-          type: VehicleType.E_MOTORBIKE,
-          connectorType: ConnectorType.STANDARD_PLUG,
+          type: "E_MOTORBIKE",
+          connectorType: "STANDARD_PLUG",
         })
         .run();
     }
@@ -107,29 +98,33 @@ async function main() {
     // Hub, vị trí đỗ, cổng sạc, xe
     let vehicleNo = 1;
     for (const h of HUBS) {
-      const hub = tx.insert(s.hubs).values({ name: h.name, location: h.location, lastUpdatedAt: now }).returning().get();
+      const hub = db
+        .insert(s.hubs)
+        .values({ name: h.name, location: h.location, lastUpdatedAt: now })
+        .returning()
+        .get();
 
       const slots = [];
       for (let i = 1; i <= SLOTS_PER_HUB; i++) {
         const hasCharger = i > SLOTS_PER_HUB - CHARGERS_PER_HUB; // 4 vị trí cuối có cổng sạc
-        const slot = tx
+        const slot = db
           .insert(s.parkingSlots)
           .values({
             hubId: hub.id,
             code: `${h.code}-${String(i).padStart(2, "0")}`,
             hasCharger,
-            status: SlotStatus.IN_SERVICE,
+            status: "IN_SERVICE",
           })
           .returning()
           .get();
         slots.push(slot);
         if (hasCharger) {
-          tx.insert(s.chargingPorts)
+          db.insert(s.chargingPorts)
             .values({
               slotId: slot.id,
-              connectorType: i % 2 === 0 ? ConnectorType.TYPE_2 : ConnectorType.STANDARD_PLUG,
+              connectorType: i % 2 === 0 ? "TYPE_2" : "STANDARD_PLUG",
               maxPowerKw: i % 2 === 0 ? 7.4 : 3.6,
-              status: ChargingPortStatus.AVAILABLE,
+              status: "AVAILABLE",
             })
             .run();
         }
@@ -142,15 +137,11 @@ async function main() {
         const onCharger = i >= VEHICLES_PER_HUB - 2;
         const slot = onCharger ? chargerSlots[i - (VEHICLES_PER_HUB - 2)]! : normalSlots[i]!;
         const roll = rand();
-        const status = onCharger
-          ? VehicleStatus.CHARGING
-          : roll < 0.08
-            ? VehicleStatus.UNDER_MAINTENANCE
-            : VehicleStatus.AVAILABLE;
-        const type = rand() < 0.6 ? VehicleType.E_BIKE : VehicleType.E_MOTORBIKE;
-        tx.insert(s.sharedVehicles)
+        const status = onCharger ? "CHARGING" : roll < 0.08 ? "UNDER_MAINTENANCE" : "AVAILABLE";
+        const type = rand() < 0.6 ? "E_BIKE" : "E_MOTORBIKE";
+        db.insert(s.sharedVehicles)
           .values({
-            code: `${type === VehicleType.E_BIKE ? "EB" : "EM"}-${String(vehicleNo++).padStart(3, "0")}`,
+            code: `${type === "E_BIKE" ? "EB" : "EM"}-${String(vehicleNo++).padStart(3, "0")}`,
             type,
             batteryLevel: onCharger ? randInt(10, 40) : randInt(10, 100),
             status,
@@ -161,23 +152,27 @@ async function main() {
           .run();
         if (onCharger) {
           // Cổng sạc đang được xe dùng chung sử dụng
-          const port = tx.select().from(s.chargingPorts).all().find((p) => p.slotId === slot.id)!;
-          tx.update(s.chargingPorts)
-            .set({ status: ChargingPortStatus.IN_USE })
-            .where(eq(s.chargingPorts.id, port.id))
-            .run();
+          const port = db
+            .select()
+            .from(s.chargingPorts)
+            .all()
+            .find((p) => p.slotId === slot.id)!;
+          db.update(s.chargingPorts).set({ status: "IN_USE" }).where(eq(s.chargingPorts.id, port.id)).run();
         }
       }
     }
   });
 
-  const total = (table: typeof s.hubs | typeof s.parkingSlots | typeof s.chargingPorts | typeof s.sharedVehicles | typeof s.users) =>
-    db.select({ n: count() }).from(table).get()?.n ?? 0;
+  const total = (
+    table: typeof s.hubs | typeof s.parkingSlots | typeof s.chargingPorts | typeof s.sharedVehicles | typeof s.users,
+  ) => db.select({ n: count() }).from(table).get()?.n ?? 0;
   console.log(
     `[seed] Xong: ${total(s.hubs)} Hub, ${total(s.parkingSlots)} vị trí đỗ, ${total(s.chargingPorts)} cổng sạc, ` +
-    `${total(s.sharedVehicles)} xe dùng chung, ${total(s.users)} tài khoản.`,
+      `${total(s.sharedVehicles)} xe dùng chung, ${total(s.users)} tài khoản.`,
   );
-  console.log("[seed] Tài khoản: operator@hub.local / operator123 · student1@hub.local, student2@hub.local / student123");
+  console.log(
+    "[seed] Tài khoản: operator@hub.local / operator123 · student1@hub.local, student2@hub.local / student123",
+  );
 }
 
 main()

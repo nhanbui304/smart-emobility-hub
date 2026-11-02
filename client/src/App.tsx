@@ -1,6 +1,5 @@
 /** Định tuyến. Student: /student/..., Operator: /operator/... Sai vai trò sẽ bị chuyển hướng. */
 import { Navigate, Route, Routes } from "react-router-dom";
-import { Role } from "@hub/shared";
 import { RoleRoute, homePathFor } from "./components/RoleRoute";
 import { Spinner } from "./components/Spinner";
 import { useAuth } from "./context/AuthContext";
@@ -27,7 +26,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
-      <Route element={<RoleRoute role={Role.STUDENT} />}>
+      <Route element={<RoleRoute role="STUDENT" />}>
         <Route path="/student" element={<StudentLayout />}>
           <Route index element={<HomePage />} />
           <Route path="hubs/:hubId/reserve" element={<ReserveVehiclePage />} />
@@ -39,7 +38,7 @@ export default function App() {
         </Route>
       </Route>
 
-      <Route element={<RoleRoute role={Role.OPERATOR} />}>
+      <Route element={<RoleRoute role="OPERATOR" />}>
         <Route path="/operator" element={<OperatorLayout />}>
           <Route index element={<Navigate to="monitoring" replace />} />
           <Route path="monitoring" element={<MonitoringPage />} />

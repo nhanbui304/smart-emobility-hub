@@ -34,11 +34,7 @@ export const chargingReservationService = {
   },
 
   /** UC08 bước 5–6: xác nhận đặt lịch sạc. */
-  async confirmChargingReservation(
-    requestId: string,
-    studentId: string,
-    slotOptionId: string,
-  ): Promise<ChargingReservation> {
+  async confirmChargingReservation(studentId: string, slotOptionId: string): Promise<ChargingReservation> {
     throw notImplemented("ChargingReservationService.confirmChargingReservation (UC08)");
   },
 
@@ -63,7 +59,6 @@ export const chargingReservationService = {
 
   /** UC09 đổi lịch bước 3: xác nhận, kiểm tra expectedVersion. */
   async confirmReschedule(
-    requestId: string,
     studentId: string,
     reservationId: string,
     optionId: string,
@@ -79,7 +74,6 @@ export const chargingReservationService = {
 
   /** UC09 hủy lịch bước 2: hủy, kiểm tra expectedVersion. */
   async cancelReservation(
-    requestId: string,
     studentId: string,
     reservationId: string,
     expectedVersion: number,

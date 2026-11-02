@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { Role } from "@hub/shared";
 import { useAuth } from "../context/AuthContext";
+import type { Role } from "../types";
 import { Spinner } from "./Spinner";
 
 /** Chặn trang theo vai trò. Sai vai trò → về trang chủ của vai trò đó. */
@@ -15,5 +15,5 @@ export function RoleRoute({ role }: { role: Role }) {
 }
 
 export function homePathFor(role: Role): string {
-  return role === Role.OPERATOR ? "/operator/monitoring" : "/student";
+  return role === "OPERATOR" ? "/operator/monitoring" : "/student";
 }

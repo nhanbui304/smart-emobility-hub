@@ -16,7 +16,6 @@ export const parkingService = {
 
   /** UC06 bước 4: giữ tạm vị trí trong parkingHoldMinutes. holdToken = id của ParkingAllocation. */
   async holdSlot(
-    requestId: string,
     studentId: string,
     slotId: string,
     vehicleId: string,
@@ -26,17 +25,17 @@ export const parkingService = {
   },
 
   /** UC06 bước 5–6: xác nhận đặt chỗ từ bản giữ tạm. */
-  async confirmReservation(requestId: string, studentId: string, holdToken: string): Promise<ParkingAllocation> {
+  async confirmReservation(studentId: string, holdToken: string): Promise<ParkingAllocation> {
     throw notImplemented("ParkingService.confirmReservation (UC06)");
   },
 
   /** UC06 luồng thay thế: sinh viên bỏ giữ tạm. */
-  async cancelHold(requestId: string, studentId: string, holdToken: string): Promise<ParkingAllocation> {
+  async cancelHold(studentId: string, holdToken: string): Promise<ParkingAllocation> {
     throw notImplemented("ParkingService.cancelHold (UC06)");
   },
 
   /** Cancel Parking Reservation: hủy đặt chỗ đã xác nhận (trước giờ bắt đầu). */
-  async cancelBooking(requestId: string, studentId: string, bookingId: string): Promise<ParkingAllocation> {
+  async cancelBooking(studentId: string, bookingId: string): Promise<ParkingAllocation> {
     throw notImplemented("ParkingService.cancelBooking (Cancel Parking Reservation)");
   },
 };

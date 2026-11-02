@@ -1,5 +1,5 @@
 // Owner: Nguyễn Hoàng Nhân – UC10 Monitor Mobility Hub Network
-import type { AlertDto, HubDetail, HubStatus } from "@hub/shared";
+import type { AlertDto, HubDetail, HubStatus } from "../types/dto";
 import { notImplemented } from "../lib/errors";
 
 export interface NetworkOverview {

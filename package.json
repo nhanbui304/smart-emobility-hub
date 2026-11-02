@@ -3,26 +3,14 @@
   "private": true,
   "version": "0.1.0",
   "description": "Smart E-Mobility Hub – BTL Công nghệ phần mềm (CO3001), Nhóm 17",
-  "workspaces": [
-    "shared",
-    "server",
-    "client"
-  ],
-  "engines": {
-    "node": ">=20.19"
-  },
   "scripts": {
-    "postinstall": "node scripts/ensure-env.mjs",
-    "dev": "concurrently -k -n server,client -c green,cyan \"npm run dev -w server\" \"npm run dev -w client\"",
-    "db:reset": "npm run db:reset -w server",
-    "db:seed": "npm run db:seed -w server",
-    "test": "npm run test -w server",
-    "typecheck": "npm run typecheck -w shared && npm run typecheck -w server && npm run typecheck -w client",
-    "build": "npm run build -w client"
+    "postinstall": "npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently -k -n server,client -c green,cyan \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "db:reset": "npm run db:reset --prefix server",
+    "db:seed": "npm run db:seed --prefix server",
+    "typecheck": "npm run typecheck --prefix server && npm run typecheck --prefix client"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1",
-    "drizzle-orm": "^0.45.4",
-    "typescript": "~5.9.3"
+    "concurrently": "^9.2.1"
   }
 }

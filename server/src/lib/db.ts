@@ -1,7 +1,9 @@
 /**
  * Kết nối SQLite dùng chung cho toàn server.
- * better-sqlite3 chạy ĐỒNG BỘ: mọi truy vấn trong db.transaction(...) chạy liền một mạch,
- * không xen kẽ với request khác – đây là nền cho các thao tác atomic...
+ *
+ * Transaction: bọc các lệnh ghi trong db.transaction(() => { ... }).
+ * SQLite chỉ có MỘT kết nối nên mọi lệnh db bên trong hàm đó đều thuộc transaction;
+ * nếu hàm ném lỗi thì mọi thay đổi bị hủy. Hàm bên trong phải đồng bộ (không dùng await).
  */
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -15,16 +17,8 @@ mkdirSync(dirname(env.databaseUrl), { recursive: true });
 const sqlite = new Database(env.databaseUrl);
 sqlite.pragma("journal_mode = WAL");
 sqlite.pragma("foreign_keys = ON");
-sqlite.pragma("busy_timeout = 5000");
 
 export const db = drizzle(sqlite, { schema });
-
-/** Kiểu của db, dùng khi viết repository. */
-export type Db = typeof db;
-/** Kiểu của tx bên trong db.transaction((tx) => ...). */
-export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
-/** Repository nhận db hoặc tx đều được. */
-export type DbOrTx = Db | Tx;
 
 export function closeDb(): void {
   sqlite.close();

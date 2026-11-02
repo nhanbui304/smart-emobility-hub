@@ -1,4 +1,4 @@
-import { StatusLabel } from "@hub/shared";
+import { statusLabels } from "../statusLabels";
 
 /**
  * Nhãn trạng thái – LUÔN có chữ, không chỉ dùng màu (yêu cầu phi chức năng).
@@ -47,7 +47,7 @@ export function StatusBadge({ status, label }: { status: string; label?: string 
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${t}`}>
       <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />
-      {label ?? StatusLabel[status] ?? status}
+      {label ?? statusLabels[status] ?? status}
     </span>
   );
 }

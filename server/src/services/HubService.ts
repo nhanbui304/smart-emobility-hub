@@ -1,8 +1,8 @@
 // Owner: Lê Quốc Linh – View Hub and Resource Status (luồng mẫu cho cả nhóm)
-import { ChargingPortStatus, SlotStatus, VehicleStatus, type HubDetail, type HubStatus } from "@hub/shared";
 import type { Hub } from "../db/schema";
-import { AppError, ErrorCode } from "../lib/errors";
+import { AppError } from "../lib/errors";
 import { hubRepository } from "../repositories/HubRepository";
+import type { HubDetail, HubStatus } from "../types/dto";
 
 /**
  * Service chứa NGHIỆP VỤ: tổng hợp số liệu từ repository thành HubStatus.
@@ -10,15 +10,14 @@ import { hubRepository } from "../repositories/HubRepository";
  */
 export const hubService = {
   getAllHubStatuses(now: Date = new Date()): HubStatus[] {
-    const hubs = hubRepository.findAll();
-    return buildStatuses(hubs, now);
+    return buildStatuses(hubRepository.findAll(), now);
   },
 
   getHubDetail(hubId: string, now: Date = new Date()): HubDetail {
     const hub = hubRepository.findById(hubId);
-    if (!hub) throw new AppError(ErrorCode.NOT_FOUND, "Không tìm thấy Hub.");
+    if (!hub) throw new AppError("NOT_FOUND", "Không tìm thấy Hub.");
 
-    const [status] = buildStatuses([hub], now);
+    const status = buildStatuses([hub], now)[0]!;
     const vehicles = hubRepository.listVehicles(hubId).map((v) => ({
       id: v.id,
       code: v.code,
@@ -29,7 +28,7 @@ export const hubService = {
       slotId: v.slotId,
       lastUpdatedAt: v.lastUpdatedAt.toISOString(),
     }));
-    return { ...status!, vehicles };
+    return { ...status, vehicles };
   },
 };
 
@@ -39,29 +38,28 @@ function buildStatuses(hubs: Hub[], now: Date): HubStatus[] {
   const ports = hubRepository.listPortsWithHub();
   const allocations = hubRepository.listActiveAllocationsAt(now);
 
-  const occupiedSlotIds = new Set<string>([
-    ...vehicles.filter((v) => v.slotId).map((v) => v.slotId!),
-    ...allocations.map((a) => a.slotId),
-  ]);
+  // Vị trí đang có xe dùng chung đỗ hoặc đang được giữ/đặt thì không còn trống
+  const occupiedSlotIds = new Set<string>();
+  for (const v of vehicles) if (v.slotId) occupiedSlotIds.add(v.slotId);
+  for (const a of allocations) occupiedSlotIds.add(a.slotId);
 
   return hubs.map((hub) => {
     const hubSlots = slots.filter((s) => s.hubId === hub.id);
     const hubVehicles = vehicles.filter((v) => v.hubId === hub.id);
     const hubPorts = ports.filter((p) => p.hubId === hub.id);
-    const avgBattery =
-      hubVehicles.length === 0 ? 0 : hubVehicles.reduce((sum, v) => sum + v.batteryLevel, 0) / hubVehicles.length;
+    const totalBattery = hubVehicles.reduce((sum, v) => sum + v.batteryLevel, 0);
 
     return {
       id: hub.id,
       name: hub.name,
       location: hub.location,
-      availableVehicles: hubVehicles.filter((v) => v.status === VehicleStatus.AVAILABLE).length,
+      availableVehicles: hubVehicles.filter((v) => v.status === "AVAILABLE").length,
       totalVehicles: hubVehicles.length,
-      freeSlots: hubSlots.filter((s) => s.status === SlotStatus.IN_SERVICE && !occupiedSlotIds.has(s.id)).length,
+      freeSlots: hubSlots.filter((s) => s.status === "IN_SERVICE" && !occupiedSlotIds.has(s.id)).length,
       totalSlots: hubSlots.length,
-      freeChargingPorts: hubPorts.filter((p) => p.status === ChargingPortStatus.AVAILABLE).length,
+      freeChargingPorts: hubPorts.filter((p) => p.status === "AVAILABLE").length,
       totalChargingPorts: hubPorts.length,
-      averageBattery: Math.round(avgBattery),
+      averageBattery: hubVehicles.length === 0 ? 0 : Math.round(totalBattery / hubVehicles.length),
       lastUpdatedAt: hub.lastUpdatedAt.toISOString(),
     };
   });

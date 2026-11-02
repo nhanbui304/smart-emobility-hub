@@ -5,27 +5,23 @@ type TimeRange = { startTime: string; endTime: string };
 
 export const parkingApi = {
   searchSlots: (params: { hubId: string; vehicleId: string } & TimeRange) => api.get<unknown>("/parking/slots", params),
-  hold: (requestId: string, slotId: string, vehicleId: string, timeRange: TimeRange) =>
-    api.post<unknown>("/parking/holds", { requestId, slotId, vehicleId, timeRange }),
-  confirm: (requestId: string, holdToken: string) => api.post<unknown>(`/parking/holds/${holdToken}/confirm`, { requestId }),
-  cancelHold: (requestId: string, holdToken: string) =>
-    api.post<unknown>(`/parking/holds/${holdToken}/cancel`, { requestId }),
-  cancelBooking: (requestId: string, bookingId: string) =>
-    api.post<unknown>(`/parking/bookings/${bookingId}/cancel`, { requestId }),
+  hold: (slotId: string, vehicleId: string, timeRange: TimeRange) =>
+    api.post<unknown>("/parking/holds", { slotId, vehicleId, timeRange }),
+  confirm: (holdToken: string) => api.post<unknown>(`/parking/holds/${holdToken}/confirm`, {}),
+  cancelHold: (holdToken: string) => api.post<unknown>(`/parking/holds/${holdToken}/cancel`, {}),
+  cancelBooking: (bookingId: string) => api.post<unknown>(`/parking/bookings/${bookingId}/cancel`, {}),
 };
 
 export const chargingApi = {
   submitRequest: (body: {
-    requestId: string;
     hubId: string;
     vehicleRef: string;
     need: { currentBattery: number; targetBattery: number };
   }) => api.post<unknown>("/charging-requests", body),
-  cancelRequest: (requestId: string, id: string) => api.post<unknown>(`/charging-requests/${id}/cancel`, { requestId }),
+  cancelRequest: (id: string) => api.post<unknown>(`/charging-requests/${id}/cancel`, {}),
   searchSlots: (body: Record<string, unknown>) => api.post<unknown>("/charging-reservations/search", body),
-  confirmReservation: (requestId: string, slotOptionId: string) =>
-    api.post<unknown>("/charging-reservations", { requestId, slotOptionId }),
+  confirmReservation: (slotOptionId: string) => api.post<unknown>("/charging-reservations", { slotOptionId }),
   reservationDetail: (id: string) => api.get<unknown>(`/charging-reservations/${id}`),
-  cancelReservation: (requestId: string, id: string, expectedVersion: number) =>
-    api.post<unknown>(`/charging-reservations/${id}/cancel`, { requestId, expectedVersion }),
+  cancelReservation: (id: string, expectedVersion: number) =>
+    api.post<unknown>(`/charging-reservations/${id}/cancel`, { expectedVersion }),
 };

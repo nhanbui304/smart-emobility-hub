@@ -1,5 +1,5 @@
 // Owner: Nguyễn Hoàng Nhân – UC14 Run What-if Simulation
-import type { HubStatus } from "@hub/shared";
+import type { HubStatus } from "../types/dto";
 import type { SimulationRun } from "../db/schema";
 import { notImplemented } from "../lib/errors";
 import type { TimeRange } from "../lib/schemas";
@@ -48,7 +48,7 @@ export const simulationService = {
    * UC14 bước 4–5: tạo SimulationRun RUNNING, chạy simulationEngine ở nền,
    * xong thì cập nhật kết quả và emitToOperators(SIMULATION_FINISHED).
    */
-  async startRun(requestId: string, scenarioDraftId: string, operatorId: string): Promise<SimulationRun> {
+  async startRun(scenarioDraftId: string, operatorId: string): Promise<SimulationRun> {
     throw notImplemented("SimulationService.startRun (UC14)");
   },
 

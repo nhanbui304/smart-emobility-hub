@@ -6,14 +6,11 @@ export const vehicleApi = {
   reservableVehicles: (hubId: string) => api.get<unknown>("/vehicle-reservations/reservable", { hubId }),
   prepareReservation: (hubId: string, vehicleId: string) =>
     api.post<unknown>("/vehicle-reservations/prepare", { hubId, vehicleId }),
-  confirmReservation: (requestId: string, hubId: string, vehicleId: string) =>
-    api.post<unknown>("/vehicle-reservations", { requestId, hubId, vehicleId }),
-  cancelReservation: (requestId: string, reservationId: string) =>
-    api.post<unknown>(`/vehicle-reservations/${reservationId}/cancel`, { requestId }),
+  confirmReservation: (hubId: string, vehicleId: string) =>
+    api.post<unknown>("/vehicle-reservations", { hubId, vehicleId }),
+  cancelReservation: (reservationId: string) => api.post<unknown>(`/vehicle-reservations/${reservationId}/cancel`, {}),
   preparePickUp: (reservationId: string) => api.post<unknown>("/trips/pickup/prepare", { reservationId }),
-  confirmPickUp: (requestId: string, reservationId: string) =>
-    api.post<unknown>("/trips/pickup/confirm", { requestId, reservationId }),
-  prepareReturn: (requestId: string, tripId: string, hubId: string) =>
-    api.post<unknown>(`/trips/${tripId}/return/prepare`, { requestId, hubId }),
-  confirmReturn: (requestId: string, tripId: string) => api.post<unknown>(`/trips/${tripId}/return/confirm`, { requestId }),
+  confirmPickUp: (reservationId: string) => api.post<unknown>("/trips/pickup/confirm", { reservationId }),
+  prepareReturn: (tripId: string, hubId: string) => api.post<unknown>(`/trips/${tripId}/return/prepare`, { hubId }),
+  confirmReturn: (tripId: string) => api.post<unknown>(`/trips/${tripId}/return/confirm`, {}),
 };

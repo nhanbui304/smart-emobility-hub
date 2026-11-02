@@ -2,7 +2,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { sendOk } from "../lib/response";
-import { idParams, requestIdField, timeRangeSchema } from "../lib/schemas";
+import { idParams, timeRangeSchema } from "../lib/schemas";
 import { currentUser } from "../middleware/auth";
 import { parseOrThrow } from "../middleware/validate";
 import { simulationService } from "../services/SimulationService";
@@ -13,7 +13,7 @@ export const scenarioSchema = z.object({
   scenarioType: z.enum(["DEMAND_SURGE", "HUB_CLOSURE", "ADD_CHARGERS", "ADD_VEHICLES"]),
   assumptions: z.record(z.string(), z.union([z.number(), z.string(), z.boolean()])),
 });
-export const startRunSchema = z.object({ requestId: requestIdField, scenarioDraftId: z.string().min(1) });
+export const startRunSchema = z.object({ scenarioDraftId: z.string().min(1) });
 
 export const simulationController = {
   /** POST /api/simulations/snapshots */
@@ -29,8 +29,8 @@ export const simulationController = {
 
   /** POST /api/simulations/runs */
   async start(req: Request, res: Response): Promise<void> {
-    const { requestId, scenarioDraftId } = req.body;
-    sendOk(res, await simulationService.startRun(requestId, scenarioDraftId, currentUser(req).id), 202);
+    const { scenarioDraftId } = req.body;
+    sendOk(res, await simulationService.startRun(scenarioDraftId, currentUser(req).id), 202);
   },
 
   /** POST /api/simulations/runs/:id/stop */

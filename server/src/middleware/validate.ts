@@ -1,9 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
 import type { z } from "zod";
-import { AppError, ErrorCode } from "../lib/errors";
+import { AppError } from "../lib/errors";
 
 /**
- * Validate req.body bằng zod. Body sau khi parse (đã ép kiểu, bỏ trường thừa) thay vào req.body.
+ * Kiểm tra req.body bằng zod. Body sau khi kiểm tra (đã ép kiểu, bỏ trường thừa) thay vào req.body.
  *   router.post("/", validateBody(createSchema), controller.create)
  */
 export function validateBody(schema: z.ZodType) {
@@ -17,12 +17,8 @@ export function validateBody(schema: z.ZodType) {
 export function parseOrThrow<S extends z.ZodType>(schema: S, value: unknown): z.infer<S> {
   const result = schema.safeParse(value);
   if (!result.success) {
-    throw new AppError(
-      ErrorCode.VALIDATION_ERROR,
-      "Dữ liệu gửi lên không hợp lệ.",
-      400,
-      result.error.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
-    );
+    const details = result.error.issues.map((i) => ({ path: i.path.join("."), message: i.message }));
+    throw new AppError("VALIDATION_ERROR", "Dữ liệu gửi lên không hợp lệ.", details);
   }
   return result.data;
 }

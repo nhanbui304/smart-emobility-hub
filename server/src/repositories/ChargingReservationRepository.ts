@@ -1,6 +1,6 @@
 // Owner: Ngô Minh Triết (UC08 Schedule Charging Session), Nguyễn Hoàng Nhân (UC09 Manage Scheduled Charging Session)
 import type { ChargingPort, ChargingReservation } from "../db/schema";
-import { db, type DbOrTx, type Tx } from "../lib/db";
+import { db } from "../lib/db";
 import { notImplemented } from "../lib/errors";
 
 export const chargingReservationRepository = {
@@ -11,43 +11,44 @@ export const chargingReservationRepository = {
     startTime: Date,
     endTime: Date,
     excludeReservationId?: string,
-    conn: DbOrTx = db,
   ): ChargingPort[] {
     throw notImplemented("ChargingReservationRepository.findFreePorts (UC08)");
   },
 
-  findById(reservationId: string, conn: DbOrTx = db): ChargingReservation | undefined {
+  findById(reservationId: string): ChargingReservation | undefined {
     throw notImplemented("ChargingReservationRepository.findById (UC09)");
   },
 
-  /** UC08 – trong runIdempotent: kiểm tra lại không chồng lấn rồi tạo lịch CONFIRMED (version = 1). */
-  atomicCreateReservation(
-    tx: Tx,
-    input: { studentId: string; privateVehicleId: string; portId: string; startTime: Date; endTime: Date },
-  ): ChargingReservation {
+  /** UC08 – trong db.transaction: kiểm tra lại không chồng lấn rồi tạo lịch CONFIRMED (version = 1). */
+  atomicCreateReservation(input: {
+    studentId: string;
+    privateVehicleId: string;
+    portId: string;
+    startTime: Date;
+    endTime: Date;
+  }): ChargingReservation {
     throw notImplemented("ChargingReservationRepository.atomicCreateReservation (UC08)");
   },
 
-  /** UC09 – trong runIdempotent: version phải khớp expectedVersion; đổi cổng/khung giờ, version + 1. */
-  atomicReschedule(
-    tx: Tx,
-    input: {
-      studentId: string;
-      reservationId: string;
-      portId: string;
-      startTime: Date;
-      endTime: Date;
-      expectedVersion: number;
-    },
-  ): ChargingReservation {
+  /** UC09 – trong db.transaction: version phải khớp expectedVersion; đổi cổng/khung giờ, version + 1. */
+  atomicReschedule(input: {
+    studentId: string;
+    reservationId: string;
+    portId: string;
+    startTime: Date;
+    endTime: Date;
+    expectedVersion: number;
+  }): ChargingReservation {
     throw notImplemented("ChargingReservationRepository.atomicReschedule (UC09)");
   },
 
-  /** UC09 – trong runIdempotent: version phải khớp; CONFIRMED → CANCELLED. */
-  atomicCancelReservation(
-    tx: Tx,
-    input: { studentId: string; reservationId: string; expectedVersion: number; now: Date },
-  ): ChargingReservation {
+  /** UC09 – trong db.transaction: version phải khớp; CONFIRMED → CANCELLED. */
+  atomicCancelReservation(input: {
+    studentId: string;
+    reservationId: string;
+    expectedVersion: number;
+    now: Date;
+  }): ChargingReservation {
     throw notImplemented("ChargingReservationRepository.atomicCancelReservation (UC09)");
   },
 };

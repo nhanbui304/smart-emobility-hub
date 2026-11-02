@@ -36,12 +36,7 @@ export const smartChargingService = {
   },
 
   /** UC13 bước 5–6: áp dụng lịch, kiểm tra baseVersion, thông báo sinh viên bị ảnh hưởng. */
-  async applyChargingSchedule(
-    requestId: string,
-    planDraftId: string,
-    baseVersion: number,
-    operatorId: string,
-  ): Promise<ChargingPlan> {
+  async applyChargingSchedule(planDraftId: string, baseVersion: number, operatorId: string): Promise<ChargingPlan> {
     throw notImplemented("SmartChargingService.applyChargingSchedule (UC13)");
   },
 };

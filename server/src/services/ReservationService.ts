@@ -21,20 +21,14 @@ export const reservationService = {
 
   /**
    * UC02 bước 4–6: xác nhận đặt xe.
-   * TODO: runIdempotent(requestId, "UC02.confirmReservation", studentId, (tx) =>
-   *         reservationRepository.atomicReserveVehicle(tx, {...}))
+   * TODO: return db.transaction(() => reservationRepository.atomicReserveVehicle({...}))
    */
-  async confirmReservation(
-    requestId: string,
-    studentId: string,
-    hubId: string,
-    vehicleId: string,
-  ): Promise<VehicleReservation> {
+  async confirmReservation(studentId: string, hubId: string, vehicleId: string): Promise<VehicleReservation> {
     throw notImplemented("ReservationService.confirmReservation (UC02)");
   },
 
   /** UC03: hủy đặt xe trước khi nhận. */
-  async cancelReservation(requestId: string, studentId: string, reservationId: string): Promise<VehicleReservation> {
+  async cancelReservation(studentId: string, reservationId: string): Promise<VehicleReservation> {
     throw notImplemented("ReservationService.cancelReservation (UC03)");
   },
 };

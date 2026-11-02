@@ -1,7 +1,7 @@
 // Owner: Ngô Minh Triết – UC01 Find Suitable Hub and Mobility Option
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { VehicleType, enumValues } from "@hub/shared";
+import { VEHICLE_TYPES } from "../constants";
 import { sendOk } from "../lib/response";
 import { parseOrThrow } from "../middleware/validate";
 import { searchService } from "../services/SearchService";
@@ -9,7 +9,7 @@ import { searchService } from "../services/SearchService";
 export const searchCriteriaSchema = z.object({
   purpose: z.enum(["RENT_VEHICLE", "PARK", "CHARGE"]),
   originHubId: z.string().optional(),
-  vehicleType: z.enum(enumValues(VehicleType)).optional(),
+  vehicleType: z.enum(VEHICLE_TYPES).optional(),
   minBattery: z.number().int().min(0).max(100).optional(),
   startTime: z.coerce.date().optional(),
   endTime: z.coerce.date().optional(),

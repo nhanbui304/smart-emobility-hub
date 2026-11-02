@@ -1,13 +1,12 @@
 // Owner: Bùi Quang Nhân – Sign In / Sign Out
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { AuthUser } from "@hub/shared";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { authApi } from "../api/auth";
-import { TOKEN_KEY, setUnauthorizedHandler } from "../api/client";
+import { setUnauthorizedHandler } from "../api/client";
+import type { AuthUser } from "../types";
 
 interface AuthState {
   user: AuthUser | null;
-  token: string | null;
-  /** true trong lúc kiểm tra token đã lưu khi mở trang. */
+  /** true trong lúc kiểm tra phiên đăng nhập khi mở trang. */
   loading: boolean;
   login: (email: string, password: string) => Promise<AuthUser>;
   register: (input: { email: string; password: string; fullName: string }) => Promise<AuthUser>;
@@ -18,60 +17,43 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState<boolean>(() => !!localStorage.getItem(TOKEN_KEY));
+  const [loading, setLoading] = useState(true);
 
-  const clear = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY);
-    setToken(null);
-    setUser(null);
-  }, []);
-
+  // Mở trang: hỏi server xem cookie phiên còn hợp lệ không
   useEffect(() => {
-    setUnauthorizedHandler(clear);
-    return () => setUnauthorizedHandler(null);
-  }, [clear]);
-
-  // Mở lại trang: dùng token đã lưu để lấy thông tin người dùng
-  useEffect(() => {
-    if (!token || user) return;
     authApi
       .me()
       .then(setUser)
-      .catch(clear)
+      .catch(() => setUser(null))
       .finally(() => setLoading(false));
-  }, [token, user, clear]);
-
-  const save = useCallback((t: string, u: AuthUser) => {
-    localStorage.setItem(TOKEN_KEY, t);
-    setToken(t);
-    setUser(u);
-    setLoading(false);
-    return u;
   }, []);
 
-  const value = useMemo<AuthState>(
-    () => ({
-      user,
-      token,
-      loading,
-      login: async (email, password) => {
-        const res = await authApi.login(email, password);
-        return save(res.token, res.user);
-      },
-      register: async (input) => {
-        const res = await authApi.register(input);
-        return save(res.token, res.user);
-      },
-      logout: async () => {
-        await authApi.logout().catch(() => undefined);
-        clear();
-      },
-      setUser,
-    }),
-    [user, token, loading, save, clear],
-  );
+  // Phiên hết hạn giữa chừng → về trạng thái chưa đăng nhập
+  useEffect(() => {
+    setUnauthorizedHandler(() => setUser(null));
+    return () => setUnauthorizedHandler(null);
+  }, []);
+
+  const value: AuthState = {
+    user,
+    loading,
+    login: async (email, password) => {
+      const u = await authApi.login(email, password);
+      setUser(u);
+      return u;
+    },
+    register: async (input) => {
+      const u = await authApi.register(input);
+      setUser(u);
+      return u;
+    },
+    logout: async () => {
+      await authApi.logout().catch(() => undefined);
+      setUser(null);
+    },
+    setUser,
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -1,5 +1,5 @@
 // Owner: Lê Quốc Linh – UC04 Pick Up Shared Vehicle
-import type { DeviceCommandResult } from "@hub/shared";
+import type { DeviceCommandResult } from "../constants";
 import type { Trip, VehicleReservation } from "../db/schema";
 import { notImplemented } from "../lib/errors";
 
@@ -26,7 +26,7 @@ export const pickUpService = {
    * UC04 bước 4–7: atomicBeginHandover → vehicleSimulator.requestUnlock (NGOÀI transaction)
    * → SUCCESS: atomicStartTrip · FAILED: trả về RESERVED · UNKNOWN: markPendingVerification.
    */
-  async confirmPickUp(requestId: string, studentId: string, reservationId: string): Promise<PickUpResult> {
+  async confirmPickUp(studentId: string, reservationId: string): Promise<PickUpResult> {
     throw notImplemented("PickUpService.confirmPickUp (UC04)");
   },
 };

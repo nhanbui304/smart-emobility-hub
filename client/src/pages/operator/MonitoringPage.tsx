@@ -1,8 +1,6 @@
 // Owner: Nguyễn Hoàng Nhân – UC10 Monitor Mobility Hub Network
-// Bảng trạng thái Hub real-time đã chạy (dùng /api/hubs + HUB_STATUS_UPDATED).
+// Bảng trạng thái Hub đã chạy: gọi /api/hubs, tự tải lại mỗi 3 giây (NFR cập nhật trong 3 giây).
 // TODO (Hoàng Nhân): thêm cảnh báo (operationsApi.overview), chi tiết Hub, nút điều chuyển.
-import { useState } from "react";
-import { SocketEvents, type HubStatus, type HubStatusUpdatedPayload } from "@hub/shared";
 import { hubApi } from "../../api/hubs";
 import { Card } from "../../components/Card";
 import { ErrorMessage } from "../../components/ErrorMessage";
@@ -11,15 +9,19 @@ import { Spinner } from "../../components/Spinner";
 import { StatusBadge } from "../../components/StatusBadge";
 import { StubNotice } from "../../components/StubNotice";
 import { useAsync } from "../../hooks/useAsync";
-import { useSocketEvent } from "../../hooks/useSocket";
+import type { HubStatus } from "../../types";
 
 export function MonitoringPage() {
-  const { data: hubs, setData: setHubs, loading, error, reload } = useAsync(() => hubApi.list(), []);
-  const [lastPush, setLastPush] = useState<Date | null>(null);
-  const { connected } = useSocketEvent<HubStatusUpdatedPayload>(SocketEvents.HUB_STATUS_UPDATED, (p) => {
-    setHubs(p.hubs);
-    setLastPush(new Date(p.emittedAt));
+  const {
+    data: hubs,
+    loading,
+    error,
+    lastLoadedAt,
+    reload,
+  } = useAsync(() => hubApi.list(), [], {
+    refreshEveryMs: 3000,
   });
+  const connected = !error;
 
   const totals = (hubs ?? []).reduce(
     (acc, h) => ({
@@ -39,22 +41,27 @@ export function MonitoringPage() {
           <span className="inline-flex items-center gap-2">
             <StatusBadge
               status={connected ? "ACTIVE" : "OUT_OF_SERVICE"}
-              label={connected ? "Đang nhận dữ liệu trực tiếp" : "Mất kết nối trực tiếp"}
+              label={connected ? "Tự cập nhật mỗi 3 giây" : "Mất kết nối máy chủ"}
             />
-            {lastPush && <span>Cập nhật lúc {lastPush.toLocaleTimeString("vi-VN")}</span>}
+            {lastLoadedAt && <span>Cập nhật lúc {lastLoadedAt.toLocaleTimeString("vi-VN")}</span>}
           </span>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi tone="highlight" label="Xe sẵn sàng" value={`${totals.vehicles}`} sub={`trên ${totals.totalVehicles} xe`} />
+        <Kpi
+          tone="highlight"
+          label="Xe sẵn sàng"
+          value={`${totals.vehicles}`}
+          sub={`trên ${totals.totalVehicles} xe`}
+        />
         <Kpi label="Chỗ đỗ trống" value={`${totals.slots}`} sub="toàn mạng lưới" />
         <Kpi label="Cổng sạc rảnh" value={`${totals.ports}`} sub="toàn mạng lưới" />
         <Kpi label="Số Hub" value={`${hubs?.length ?? 0}`} sub="đang hoạt động" />
       </div>
 
       {loading && !hubs && <Spinner />}
-      <ErrorMessage error={error} onRetry={reload} />
+      <ErrorMessage error={error} onRetry={() => void reload()} />
 
       {hubs && (
         <Card className="overflow-x-auto p-0">
@@ -83,7 +90,6 @@ export function MonitoringPage() {
         useCases="UC10"
         todo={[
           "Hiển thị cảnh báo đang mở (LOW_VEHICLE, NEAR_FULL, DATA_STALE) từ operationsApi.overview",
-          "Nghe ALERT_RAISED / ALERT_CLEARED để cập nhật cảnh báo",
           "Bấm vào Hub → xem chi tiết xe, cổng sạc (operationsApi.hubDetail)",
         ]}
       />

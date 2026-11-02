@@ -1,6 +1,5 @@
 // Owner: Ngô Minh Triết (UC08 Schedule Charging Session), Nguyễn Hoàng Nhân (UC09 Manage Scheduled Charging Session)
 import { Router } from "express";
-import { Role } from "@hub/shared";
 import {
   cancelChargingSchema,
   chargingReservationController as c,
@@ -13,7 +12,7 @@ import { requireAuth, requireRole } from "../middleware/auth";
 import { validateBody } from "../middleware/validate";
 
 export const chargingReservationRoutes = Router();
-chargingReservationRoutes.use(requireAuth, requireRole(Role.STUDENT));
+chargingReservationRoutes.use(requireAuth, requireRole("STUDENT"));
 
 // UC08
 chargingReservationRoutes.post("/search", validateBody(findSlotsSchema), c.search);

@@ -36,7 +36,9 @@ export function StudentLayout() {
               >
                 {({ isActive }) => (
                   <>
-                    <span className={`rounded-full px-4 py-1 transition ${isActive ? "bg-lime/70 dark:bg-lime/15" : ""}`}>
+                    <span
+                      className={`rounded-full px-4 py-1 transition ${isActive ? "bg-lime/70 dark:bg-lime/15" : ""}`}
+                    >
                       <Icon />
                     </span>
                     {label}

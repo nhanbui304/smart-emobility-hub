@@ -2,36 +2,34 @@
  * Schema cơ sở dữ liệu (Drizzle ORM + SQLite).
  *
  * - Mỗi bảng ứng với một entity trong class diagram.
- * - Trường trạng thái lưu dạng TEXT nhưng được gõ kiểu theo enum trong @hub/shared,
+ * - Trường trạng thái lưu dạng TEXT nhưng được gõ kiểu theo danh sách trong src/constants.ts,
  *   nên TypeScript sẽ báo lỗi nếu ghi một trạng thái không tồn tại.
  * - Sau khi sửa file này: chạy `npm run db:push` (giữ dữ liệu nếu được)
  *   hoặc `npm run db:reset` (xóa sạch và seed lại).
  */
-import { sql } from "drizzle-orm";
 import { index, integer, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import {
-  AlertType,
-  ChargingPortStatus,
-  ChargingRequestStatus,
-  ChargingReservationStatus,
-  ChargingSessionStatus,
-  ConnectorType,
-  ImpactLevel,
-  IncidentStatus,
-  ParkingAllocationStatus,
-  RedistributionItemStatus,
-  RedistributionStatus,
-  ResourceType,
-  Role,
-  SimulationRunStatus,
-  SlotStatus,
-  ThemePreference,
-  TripStatus,
-  VehicleReservationStatus,
-  VehicleStatus,
-  VehicleType,
-  enumValues,
-} from "@hub/shared";
+  ALERT_TYPES,
+  CHARGING_PORT_STATUSES,
+  CHARGING_REQUEST_STATUSES,
+  CHARGING_RESERVATION_STATUSES,
+  CHARGING_SESSION_STATUSES,
+  CONNECTOR_TYPES,
+  IMPACT_LEVELS,
+  INCIDENT_STATUSES,
+  PARKING_ALLOCATION_STATUSES,
+  REDISTRIBUTION_ITEM_STATUSES,
+  REDISTRIBUTION_STATUSES,
+  RESOURCE_TYPES,
+  ROLES,
+  SIMULATION_RUN_STATUSES,
+  SLOT_STATUSES,
+  THEME_PREFERENCES,
+  TRIP_STATUSES,
+  VEHICLE_RESERVATION_STATUSES,
+  VEHICLE_STATUSES,
+  VEHICLE_TYPES,
+} from "../constants";
 
 // ---------- Cột dùng chung ----------
 const id = () =>
@@ -55,10 +53,8 @@ export const users = sqliteTable("users", {
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   fullName: text("full_name").notNull(),
-  role: text("role", { enum: enumValues(Role) }).notNull(),
-  themePreference: text("theme_preference", { enum: enumValues(ThemePreference) })
-    .notNull()
-    .default(ThemePreference.SYSTEM),
+  role: text("role", { enum: ROLES }).notNull(),
+  themePreference: text("theme_preference", { enum: THEME_PREFERENCES }).notNull().default("SYSTEM"),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -84,9 +80,7 @@ export const parkingSlots = sqliteTable(
       .references(() => hubs.id),
     code: text("code").notNull(),
     hasCharger: integer("has_charger", { mode: "boolean" }).notNull().default(false),
-    status: text("status", { enum: enumValues(SlotStatus) })
-      .notNull()
-      .default(SlotStatus.IN_SERVICE),
+    status: text("status", { enum: SLOT_STATUSES }).notNull().default("IN_SERVICE"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -100,11 +94,9 @@ export const chargingPorts = sqliteTable("charging_ports", {
     .notNull()
     .unique()
     .references(() => parkingSlots.id),
-  connectorType: text("connector_type", { enum: enumValues(ConnectorType) }).notNull(),
+  connectorType: text("connector_type", { enum: CONNECTOR_TYPES }).notNull(),
   maxPowerKw: real("max_power_kw").notNull(),
-  status: text("status", { enum: enumValues(ChargingPortStatus) })
-    .notNull()
-    .default(ChargingPortStatus.AVAILABLE),
+  status: text("status", { enum: CHARGING_PORT_STATUSES }).notNull().default("AVAILABLE"),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -114,9 +106,9 @@ export const sharedVehicles = sqliteTable(
   {
     id: id(),
     code: text("code").notNull().unique(),
-    type: text("type", { enum: enumValues(VehicleType) }).notNull(),
+    type: text("type", { enum: VEHICLE_TYPES }).notNull(),
     batteryLevel: integer("battery_level").notNull(),
-    status: text("status", { enum: enumValues(VehicleStatus) }).notNull(),
+    status: text("status", { enum: VEHICLE_STATUSES }).notNull(),
     hubId: text("hub_id").references(() => hubs.id),
     slotId: text("slot_id").references(() => parkingSlots.id),
     lastUpdatedAt: timestamp("last_updated_at")
@@ -134,8 +126,8 @@ export const privateVehicles = sqliteTable("private_vehicles", {
     .notNull()
     .references(() => users.id),
   plate: text("plate").notNull(),
-  type: text("type", { enum: enumValues(VehicleType) }).notNull(),
-  connectorType: text("connector_type", { enum: enumValues(ConnectorType) }).notNull(),
+  type: text("type", { enum: VEHICLE_TYPES }).notNull(),
+  connectorType: text("connector_type", { enum: CONNECTOR_TYPES }).notNull(),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -154,7 +146,7 @@ export const vehicleReservations = sqliteTable(
     hubId: text("hub_id")
       .notNull()
       .references(() => hubs.id),
-    status: text("status", { enum: enumValues(VehicleReservationStatus) }).notNull(),
+    status: text("status", { enum: VEHICLE_RESERVATION_STATUSES }).notNull(),
     pickupDeadline: timestamp("pickup_deadline").notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -178,7 +170,7 @@ export const trips = sqliteTable("trips", {
   endedAt: timestamp("ended_at"),
   returnHubId: text("return_hub_id").references(() => hubs.id),
   returnSlotId: text("return_slot_id").references(() => parkingSlots.id),
-  status: text("status", { enum: enumValues(TripStatus) }).notNull(),
+  status: text("status", { enum: TRIP_STATUSES }).notNull(),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -199,7 +191,7 @@ export const parkingAllocations = sqliteTable(
     vehicleRef: text("vehicle_ref").notNull(),
     startTime: timestamp("start_time").notNull(),
     endTime: timestamp("end_time").notNull(),
-    status: text("status", { enum: enumValues(ParkingAllocationStatus) }).notNull(),
+    status: text("status", { enum: PARKING_ALLOCATION_STATUSES }).notNull(),
     holdExpiresAt: timestamp("hold_expires_at"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -218,7 +210,7 @@ export const chargingRequests = sqliteTable("charging_requests", {
     .notNull()
     .references(() => hubs.id),
   portId: text("port_id").references(() => chargingPorts.id),
-  status: text("status", { enum: enumValues(ChargingRequestStatus) }).notNull(),
+  status: text("status", { enum: CHARGING_REQUEST_STATUSES }).notNull(),
   targetBattery: integer("target_battery").notNull(),
   queuedAt: timestamp("queued_at"),
   createdAt: createdAt(),
@@ -240,8 +232,8 @@ export const chargingReservations = sqliteTable(
       .references(() => chargingPorts.id),
     startTime: timestamp("start_time").notNull(),
     endTime: timestamp("end_time").notNull(),
-    status: text("status", { enum: enumValues(ChargingReservationStatus) }).notNull(),
-    /** Dùng cho expectedVersion khi đổi lịch / hủy (UC09). */
+    status: text("status", { enum: CHARGING_RESERVATION_STATUSES }).notNull(),
+    /** Tăng mỗi lần đổi lịch; dùng để phát hiện lịch đã bị người khác sửa (UC09). */
     version: integer("version").notNull().default(1),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -255,10 +247,10 @@ export const chargingSessions = sqliteTable("charging_sessions", {
     .notNull()
     .references(() => chargingPorts.id),
   reservationId: text("reservation_id").references(() => chargingReservations.id),
-  requestId: text("request_id").references(() => chargingRequests.id),
+  chargingRequestId: text("charging_request_id").references(() => chargingRequests.id),
   startedAt: timestamp("started_at").notNull(),
   endedAt: timestamp("ended_at"),
-  status: text("status", { enum: enumValues(ChargingSessionStatus) }).notNull(),
+  status: text("status", { enum: CHARGING_SESSION_STATUSES }).notNull(),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -266,11 +258,11 @@ export const chargingSessions = sqliteTable("charging_sessions", {
 // ---------- Vận hành ----------
 export const incidents = sqliteTable("incidents", {
   id: id(),
-  resourceType: text("resource_type", { enum: enumValues(ResourceType) }).notNull(),
+  resourceType: text("resource_type", { enum: RESOURCE_TYPES }).notNull(),
   resourceId: text("resource_id").notNull(),
   description: text("description").notNull(),
-  impactLevel: text("impact_level", { enum: enumValues(ImpactLevel) }).notNull(),
-  status: text("status", { enum: enumValues(IncidentStatus) }).notNull(),
+  impactLevel: text("impact_level", { enum: IMPACT_LEVELS }).notNull(),
+  status: text("status", { enum: INCIDENT_STATUSES }).notNull(),
   /** Phương án xử lý, lưu dạng JSON. */
   handlingPlan: text("handling_plan", { mode: "json" }),
   version: integer("version").notNull().default(1),
@@ -285,7 +277,7 @@ export const alerts = sqliteTable(
     hubId: text("hub_id")
       .notNull()
       .references(() => hubs.id),
-    type: text("type", { enum: enumValues(AlertType) }).notNull(),
+    type: text("type", { enum: ALERT_TYPES }).notNull(),
     value: real("value").notNull(),
     threshold: real("threshold").notNull(),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
@@ -307,7 +299,7 @@ export const redistributionOrders = sqliteTable("redistribution_orders", {
     .notNull()
     .references(() => users.id),
   eta: timestamp("eta"),
-  status: text("status", { enum: enumValues(RedistributionStatus) }).notNull(),
+  status: text("status", { enum: REDISTRIBUTION_STATUSES }).notNull(),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -320,7 +312,7 @@ export const redistributionItems = sqliteTable("redistribution_items", {
   vehicleId: text("vehicle_id")
     .notNull()
     .references(() => sharedVehicles.id),
-  status: text("status", { enum: enumValues(RedistributionItemStatus) }).notNull(),
+  status: text("status", { enum: REDISTRIBUTION_ITEM_STATUSES }).notNull(),
   departedAt: timestamp("departed_at"),
   arrivedAt: timestamp("arrived_at"),
   createdAt: createdAt(),
@@ -346,22 +338,10 @@ export const simulationRuns = sqliteTable("simulation_runs", {
   snapshot: text("snapshot", { mode: "json" }).notNull(),
   scenario: text("scenario", { mode: "json" }).notNull(),
   result: text("result", { mode: "json" }),
-  status: text("status", { enum: enumValues(SimulationRunStatus) }).notNull(),
+  status: text("status", { enum: SIMULATION_RUN_STATUSES }).notNull(),
   dataLimitation: text("data_limitation"),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
-});
-
-// ---------- Chống gửi lặp ----------
-/** Mỗi requestId chỉ được xử lý một lần; lần gửi lặp trả lại resultJson đã lưu. */
-export const requestLogs = sqliteTable("request_logs", {
-  requestId: text("request_id").primaryKey(),
-  operation: text("operation").notNull(),
-  userId: text("user_id").notNull(),
-  resultJson: text("result_json").notNull(),
-  createdAt: timestamp("created_at")
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`),
 });
 
 // ---------- Kiểu dữ liệu suy ra từ bảng ----------
@@ -383,4 +363,3 @@ export type RedistributionOrder = typeof redistributionOrders.$inferSelect;
 export type RedistributionItem = typeof redistributionItems.$inferSelect;
 export type ChargingPlan = typeof chargingPlans.$inferSelect;
 export type SimulationRun = typeof simulationRuns.$inferSelect;
-export type RequestLog = typeof requestLogs.$inferSelect;

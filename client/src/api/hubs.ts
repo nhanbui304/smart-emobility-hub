@@ -1,5 +1,5 @@
 // Owner: Lê Quốc Linh – View Hub and Resource Status, View My Reservations
-import type { HubDetail, HubStatus } from "@hub/shared";
+import type { HubDetail, HubStatus } from "../types";
 import { api } from "./client";
 
 export const hubApi = {
