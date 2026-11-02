@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+server/data/
+coverage/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db

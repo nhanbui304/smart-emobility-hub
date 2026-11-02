@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-surface text-neutral-900 antialiased;
+  }
+  html.dark {
+    @apply bg-surface-dark text-neutral-100;
+  }
+  body {
+    @apply min-h-screen font-sans;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-lime ring-offset-2 ring-offset-surface dark:ring-offset-surface-dark;
+  }
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm
+      placeholder:text-neutral-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20
+      dark:border-neutral-700 dark:bg-panel-dark dark:focus:border-lime dark:focus:ring-lime/20;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-300;
+  }
+}

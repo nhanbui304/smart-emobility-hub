@@ -1,0 +1,31 @@
+// Owner: Bùi Quang Nhân (UC06), Ngô Minh Triết (UC07, UC08), Nguyễn Hoàng Nhân (UC09)
+import { api } from "./client";
+
+type TimeRange = { startTime: string; endTime: string };
+
+export const parkingApi = {
+  searchSlots: (params: { hubId: string; vehicleId: string } & TimeRange) => api.get<unknown>("/parking/slots", params),
+  hold: (requestId: string, slotId: string, vehicleId: string, timeRange: TimeRange) =>
+    api.post<unknown>("/parking/holds", { requestId, slotId, vehicleId, timeRange }),
+  confirm: (requestId: string, holdToken: string) => api.post<unknown>(`/parking/holds/${holdToken}/confirm`, { requestId }),
+  cancelHold: (requestId: string, holdToken: string) =>
+    api.post<unknown>(`/parking/holds/${holdToken}/cancel`, { requestId }),
+  cancelBooking: (requestId: string, bookingId: string) =>
+    api.post<unknown>(`/parking/bookings/${bookingId}/cancel`, { requestId }),
+};
+
+export const chargingApi = {
+  submitRequest: (body: {
+    requestId: string;
+    hubId: string;
+    vehicleRef: string;
+    need: { currentBattery: number; targetBattery: number };
+  }) => api.post<unknown>("/charging-requests", body),
+  cancelRequest: (requestId: string, id: string) => api.post<unknown>(`/charging-requests/${id}/cancel`, { requestId }),
+  searchSlots: (body: Record<string, unknown>) => api.post<unknown>("/charging-reservations/search", body),
+  confirmReservation: (requestId: string, slotOptionId: string) =>
+    api.post<unknown>("/charging-reservations", { requestId, slotOptionId }),
+  reservationDetail: (id: string) => api.get<unknown>(`/charging-reservations/${id}`),
+  cancelReservation: (requestId: string, id: string, expectedVersion: number) =>
+    api.post<unknown>(`/charging-reservations/${id}/cancel`, { requestId, expectedVersion }),
+};
