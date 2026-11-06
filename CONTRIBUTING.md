@@ -96,21 +96,46 @@ Xem dữ liệu trên trình duyệt: `npm run db:studio --prefix server`.
 
 ## 6. Quy ước Git
 
-- Không push thẳng lên `main`.
-- Mỗi người làm trên nhánh riêng: `feature/<tên>-<uc>`, ví dụ `feature/linh-uc02`, `feature/quangnhan-uc06`.
-- Trước khi mở Pull Request: `npm run typecheck` phải qua.
-- Mở Pull Request vào `main`, nhờ ít nhất một người review.
-- Commit message ngắn, nói rõ việc: `UC02: xác nhận đặt xe`, `fix UC06: hết hạn giữ chỗ`.
-- `package-lock.json` (trong `server/` và `client/`): người tạo repo chạy `npm install` lần đầu rồi commit; sau đó mọi người dùng chung, không tự xóa.
+**Nhánh**
+
+- Không commit, push thẳng lên `main`; không tự merge vào `main`.
+- Mỗi việc một nhánh, tạo từ `main` mới nhất:
+  - code: `feature/<tên>-<uc>` – ví dụ `feature/linh-uc02`, `feature/triet-uc08`
+  - sửa lỗi: `fix/<tên>-<việc>` – ví dụ `fix/hoangnhan-alert`
+  - sơ đồ, báo cáo: `docs/<tên>-<việc>` – ví dụ `docs/quangnhan-class-diagram`
+
+**Commit** (Conventional Commits): `<loại>(<phạm vi>): <mô tả ngắn>`
+
+| Loại | Dùng khi | Ví dụ |
+| --- | --- | --- |
+| `feat` | Thêm chức năng | `feat(UC02): confirm vehicle reservation` |
+| `fix` | Sửa lỗi | `fix(UC06): release expired parking holds` |
+| `docs` | Tài liệu, sơ đồ | `docs(class): add parking subsystem diagram` |
+| `refactor` | Sửa code, không đổi chức năng | `refactor(UC10): extract alert calculation` |
+| `style` | Giao diện, CSS | `style(UC08): update charging schedule form` |
+| `chore` | Cấu hình, thư viện | `chore: add dayjs dependency` |
+
+Mô tả viết bằng tiếng Anh, thể mệnh lệnh, chữ thường, không dấu chấm cuối (`add`, `fix`, `update`...). Mỗi commit một ý. Không commit `node_modules`, `.env`, file `.db`.
+
+**Quy trình**
 
 ```bash
 git checkout main && git pull
 git checkout -b feature/linh-uc02
 # ... code ...
 npm run typecheck
-git add . && git commit -m "UC02: xác nhận đặt xe"
+git add .
+git commit -m "feat(UC02): confirm vehicle reservation"
 git push -u origin feature/linh-uc02
 ```
+
+1. Push xong thì mở Pull Request vào `main` trên GitHub, ghi ngắn đã làm gì và cách thử.
+2. Gửi link PR vào group để mọi người xem và góp ý.
+3. Sửa theo góp ý: commit tiếp trên cùng nhánh, không mở PR mới.
+4. Có ít nhất 1 người đồng ý thì Quang Nhân merge.
+5. Trước khi làm việc mới: `git checkout main && git pull` rồi tạo nhánh mới.
+
+`package-lock.json` (trong `server/` và `client/`): commit cùng code, không tự xóa.
 
 ## 7. Gặp lỗi thường gặp
 
