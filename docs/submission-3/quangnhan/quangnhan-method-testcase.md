@@ -71,8 +71,8 @@ Dữ liệu dùng theo dữ liệu mẫu của hệ thống: tài khoản `stude
 | **Test Items** | Mục 2.3.1 – giữ chỗ quá hạn tự giải phóng |
 | **Pre-condition** | student1 đang giữ tạm vị trí BKU-11 (trạng thái HELD); thời gian giữ chỗ cấu hình là 30 phút |
 | **Test Data** | student1, vị trí BKU-11 |
-| **Test Steps** | 1. student1 giữ tạm BKU-11 nhưng không bấm Xác nhận<br>2. Chờ quá hạn giữ (chỉnh `parkingHoldMinutes` = 1 để thử nhanh)<br>3. student2 tìm chỗ đỗ ở cùng Hub và khung giờ, ngay cả khi tác vụ định kỳ chưa chạy |
-| **Expected results** | Bản ghi giữ chỗ của student1 chuyển sang EXPIRED · student1 nhận thông báo giữ chỗ đã hết hạn · BKU-11 hiển thị trống trở lại trong kết quả tìm kiếm của student2 |
+| **Test Steps** | 1. student1 giữ tạm BKU-11 nhưng không bấm Xác nhận<br>2. Chờ quá hạn giữ (chỉnh `parkingHoldMinutes` = 1 để thử nhanh)<br>3. Ngay sau khi quá hạn, student2 tìm chỗ đỗ ở cùng Hub và khung giờ, chọn BKU-11 và bấm Giữ chỗ<br>4. student1 bấm Xác nhận lượt giữ cũ<br>5. Chờ `HoldExpiryScheduler` chạy, kiểm tra lại bản ghi và thông báo của student1 |
+| **Expected results** | **Ngay khi quá hạn (scheduler có thể chưa chạy):** BKU-11 hiển thị trống trong kết quả tìm kiếm của student2 và student2 giữ được BKU-11; student1 không xác nhận được lượt giữ cũ · **Sau khi `HoldExpiryScheduler` chạy:** bản ghi của student1 chuyển EXPIRED và student1 nhận thông báo giữ chỗ đã hết hạn |
 | **Result** | |
 | **Comments** | |
 
