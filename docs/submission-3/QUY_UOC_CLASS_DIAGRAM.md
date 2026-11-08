@@ -6,12 +6,12 @@ Mẫu đã vẽ sẵn: `class-diagram-template.drawio` (UC02 – Đặt xe). M�
 
 | Người | File | Subsystem |
 | --- | --- | --- |
-| Linh | `class-xe-dung-chung.drawio` | UC02, UC03, UC04, UC12, View Hub Status, View My Reservations |
-| Quang Nhân | `class-tai-khoan-do-xe.drawio` + `class-tong-the.drawio` | Register, Sign In/Out, Customize Interface, UC05, UC06, Cancel Parking |
-| Hoàng Nhân | `class-van-hanh.drawio` | UC09, UC10, UC13, UC14 |
-| Triết | `class-sac-su-co.drawio` | UC01, UC07, Cancel Charging, UC08, UC11 |
+| Linh | `linh/class-xe-dung-chung.drawio` | UC02, UC03, UC04, UC12, View Hub Status, View My Reservations |
+| Quang Nhân | `quangnhan/class-tai-khoan-do-xe.drawio` + `class-tong-the.drawio` | Register, Sign In/Out, Customize Interface, UC05, UC06, Cancel Parking |
+| Hoàng Nhân | `hoangnhan/class-van-hanh.drawio` | UC09, UC10, UC13, UC14 |
+| Triết | `triet/class-sac-su-co.drawio` | UC01, UC07, Cancel Charging, UC08, UC11 |
 
-- Lưu trong `docs/submission-3/`, commit theo nhánh `docs/<tên>-class-diagram`.
+- Mỗi người một thư mục riêng trong `docs/submission-3/` (ví dụ `docs/submission-3/linh/`), để cả sơ đồ, ảnh PNG, mô tả method và test case của mình. Xem mẫu ở thư mục `quangnhan/`. Commit theo nhánh `docs/<tên>-class-diagram`.
 - Xuất thêm PNG (File → Export as → PNG, scale 200%) để chèn vào báo cáo.
 - Bản nháp gửi group ngày **9/11**, bản xong **23:59 ngày 11/11**.
 
