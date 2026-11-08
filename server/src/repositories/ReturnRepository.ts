@@ -14,10 +14,15 @@ export const returnRepository = {
 
   /**
    * UC05 – sau khi khóa xe SUCCESS: Trip ENDED, xe đặt tại vị trí mới với vehicleStatus
-   * (AVAILABLE, hoặc UNDER_MAINTENANCE nếu pin thấp / có sự cố), cập nhật phân bổ.
+   * (AVAILABLE; pin < reservableBatteryThreshold hoặc sự cố → UNDER_MAINTENANCE; chưa rõ → PENDING_VERIFICATION), cập nhật phân bổ.
    */
   atomicCompleteReturn(input: { studentId: string; tripId: string; vehicleStatus: VehicleStatus; now: Date }): Trip {
     throw notImplemented("ReturnRepository.atomicCompleteReturn (UC05)");
+  },
+
+  /** UC05 – khóa xe FAILED: ghi nhận lần thất bại; Trip vẫn RETURN_IN_PROGRESS, giữ vị trí, xe chưa được cấp lại. */
+  recordLockFailure(input: { tripId: string; now: Date }): void {
+    throw notImplemented("ReturnRepository.recordLockFailure (UC05)");
   },
 
   /** UC05 – khóa xe UNKNOWN: Trip PENDING_RECONCILIATION, xe PENDING_VERIFICATION, giữ nguyên vị trí đã phân bổ. */

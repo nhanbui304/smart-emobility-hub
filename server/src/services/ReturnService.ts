@@ -23,7 +23,7 @@ export const returnService = {
   /**
    * UC05 bước 5–7: vehicleSimulator.sendLockCommand (NGOÀI transaction)
    * → SUCCESS: atomicCompleteReturn (trạng thái xe theo pin/sự cố)
-   * → FAILED: không đổi dữ liệu, cho thử lại · UNKNOWN: atomicMarkPendingVerification + báo Operator.
+   * → FAILED: recordLockFailure, giữ vị trí, cho thử lại · UNKNOWN: atomicMarkPendingVerification + báo Operator.
    */
   async confirmReturn(studentId: string, tripId: string): Promise<ReturnResult> {
     throw notImplemented("ReturnService.confirmReturn (UC05)");

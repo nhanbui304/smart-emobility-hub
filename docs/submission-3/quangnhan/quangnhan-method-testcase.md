@@ -28,10 +28,12 @@ Hình: `class-tai-khoan-do-xe.drawio` (trang "Tai khoan" và trang "Do xe va tra
 | **Tham số** | `studentId`: sinh viên đang đăng nhập · `tripId`: chuyến đi đang trả xe |
 | **Kết quả trả về** | `ReturnResult` gồm kết quả khóa (SUCCESS / FAILED / UNKNOWN) và chuyến đi sau khi cập nhật |
 | **Tiền điều kiện** | Chuyến đi thuộc sinh viên và đang RETURN_IN_PROGRESS, tức là đã gọi `prepareReturn` và được phân bổ vị trí trả xe |
-| **Hậu điều kiện** | **SUCCESS**: chuyến đi ENDED, ghi `endedAt`; xe được gán Hub và vị trí mới, trạng thái xe xác định theo pin và tình trạng kỹ thuật: đủ pin và không có sự cố → AVAILABLE, pin dưới `reservableBatteryThreshold` hoặc có sự cố → UNDER_MAINTENANCE (chuyến đi vẫn kết thúc) · **FAILED** (khóa thất bại): không đổi dữ liệu, chuyến đi vẫn RETURN_IN_PROGRESS, vị trí vẫn được giữ, sinh viên có thể thử khóa lại hoặc liên hệ Operator · **UNKNOWN** (không xác định được kết quả): chuyến đi PENDING_RECONCILIATION, xe PENDING_VERIFICATION, Operator nhận cảnh báo để xác minh; không phân bổ lại vị trí |
+| **Hậu điều kiện** | **SUCCESS**: chuyến đi ENDED, ghi `endedAt`; xe được gán Hub và vị trí mới; trạng thái xe xác định từ kết quả khóa (pin, tình trạng kỹ thuật) theo Sub #1 bước 9a: bình thường → AVAILABLE · pin dưới `reservableBatteryThreshold` (cấu hình) hoặc có sự cố → UNDER_MAINTENANCE · chưa rõ tình trạng → PENDING_VERIFICATION. Hai trường hợp sau chuyến đi vẫn kết thúc nhưng xe không được cấp lại · **FAILED** (khóa thất bại): `recordLockFailure` ghi nhận lần thất bại; chuyến đi chưa kết thúc (vẫn RETURN_IN_PROGRESS), giữ nguyên vị trí đã phân bổ, xe chưa được cấp lại; sinh viên thử khóa lại hoặc liên hệ Operator · **UNKNOWN** (không xác định kết quả): chuyến đi PENDING_RECONCILIATION, xe PENDING_VERIFICATION, Operator nhận cảnh báo; không cấp lại xe, không giải phóng vị trí |
 | **Ngoại lệ** | Chuyến đi không tồn tại hoặc không thuộc sinh viên → `NOT_FOUND` · Chuyến đi không ở trạng thái RETURN_IN_PROGRESS → `CONFLICT` |
 
 ## Test case
+
+> Quy ước nhóm: hệ thống chưa có trạng thái riêng "cần sạc", nên xe pin thấp sau khi trả được đặt UNDER_MAINTENANCE (tạm ngừng cấp, chờ sạc). Xe chỉ chuyển CHARGING khi thực sự được cắm sạc.
 
 Dữ liệu dùng theo dữ liệu mẫu của hệ thống: tài khoản `student1`, `student2`; Hub ĐH Bách Khoa có vị trí `BKU-01` đến `BKU-20`; dữ liệu mẫu đã đặt xe dùng chung ở `BKU-01`–`BKU-08` và `BKU-17`–`BKU-18`, nên test dùng các vị trí trống `BKU-09` trở đi.
 
@@ -92,8 +94,21 @@ Dữ liệu dùng theo dữ liệu mẫu của hệ thống: tài khoản `stude
 | Mục | Nội dung |
 | --- | --- |
 | **Test Case ID** | TC-UC05-02 |
+| **Test Items** | UC05 – trả xe thành công, xe bình thường được cấp lại |
+| **Pre-condition** | student1 đang có chuyến đi ACTIVE; Hub ĐH Bách Khoa còn vị trí trống; pin xe từ `reservableBatteryThreshold` trở lên, không có sự cố; bộ giả lập trả SUCCESS cho lệnh khóa |
+| **Test Data** | student1, Hub ĐH Bách Khoa |
+| **Test Steps** | 1. Mở màn hình Chuyến đi, chọn Trả xe, chọn Hub ĐH Bách Khoa<br>2. Đỗ xe vào vị trí được phân bổ, bấm Xác nhận trả xe |
+| **Expected results** | Chuyến đi ENDED, có `endedAt` · Xe AVAILABLE tại vị trí mới · student2 thấy xe trong danh sách có thể đặt ở Hub ĐH Bách Khoa |
+| **Result** | |
+| **Comments** | |
+
+### TC-UC05-03
+
+| Mục | Nội dung |
+| --- | --- |
+| **Test Case ID** | TC-UC05-03 |
 | **Test Items** | UC05 – trả xe thành công, xe pin thấp không được cấp lại ngay |
-| **Pre-condition** | student1 đang có chuyến đi ACTIVE; Hub ĐH Bách Khoa còn vị trí trống; pin xe 15%, dưới ngưỡng `reservableBatteryThreshold` (30%); bộ giả lập trả SUCCESS cho lệnh khóa |
+| **Pre-condition** | student1 đang có chuyến đi ACTIVE; Hub ĐH Bách Khoa còn vị trí trống; pin xe dưới ngưỡng `reservableBatteryThreshold` trong cấu hình; bộ giả lập trả SUCCESS cho lệnh khóa |
 | **Test Data** | student1, Hub ĐH Bách Khoa |
 | **Test Steps** | 1. Mở màn hình Chuyến đi, chọn Trả xe, chọn Hub ĐH Bách Khoa<br>2. Đỗ xe vào vị trí được phân bổ, bấm Xác nhận trả xe |
 | **Expected results** | Chuyến đi ENDED, có `endedAt` · Xe gắn với Hub và vị trí mới nhưng ở trạng thái UNDER_MAINTENANCE, không hiện trong danh sách xe có thể đặt |
