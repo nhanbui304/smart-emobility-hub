@@ -27,6 +27,7 @@ Vẽ theo đúng tầng của code: **View → Controller → Service → Reposi
 | Repository | `«repository»` | `#e1d5e7` / `#9673a6` | `<Nhóm>Repository` | `server/src/repositories/` |
 | Entity | `«entity»` | `#d5e8d4` / `#82b366` | Danh từ số ít, ví dụ `VehicleReservation` | `server/src/db/schema.ts` |
 | Enum | `«enumeration»` | `#f5f5f5` / `#666666` | Như trong code, ví dụ `VehicleStatus` | `server/src/constants.ts` |
+| Kiểu dữ liệu (tham số/kết quả gom nhiều trường) | `«datatype»` | `#ffffff` / `#666666` | Như trong code, ví dụ `TimeRange` | `interface` trong service / `lib/schemas.ts` |
 
 View class là **màn hình**, không phải controller (thầy đã trả lời trên forum).
 
@@ -37,7 +38,8 @@ View class là **màn hình**, không phải controller (thầy đã trả lời
 - Kiểu dữ liệu dùng chung: `String`, `int`, `double`, `boolean`, `DateTime`, `void`, `Kiểu[]` cho danh sách. Không dùng `number`, `Date`, `Promise` của TypeScript.
 - Tên method **giữ đúng như trong code** (đã khớp sequence Submission #2). Muốn đổi tên thì báo nhóm để sửa code luôn.
 - Controller **không** có tham số `studentId` (lấy từ phiên đăng nhập); Service thì có.
-- Không vẽ: getter/setter, constructor, `req`/`res`, hàm tiện ích nội bộ.
+- Giá trị có thể rỗng ghi `[0..1]`, ví dụ `- endedAt: DateTime [0..1]`, `+ findById(id: String): User [0..1]`.
+- Chỉ vẽ method có thật trong code (Entity thường không có method). Không vẽ: getter/setter, constructor, `req`/`res`, hàm tiện ích nội bộ.
 
 ## 4. Quan hệ
 
