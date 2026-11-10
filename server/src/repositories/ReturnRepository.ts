@@ -33,6 +33,12 @@ export interface ReturnHandoverContext {
   bookingId?: string;
 }
 
+/** UC05 bước 4 (allocationResult): chuyến đi sau khi phân bổ và chỗ trả được giữ. */
+export interface ReturnAllocation {
+  trip: Trip;
+  allocation: ParkingAllocation;
+}
+
 export const returnRepository = {
   /** UC05 bước 2 (findTripForReturn). */
   findTripForReturn(tripId: string): Trip | undefined {
@@ -55,7 +61,7 @@ export const returnRepository = {
     hubId: string;
     slotPlan: ReturnSlotPlan;
     now: Date;
-  }): { trip: Trip; allocation: ParkingAllocation } {
+  }): ReturnAllocation {
     throw notImplemented("ReturnRepository.atomicAllocateReturnSlot (UC05)");
   },
 
