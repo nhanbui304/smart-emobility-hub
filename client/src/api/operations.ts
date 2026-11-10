@@ -9,6 +9,19 @@ export const operationsApi = {
   chargingContext: (params: { hubId: string; startTime: string; endTime: string }) =>
     api.get<unknown>("/charging-schedules/context", params),
   proposeSchedule: (body: Record<string, unknown>) => api.post<unknown>("/charging-schedules/proposals", body),
+  validatePlan: (planDraftId: string, adjustments: Array<Record<string, unknown>>) =>
+    api.post<unknown>(`/charging-schedules/proposals/${planDraftId}/validate`, { adjustments }),
+  /** requestId: crypto.randomUUID() sinh một lần cho mỗi lần bấm xác nhận; thử lại thì gửi lại cùng mã. */
+  applySchedule: (requestId: string, planDraftId: string, baseVersion: number) =>
+    api.post<unknown>("/charging-schedules/apply", { requestId, planDraftId, baseVersion }),
   captureSnapshot: (body: Record<string, unknown>) => api.post<unknown>("/simulations/snapshots", body),
-  startSimulation: (scenarioDraftId: string) => api.post<unknown>("/simulations/runs", { scenarioDraftId }),
+  acceptStaleSnapshot: (snapshotId: string) => api.post<unknown>(`/simulations/snapshots/${snapshotId}/accept-stale`, {}),
+  prepareScenario: (body: Record<string, unknown>) => api.post<unknown>("/simulations/scenarios", body),
+  startSimulation: (requestId: string, scenarioDraftId: string) =>
+    api.post<unknown>("/simulations/runs", { requestId, scenarioDraftId }),
+  stopSimulation: (runId: string) => api.post<unknown>(`/simulations/runs/${runId}/stop`, {}),
+  simulationResult: (runId: string) => api.get<unknown>(`/simulations/runs/${runId}`),
+  retrySaveSimulation: (runId: string) => api.post<unknown>(`/simulations/runs/${runId}/retry-save`, {}),
+  prepareHandoff: (runId: string, recommendationId: string) =>
+    api.post<unknown>(`/simulations/runs/${runId}/handoff`, { recommendationId }),
 };

@@ -71,12 +71,15 @@ Lấy đúng từ `server/src/constants.ts`:
 | `RedistributionStatus` | CREATED, IN_PROGRESS, COMPLETED, CANCELLED, PARTIALLY_COMPLETED |
 | `SimulationRunStatus` | RUNNING, COMPLETED, FAILED, CANCELLED |
 | `AlertType` | LOW_VEHICLE, NEAR_FULL, RESOURCE_FAULT, DATA_STALE |
+| `RequestOperation` | CONFIRM_CHARGING_RESERVATION, RESCHEDULE_CHARGING_RESERVATION, CANCEL_CHARGING_RESERVATION, APPLY_CHARGING_PLAN, START_SIMULATION_RUN |
 
 Cần trạng thái mới thì báo Quang Nhân để thêm vào `constants.ts` và bảng này.
 
 ## 6. Class dùng chung giữa hai người
 
-- `ChargingReservation`: Triết vẽ phần tạo lịch (UC08), Hoàng Nhân vẽ phần đổi/hủy (UC09). Thuộc tính lấy theo `schema.ts`: `id`, `studentId`, `privateVehicleId`, `portId`, `startTime`, `endTime`, `status`, `version`. Hai người chốt với nhau trước **8/11**.
+- `ChargingReservation`: Triết vẽ phần tạo lịch (UC08), Hoàng Nhân vẽ phần đổi/hủy (UC09). Thuộc tính lấy theo `schema.ts`: `id`, `studentId`, `privateVehicleId`, `portId`, `startTime`, `endTime`, `currentBattery [0..1]`, `targetBattery [0..1]`, `status`, `version`.
+- `ProcessedRequest` (chống gửi lặp bằng `requestId`): dùng chung cho UC08, UC09, UC13, UC14; Hoàng Nhân vẽ hộp đầy đủ, Triết chỉ cần ghi chú.
+- Các thay đổi so với Sequence Submission #2 xem `ANH_XA_SEQUENCE_CODE.md`. Hai người chốt với nhau trước **8/11**.
 - `Hub`, `Student`, `SharedVehicle`: subsystem nào cần thì vẽ lại hộp, chỉ cần thuộc tính liên quan.
 
 ## 7. Sơ đồ tổng thể (Quang Nhân)
