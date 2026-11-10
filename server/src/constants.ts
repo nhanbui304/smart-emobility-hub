@@ -101,6 +101,17 @@ export type SimulationRunStatus = (typeof SIMULATION_RUN_STATUSES)[number];
  * Mỗi lần xử lý xong ghi một dòng ProcessedRequest; gửi lại cùng requestId thì trả kết quả cũ.
  */
 export const REQUEST_OPERATIONS = [
+  "RESERVE_VEHICLE",
+  "CONFIRM_PICKUP",
+  "PREPARE_RETURN",
+  "CONFIRM_RETURN",
+  "ABANDON_RETURN",
+  "HOLD_PARKING_SLOT",
+  "CONFIRM_PARKING_RESERVATION",
+  "CANCEL_PARKING_HOLD",
+  "REPORT_INCIDENT",
+  "PROCESS_INCIDENT_HANDLING_PLAN",
+  "VERIFY_INCIDENT_RESOLUTION",
   "CONFIRM_CHARGING_RESERVATION",
   "RESCHEDULE_CHARGING_RESERVATION",
   "CANCEL_CHARGING_RESERVATION",
@@ -114,3 +125,6 @@ export type AlertType = (typeof ALERT_TYPES)[number];
 
 /** Kết quả giả lập từ thiết bị xe khi mở khóa / khóa. */
 export type DeviceCommandResult = "SUCCESS" | "FAILED" | "UNKNOWN";
+
+/** Tình trạng kỹ thuật xe do thiết bị báo về khi khóa (UC05 bước 7: lockResult.techStatus). */
+export type VehicleTechStatus = "OK" | "FAULT" | "UNKNOWN";

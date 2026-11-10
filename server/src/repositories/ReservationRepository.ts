@@ -1,5 +1,5 @@
 // Owner: Lê Quốc Linh – UC02 Reserve Shared Vehicle, UC03 Cancel Vehicle Reservation
-import type { SharedVehicle, VehicleReservation } from "../db/schema";
+import type { Hub, SharedVehicle, VehicleReservation } from "../db/schema";
 import { db } from "../lib/db";
 import { notImplemented } from "../lib/errors";
 
@@ -19,10 +19,28 @@ export const reservationRepository = {
   },
 
   /**
-   * UC02 – chạy bên trong db.transaction. Kiểm tra lại xe còn AVAILABLE và sinh viên chưa có đặt xe khác,
-   * rồi tạo VehicleReservation (RESERVED) + chuyển xe sang RESERVED trong cùng transaction.
+   * UC02 bước 3 (loadReservationContext): xe, Hub và đặt xe còn hiệu lực của sinh viên
+   * để kiểm tra sơ bộ trước khi hiển thị xác nhận.
+   */
+  loadReservationContext(
+    studentId: string,
+    hubId: string,
+    vehicleId: string,
+  ): { vehicle: SharedVehicle | undefined; hub: Hub | undefined; activeReservation: VehicleReservation | undefined } {
+    throw notImplemented("ReservationRepository.loadReservationContext (UC02)");
+  },
+
+  /** UC02 Ext 8a: đặt xe đã tạo từ requestId (tra processed_requests). */
+  findByRequestId(studentId: string, requestId: string): VehicleReservation | undefined {
+    throw notImplemented("ReservationRepository.findByRequestId (UC02)");
+  },
+
+  /**
+   * UC02 – chạy bên trong db.transaction. requestId đã có trong processed_requests → trả đặt xe cũ. Kiểm tra lại xe còn AVAILABLE và sinh viên chưa có đặt xe khác,
+   * rồi tạo VehicleReservation (RESERVED) + chuyển xe sang RESERVED + ghi processed_requests trong cùng transaction.
    */
   atomicReserveVehicle(input: {
+    requestId: string;
     studentId: string;
     hubId: string;
     vehicleId: string;

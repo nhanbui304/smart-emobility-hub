@@ -26,7 +26,7 @@ export function ReserveVehiclePage() {
         todo={[
           "Lấy danh sách xe có thể đặt: vehicleApi.reservableVehicles(hubId)",
           "Chọn xe → prepareReservation → màn hình xác nhận (hạn nhận xe)",
-          "Xác nhận → vehicleApi.confirmReservation(hubId, vehicleId); xe vừa bị người khác đặt thì báo lỗi rõ ràng",
+          "Xác nhận → vehicleApi.confirmReservation(requestId, hubId, vehicleId); xe vừa bị người khác đặt thì báo lỗi rõ ràng",
         ]}
       />
       {loading && <Spinner />}

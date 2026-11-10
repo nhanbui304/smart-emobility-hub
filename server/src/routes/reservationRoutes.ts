@@ -14,4 +14,5 @@ reservationRoutes.use(requireAuth, requireRole("STUDENT"));
 reservationRoutes.get("/reservable", reservationController.reservable);
 reservationRoutes.post("/prepare", validateBody(prepareReservationSchema), reservationController.prepare);
 reservationRoutes.post("/", validateBody(confirmReservationSchema), reservationController.confirm);
+reservationRoutes.get("/requests/:requestId", reservationController.requestResult);
 reservationRoutes.post("/:id/cancel", reservationController.cancel);

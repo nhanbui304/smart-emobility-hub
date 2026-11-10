@@ -9,13 +9,31 @@
  */
 import { eq, inArray } from "drizzle-orm";
 import { systemConfig } from "../config/systemConfig";
-import type { DeviceCommandResult } from "../constants";
+import type { DeviceCommandResult, VehicleTechStatus } from "../constants";
 import { hubs, sharedVehicles } from "../db/schema";
 import { db } from "../lib/db";
+import { notImplemented } from "../lib/errors";
+
+/** Vị trí xe do thiết bị báo về (UC05: readVehiclePosition). */
+export interface VehiclePosition {
+  hubId: string;
+  slotId: string;
+  reportedAt: Date;
+}
+
+/** Kết quả khóa xe (UC05 bước 7: lockResult(status, batteryLevel, techStatus)). */
+export interface LockResult {
+  status: DeviceCommandResult;
+  /** undefined khi không đọc được (status UNKNOWN). */
+  batteryLevel?: number;
+  techStatus: VehicleTechStatus;
+}
 
 /** Tỉ lệ lệnh thiết bị thành công – giảm xuống để thử nhánh lỗi khi demo. */
 const SUCCESS_RATE = 0.9;
 const DEVICE_DELAY_MS = 300;
+/** Tỉ lệ thiết bị báo xe có sự cố kỹ thuật khi khóa. */
+const FAULT_RATE = 0.05;
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -73,11 +91,29 @@ export const vehicleSimulator = {
     return result;
   },
 
-  /** UC05: gửi lệnh khóa xe khi trả. Gọi NGOÀI transaction. */
-  async sendLockCommand(vehicleId: string): Promise<DeviceCommandResult> {
+  /**
+   * UC05 bước 6 (Sequence 2/3, 3/3): đọc vị trí xe do thiết bị báo về.
+   * Giả lập: trả về chỗ trả đã phân bổ cho chuyến đi của xe; thỉnh thoảng trả sai vị trí
+   * (hoặc null = chưa xác định) để thử Ext 6a.
+   */
+  async readVehiclePosition(vehicleId: string): Promise<VehiclePosition | null> {
+    throw notImplemented("VehicleSimulator.readVehiclePosition (UC05)");
+  },
+
+  /**
+   * UC05 bước 7: gửi lệnh khóa xe khi trả. Gọi NGOÀI transaction.
+   * Trả kết quả khóa kèm mức pin và tình trạng kỹ thuật để xác định trạng thái xe (Ext 9a).
+   */
+  async sendLockCommand(vehicleId: string): Promise<LockResult> {
     await wait(DEVICE_DELAY_MS);
-    const result = randomResult();
-    console.log(`[simulator] sendLockCommand(${vehicleId}) → ${result}`);
+    const status = randomResult();
+    const vehicle = db.select().from(sharedVehicles).where(eq(sharedVehicles.id, vehicleId)).get();
+    const result: LockResult = {
+      status,
+      batteryLevel: status === "UNKNOWN" ? undefined : vehicle?.batteryLevel,
+      techStatus: status === "UNKNOWN" ? "UNKNOWN" : Math.random() < FAULT_RATE ? "FAULT" : "OK",
+    };
+    console.log(`[simulator] sendLockCommand(${vehicleId}) → ${JSON.stringify(result)}`);
     return result;
   },
 };

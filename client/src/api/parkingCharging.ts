@@ -5,10 +5,13 @@ type TimeRange = { startTime: string; endTime: string };
 
 export const parkingApi = {
   searchSlots: (params: { hubId: string; vehicleId: string } & TimeRange) => api.get<unknown>("/parking/slots", params),
-  hold: (slotId: string, vehicleId: string, timeRange: TimeRange) =>
-    api.post<unknown>("/parking/holds", { slotId, vehicleId, timeRange }),
-  confirm: (holdToken: string) => api.post<unknown>(`/parking/holds/${holdToken}/confirm`, {}),
-  cancelHold: (holdToken: string) => api.post<unknown>(`/parking/holds/${holdToken}/cancel`, {}),
+  hold: (requestId: string, slotId: string, vehicleId: string, timeRange: TimeRange) =>
+    api.post<unknown>("/parking/holds", { requestId, slotId, vehicleId, timeRange }),
+  activeHold: () => api.get<unknown>("/parking/holds/active"),
+  confirm: (requestId: string, holdToken: string) =>
+    api.post<unknown>(`/parking/holds/${holdToken}/confirm`, { requestId }),
+  cancelHold: (requestId: string, holdToken: string) =>
+    api.post<unknown>(`/parking/holds/${holdToken}/cancel`, { requestId }),
   cancelBooking: (bookingId: string) => api.post<unknown>(`/parking/bookings/${bookingId}/cancel`, {}),
 };
 

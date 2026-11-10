@@ -2,13 +2,13 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { sendOk } from "../lib/response";
-import { idParams } from "../lib/schemas";
+import { idParams, requestIdField } from "../lib/schemas";
 import { currentUser } from "../middleware/auth";
 import { parseOrThrow } from "../middleware/validate";
 import { reservationService } from "../services/ReservationService";
 
 export const prepareReservationSchema = z.object({ hubId: z.string().min(1), vehicleId: z.string().min(1) });
-export const confirmReservationSchema = prepareReservationSchema;
+export const confirmReservationSchema = prepareReservationSchema.extend({ requestId: requestIdField });
 
 export const reservationController = {
   /** GET /api/vehicle-reservations/reservable?hubId=... */
@@ -25,8 +25,14 @@ export const reservationController = {
 
   /** POST /api/vehicle-reservations */
   async confirm(req: Request, res: Response): Promise<void> {
-    const { hubId, vehicleId } = req.body;
-    sendOk(res, await reservationService.confirmReservation(currentUser(req).id, hubId, vehicleId), 201);
+    const { requestId, hubId, vehicleId } = req.body;
+    sendOk(res, await reservationService.confirmReservation(requestId, currentUser(req).id, hubId, vehicleId), 201);
+  },
+
+  /** GET /api/vehicle-reservations/requests/:requestId – Sequence: getReservationResult(requestId) */
+  async requestResult(req: Request, res: Response): Promise<void> {
+    const { requestId } = parseOrThrow(z.object({ requestId: requestIdField }), req.params);
+    sendOk(res, await reservationService.getReservationResult(currentUser(req).id, requestId));
   },
 
   /** POST /api/vehicle-reservations/:id/cancel */
