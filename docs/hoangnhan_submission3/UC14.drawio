@@ -1,0 +1,154 @@
+<mxfile host="65bd71144e">
+    <diagram id="aU7u5k1oSXvwA-C8LQRC" name="Page-1">
+        <mxGraphModel dx="1546" dy="949" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-1" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#dae8fc;swimlaneFillColor=#ffffff;strokeColor=#6c8ebf;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«boundary»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;SimulationView&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="650" width="305" x="40" y="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-2" parent="GsbUrecIH_YIYJgMpWbD-1" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ selectScope( hubIds:&lt;br&gt;&amp;nbsp;&amp;nbsp;String[], timeRange:&lt;br&gt;&amp;nbsp;&amp;nbsp;TimeRange): void&lt;br&gt;+ acceptStaleSnapshot(&lt;br&gt;&amp;nbsp;&amp;nbsp;snapshotId: String): void&lt;br&gt;+ configureScenario(&lt;br&gt;&amp;nbsp;&amp;nbsp;scenarioType:&lt;br&gt;&amp;nbsp;&amp;nbsp;ScenarioType, assumptions:&lt;br&gt;&amp;nbsp;&amp;nbsp;ScenarioAssumptions): void&lt;br&gt;+ confirmRunSimulation(&lt;br&gt;&amp;nbsp;&amp;nbsp;scenarioDraftId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;void&lt;br&gt;+ stopRun( runId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;void&lt;br&gt;+ runFinished( runId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String): void&lt;br&gt;+ retrySaveRun( runId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String): void&lt;br&gt;+ requestOperationalHandoff(&lt;br&gt;&amp;nbsp;&amp;nbsp;recommendationId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;void&lt;/div&gt;&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ rejectStaleSnapshot( snapshotId: String): void&lt;/div&gt;&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ cancelSimulation( scenarioDraftId: String): void&lt;/div&gt;&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="590" width="305" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-3" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#fff2cc;swimlaneFillColor=#ffffff;strokeColor=#d6b656;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«control»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;SimulationController&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="610" width="382" x="500" y="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-4" parent="GsbUrecIH_YIYJgMpWbD-3" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ prepareSimulation( hubIds:&lt;br&gt;&amp;nbsp;&amp;nbsp;String[], timeRange: TimeRange):&lt;br&gt;&amp;nbsp;&amp;nbsp;SnapshotInfo&lt;br&gt;+ acceptStaleSnapshot( snapshotId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String): SnapshotReady&lt;br&gt;+ submitScenario( snapshotId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String, scenarioType:&lt;br&gt;&amp;nbsp;&amp;nbsp;ScenarioType, assumptions:&lt;br&gt;&amp;nbsp;&amp;nbsp;ScenarioAssumptions):&lt;br&gt;&amp;nbsp;&amp;nbsp;SimulationPreview&lt;br&gt;+ runSimulation( requestId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;scenarioDraftId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;RunStarted&lt;br&gt;+ stopRun( runId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;RunCancelled&lt;br&gt;+ publishRunFinished( runId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String): void&lt;br&gt;+ getRunResult( runId: String):&lt;br&gt;&amp;nbsp; RunOutcome&lt;br&gt;+ retrySaveRun( runId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;SaveStatus&lt;br&gt;+ prepareOperationalHandoff(&lt;br&gt;&amp;nbsp;&amp;nbsp;recommendationId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;TargetWorkflow&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="550" width="382" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-5" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffe6cc;swimlaneFillColor=#ffffff;strokeColor=#d79b00;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«control»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;SimulationService&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="456" width="466" x="1021" y="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-6" parent="GsbUrecIH_YIYJgMpWbD-5" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ captureStateSnapshot( hubIds: String[],&lt;br&gt;&amp;nbsp;&amp;nbsp;timeRange: TimeRange): SnapshotInfo&lt;br&gt;+ recordStaleDataAcceptance( snapshotId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String): SnapshotReady&lt;br&gt;+ prepareScenario( snapshotId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;scenarioType: ScenarioType, assumptions:&lt;br&gt;&amp;nbsp;&amp;nbsp;ScenarioAssumptions): SimulationPreview&lt;br&gt;+ startRun( requestId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;scenarioDraftId: String): RunStarted&lt;br&gt;+ stopRun(runId: String): RunCancelled&lt;br&gt;+ runFailed( runId: String, reason: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;void&lt;br&gt;+ runCompleted( runId: String, rawResults:&lt;br&gt;&amp;nbsp;&amp;nbsp;RawSimulationResult): void&lt;br&gt;+ getRunResult( runId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;RunOutcome&lt;br&gt;+ retrySaveRun(runId: String): SaveStatus&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="396" width="466" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-7" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#e1d5e7;swimlaneFillColor=#ffffff;strokeColor=#9673a6;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«repository»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;SimulationRunRepository&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="434" width="478" x="1600" y="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-8" parent="GsbUrecIH_YIYJgMpWbD-7" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ storeSnapshot( operationalState:&lt;br&gt;&amp;nbsp;&amp;nbsp;OperationalState, capturedAt: DateTime,&lt;br&gt;&amp;nbsp;&amp;nbsp;sources: String[]): SnapshotInfo&lt;br&gt;+ markStaleAccepted( snapshotId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;dataLimitation: String): void&lt;br&gt;+ createRun( requestId: String, snapshotId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String, scenario: Scenario): String&lt;br&gt;+ markRunCancelled( runId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;RunCancelled&lt;br&gt;+ markRunFailed( runId: String, reason:&lt;br&gt;&amp;nbsp;&amp;nbsp;String): void&lt;br&gt;+ storeRunResult( runId: String, assumptions:&lt;br&gt;&amp;nbsp;&amp;nbsp;ScenarioAssumptions, dataLimitation: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;comparison: SimulationComparison,&lt;br&gt;&amp;nbsp;&amp;nbsp;recommendations: Recommendation[]):&lt;br&gt;&amp;nbsp;&amp;nbsp;SaveResult&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="374" width="478" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-9" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffe6cc;swimlaneFillColor=#ffffff;strokeColor=#d79b00;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«control»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;SimulationEngine&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="170" width="466" x="1021" y="728" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-10" parent="GsbUrecIH_YIYJgMpWbD-9" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ runBaselineAndScenario( runId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;snapshotId: String, scenario: Scenario):&lt;br&gt;&amp;nbsp;&amp;nbsp;void&lt;br&gt;+ abort(runId: String): void&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="110" width="466" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-11" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#e1d5e7;swimlaneFillColor=#ffffff;strokeColor=#9673a6;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«repository»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;OperationalRepository&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="126" width="478" x="1514" y="728" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-12" parent="GsbUrecIH_YIYJgMpWbD-11" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ readOperationalState( hubIds: String[],&lt;br&gt;&amp;nbsp;&amp;nbsp;timeRange: TimeRange): OperationalState&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="66" width="478" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-13" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#d5e8d4;swimlaneFillColor=#ffffff;strokeColor=#82b366;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«entity»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;SimulationSnapshot&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="236" width="405" x="40" y="960" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-14" parent="GsbUrecIH_YIYJgMpWbD-13" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- snapshotId: String&lt;br&gt;- capturedAt: DateTime&lt;br&gt;- sources: String[]&lt;br&gt;- completeness: double&lt;br&gt;- isStale: boolean&lt;br&gt;- operationalState: OperationalState&lt;br&gt;- dataLimitation: String [0..1]&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="176" width="405" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-15" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#d5e8d4;swimlaneFillColor=#ffffff;strokeColor=#82b366;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«entity»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;SimulationRun&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="192" width="420" x="550" y="960" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-16" parent="GsbUrecIH_YIYJgMpWbD-15" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- runId: String&lt;br&gt;- snapshotId: String&lt;br&gt;- scenario: Scenario&lt;br&gt;- status: SimulationRunStatus&lt;br&gt;- result: SimulationResult [0..1]&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="132" width="420" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-17" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«enumeration»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;SimulationRunStatus&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="170" width="324" x="1080" y="960" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-18" parent="GsbUrecIH_YIYJgMpWbD-17" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;RUNNING&lt;br&gt;COMPLETED&lt;br&gt;FAILED&lt;br&gt;CANCELLED&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="110" width="324" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-19" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«dataType»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;SimulationResult&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="170" width="428" x="1520" y="960" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-20" parent="GsbUrecIH_YIYJgMpWbD-19" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- comparison: SimulationComparison&lt;br&gt;- recommendations: Recommendation[]&lt;br&gt;- constraints: String[]&lt;br&gt;- saveStatus: SaveStatus&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="110" width="428" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-21" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«dataType»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;SimulationPreview&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="170" width="405" x="40" y="1241" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-22" parent="GsbUrecIH_YIYJgMpWbD-21" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- scenarioDraftId: String&lt;br&gt;- baseline: SimulationMetrics&lt;br&gt;- scenario: Scenario&lt;br&gt;- kpis: String[]&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="110" width="405" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-23" edge="1" parent="1" source="GsbUrecIH_YIYJgMpWbD-1" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=1.000000;exitY=0.071691;entryX=-0.001;entryY=0.077;entryDx=0;entryDy=0;" target="GsbUrecIH_YIYJgMpWbD-3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-24" edge="1" parent="1" source="GsbUrecIH_YIYJgMpWbD-3" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=0;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=1.000000;exitY=0.063934;entryX=0.000000;entryY=0.085526;" target="GsbUrecIH_YIYJgMpWbD-5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-25" edge="1" parent="1" source="GsbUrecIH_YIYJgMpWbD-5" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=0;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=1.000000;exitY=0.085526;entryX=0.000000;entryY=0.089862;" target="GsbUrecIH_YIYJgMpWbD-7">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-26" edge="1" parent="1" source="GsbUrecIH_YIYJgMpWbD-5" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=0.390000;exitY=1.000000;entryX=0.390000;entryY=0.000000;" target="GsbUrecIH_YIYJgMpWbD-9">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-27" edge="1" parent="1" source="GsbUrecIH_YIYJgMpWbD-9" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=0.560000;exitY=0.000000;entryX=0.560000;entryY=1.000000;" target="GsbUrecIH_YIYJgMpWbD-5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-28" edge="1" parent="1" source="GsbUrecIH_YIYJgMpWbD-5" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=0.000000;exitY=0.199561;entryX=1.000000;entryY=0.149180;" target="GsbUrecIH_YIYJgMpWbD-3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-29" edge="1" parent="1" source="GsbUrecIH_YIYJgMpWbD-3" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;exitX=0.000000;exitY=0.149180;">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="350" y="291" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-30" edge="1" parent="1" source="GsbUrecIH_YIYJgMpWbD-5" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=0;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=0.780000;exitY=1.000000;entryX=0.500000;entryY=0.000000;" target="GsbUrecIH_YIYJgMpWbD-11">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1384.48" y="683"/>
+                            <mxPoint x="1753" y="683"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-31" edge="1" parent="1" source="GsbUrecIH_YIYJgMpWbD-13" style="noEdgeStyle=1;html=1;rounded=0;endArrow=none;endFill=0;dashed=0;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=1.000000;exitY=0.165254;entryX=0.000000;entryY=0.203125;" target="GsbUrecIH_YIYJgMpWbD-15">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-32" connectable="0" parent="GsbUrecIH_YIYJgMpWbD-31" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;" value="1" vertex="1">
+                    <mxGeometry relative="1" x="-1" as="geometry">
+                        <mxPoint x="17" y="-16" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-33" connectable="0" parent="GsbUrecIH_YIYJgMpWbD-31" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;" value="0..*" vertex="1">
+                    <mxGeometry relative="1" x="1" as="geometry">
+                        <mxPoint x="-18" y="16" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-34" edge="1" parent="1" source="GsbUrecIH_YIYJgMpWbD-15" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=1.000000;exitY=0.203125;entryX=0.000000;entryY=0.229412;" target="GsbUrecIH_YIYJgMpWbD-17">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-35" edge="1" parent="1" source="GsbUrecIH_YIYJgMpWbD-15" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;exitX=0.500000;exitY=1.000000;">
+                    <mxGeometry relative="1" x="0.1151" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="760" y="1200"/>
+                            <mxPoint x="1720" y="1201"/>
+                        </Array>
+                        <mxPoint x="1720" y="1140" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-36" edge="1" parent="1" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;entryPerimeter=0;entryX=1.000000;entryY=0.229412;" target="GsbUrecIH_YIYJgMpWbD-21">
+                    <mxGeometry relative="1" x="0.0861" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="600" y="920"/>
+                            <mxPoint x="500" y="920"/>
+                            <mxPoint x="500" y="1280"/>
+                        </Array>
+                        <mxPoint x="600" y="820" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-44" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«dataType»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;RunOutcome&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="148" width="428" x="1514" y="1270" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-45" parent="GsbUrecIH_YIYJgMpWbD-44" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- status: SimulationRunStatus&lt;br&gt;- result: SimulationResult [0..1]&lt;br&gt;- failureReason: String [0..1]&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="88" width="428" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="GsbUrecIH_YIYJgMpWbD-46" edge="1" parent="1" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;exitX=0.630000;exitY=0.000000;entryX=0.654;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" target="GsbUrecIH_YIYJgMpWbD-20">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="1800" y="1270" as="sourcePoint"/>
+                        <mxPoint x="1800" y="1139" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
