@@ -1,0 +1,131 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="uc07-request" name="UC07 - Submit Charging Request">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2120" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        
+        <mxCell id="v1_7" value="«boundary»&lt;br&gt;&lt;b&gt;ChargingRequestView&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="340" height="188" as="geometry"/>
+        </mxCell>
+        <mxCell id="v2_7" value="- hubId: String&lt;br&gt;- vehicleRef: String&lt;br&gt;- need: ChargingNeed&lt;br&gt;- errorMessage: String" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="v1_7">
+          <mxGeometry y="44" width="340" height="68" as="geometry"/>
+        </mxCell>
+        <mxCell id="v3_7" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#6c8ebf;" vertex="1" parent="v1_7">
+          <mxGeometry y="112" width="340" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="v4_7" value="+ submitRequest(): void&lt;br&gt;+ cancelRequest(requestId: String): void&lt;br&gt;+ displayResult(request: ChargingRequest): void" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="v1_7">
+          <mxGeometry y="120" width="340" height="68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="c1_7" value="«control»&lt;br&gt;&lt;b&gt;ChargingRequestController&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="460" y="40" width="480" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2_7" value="- chargingRequestService: ChargingRequestService" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="c1_7">
+          <mxGeometry y="44" width="480" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3_7" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" vertex="1" parent="c1_7">
+          <mxGeometry y="70" width="480" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="c4_7" value="+ submit(hubId: String, vehicleRef: String, need: ChargingNeed): ChargingRequest&lt;br&gt;+ cancel(id: String): ChargingRequest" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="c1_7">
+          <mxGeometry y="78" width="480" height="68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s1_7" value="«control»&lt;br&gt;&lt;b&gt;ChargingRequestService&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="40" width="700" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_7" value="- chargingRequestRepository: ChargingRequestRepository" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="s1_7">
+          <mxGeometry y="44" width="700" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_7" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d79b00;" vertex="1" parent="s1_7">
+          <mxGeometry y="70" width="700" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4_7" value="+ submitChargingRequest(studentId: String, hubId: String, vehicleRef: String, need: ChargingNeed): ChargingRequest&lt;br&gt;+ cancelChargingRequest(studentId: String, chargingRequestId: String): ChargingRequest" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="s1_7">
+          <mxGeometry y="78" width="700" height="68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="r1_7" value="«repository»&lt;br&gt;&lt;b&gt;ChargingRequestRepository&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1800" y="40" width="560" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="r2_7" value="- db: Database" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="r1_7">
+          <mxGeometry y="44" width="560" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="r3_7" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#9673a6;" vertex="1" parent="r1_7">
+          <mxGeometry y="70" width="560" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="r4_7" value="+ findById(id: String): ChargingRequest&lt;br&gt;+ atomicCreateRequest(input: object): ChargingRequest&lt;br&gt;+ atomicCancelRequest(input: object): ChargingRequest" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="r1_7">
+          <mxGeometry y="78" width="560" height="68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1_7" value="«entity»&lt;br&gt;&lt;b&gt;SharedVehicle&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="320" width="280" height="188" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2_7" value="- id: String&lt;br&gt;- code: String&lt;br&gt;- type: VehicleType&lt;br&gt;- batteryLevel: int&lt;br&gt;- status: VehicleStatus&lt;br&gt;- hubId: String&lt;br&gt;- slotId: String&lt;br&gt;- lastUpdatedAt: DateTime" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="e1_7">
+          <mxGeometry y="44" width="280" height="124" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e3_7" value="«entity»&lt;br&gt;&lt;b&gt;ChargingRequest&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="460" y="320" width="340" height="202" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4_7" value="- id: String&lt;br&gt;- studentId: String&lt;br&gt;- vehicleRef: String&lt;br&gt;- hubId: String&lt;br&gt;- portId: String&lt;br&gt;- status: ChargingRequestStatus&lt;br&gt;- targetBattery: int&lt;br&gt;- queuedAt: DateTime&lt;br&gt;- createdAt: DateTime" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="e3_7">
+          <mxGeometry y="44" width="340" height="138" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e5_7" value="«entity»&lt;br&gt;&lt;b&gt;ChargingPort&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="320" width="280" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6_7" value="- id: String&lt;br&gt;- slotId: String&lt;br&gt;- connectorType: ConnectorType&lt;br&gt;- maxPowerKw: double&lt;br&gt;- status: ChargingPortStatus" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="e5_7">
+          <mxGeometry y="44" width="280" height="82" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="en1_7" value="«enumeration»&lt;br&gt;&lt;b&gt;ChargingRequestStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="460" y="600" width="260" height="124" as="geometry"/>
+        </mxCell>
+        <mxCell id="en2_7" value="ALLOCATED&lt;br&gt;WAITING&lt;br&gt;CHARGING&lt;br&gt;COMPLETED&lt;br&gt;CANCELLED" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="en1_7">
+          <mxGeometry y="44" width="260" height="80" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="en3_7" value="«enumeration»&lt;br&gt;&lt;b&gt;ChargingPortStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="600" width="260" height="96" as="geometry"/>
+        </mxCell>
+        <mxCell id="en4_7" value="AVAILABLE&lt;br&gt;IN_USE&lt;br&gt;OUT_OF_SERVICE" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="en3_7">
+          <mxGeometry y="44" width="260" height="52" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ed1_7" value="gọi API" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0;exitDy=22;entryX=0;entryY=0;entryDy=22;" edge="1" parent="1" source="v1_7" target="c1_7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed2_7" value="" style="endArrow=open;endSize=10;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0;exitDy=22;entryX=0;entryY=0;entryDy=22;" edge="1" parent="1" source="c1_7" target="s1_7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed3_7" value="" style="endArrow=open;endSize=10;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0;exitDy=22;entryX=0;entryY=0;entryDy=22;" edge="1" parent="1" source="s1_7" target="r1_7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed4_7" value="tạo" style="endArrow=none;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;entryX=0;exitY=0;exitDy=70;entryY=0;entryDy=70;" edge="1" parent="1" source="e1_7" target="e3_7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed4_7_1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;" vertex="1" connectable="0" parent="ed4_7">
+          <mxGeometry x="-0.8" y="-12" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ed4_7_2" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;" vertex="1" connectable="0" parent="ed4_7">
+          <mxGeometry x="0.8" y="-12" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ed5_7" value="phân bổ" style="endArrow=none;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=0;entryX=1;exitY=0;exitDy=70;entryY=0;entryDy=70;" edge="1" parent="1" source="e5_7" target="e3_7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed5_7_1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;" vertex="1" connectable="0" parent="ed5_7">
+          <mxGeometry x="-0.8" y="-12" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ed5_7_2" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;" vertex="1" connectable="0" parent="ed5_7">
+          <mxGeometry x="0.8" y="-12" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ed6_7" value="" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.35;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e3_7" target="en1_7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed7_7" value="" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.35;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e5_7" target="en3_7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

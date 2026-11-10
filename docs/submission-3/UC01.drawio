@@ -1,0 +1,129 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="uc01-search" name="UC01 - Search Options">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2120" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        
+        <!-- ================= TẦNG BOUNDARY (VIEW) ================= -->
+        <mxCell id="v1" value="«boundary»&lt;br&gt;&lt;b&gt;SearchHubView&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="340" height="188" as="geometry"/>
+        </mxCell>
+        <mxCell id="v2" value="- purpose: String&lt;br&gt;- originHubId: String&lt;br&gt;- vehicleType: String&lt;br&gt;- minBattery: int" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="v1">
+          <mxGeometry y="44" width="340" height="68" as="geometry"/>
+        </mxCell>
+        <mxCell id="v3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#6c8ebf;" vertex="1" parent="v1">
+          <mxGeometry y="112" width="340" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="v4" value="+ inputCriteria(criteria: SearchCriteria): void&lt;br&gt;+ displayOptions(result: SearchResult): void&lt;br&gt;+ selectOption(optionId: String): void" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="v1">
+          <mxGeometry y="120" width="340" height="68" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= TẦNG CONTROL (CONTROLLER) ================= -->
+        <mxCell id="c1" value="«control»&lt;br&gt;&lt;b&gt;SearchController&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="460" y="40" width="480" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="- searchService: SearchService" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="c1">
+          <mxGeometry y="44" width="480" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" vertex="1" parent="c1">
+          <mxGeometry y="70" width="480" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="c4" value="+ findOptions(criteria: SearchCriteria): SearchResult&lt;br&gt;+ filterOptions(criteria: SearchCriteria, sessionId: String): SearchResult&lt;br&gt;+ selectOption(sessionId: String, optionId: String): void" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="c1">
+          <mxGeometry y="78" width="480" height="82" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= TẦNG CONTROL (SERVICE) ================= -->
+        <mxCell id="s1" value="«control»&lt;br&gt;&lt;b&gt;SearchService&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="40" width="560" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2" value="- searchRepository: SearchRepository" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="s1">
+          <mxGeometry y="44" width="560" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d79b00;" vertex="1" parent="s1">
+          <mxGeometry y="70" width="560" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4" value="+ findSuitableOptions(criteria: SearchCriteria): SearchResult&lt;br&gt;+ filterSuitableOptions(criteria: SearchCriteria, context: object): SearchResult&lt;br&gt;+ confirmOptionSelection(sessionId: String, optionId: String): MobilityOption" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="s1">
+          <mxGeometry y="78" width="560" height="82" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= TẦNG REPOSITORY ================= -->
+        <mxCell id="r1" value="«repository»&lt;br&gt;&lt;b&gt;SearchRepository&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1660" y="40" width="480" height="132" as="geometry"/>
+        </mxCell>
+        <mxCell id="r2" value="- db: Database" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="r1">
+          <mxGeometry y="44" width="480" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="r3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#9673a6;" vertex="1" parent="r1">
+          <mxGeometry y="70" width="480" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="r4" value="+ findCandidateVehicles(criteria: SearchCriteria): SharedVehicle[]" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="r1">
+          <mxGeometry y="78" width="480" height="54" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= TẦNG ENTITY ================= -->
+        <mxCell id="e1" value="«entity»&lt;br&gt;&lt;b&gt;Hub&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="320" width="260" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="- id: String&lt;br&gt;- name: String&lt;br&gt;- location: String&lt;br&gt;- lastUpdatedAt: DateTime" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="e1">
+          <mxGeometry y="44" width="260" height="68" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" vertex="1" parent="e1">
+          <mxGeometry y="112" width="260" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="e1">
+          <mxGeometry y="120" width="260" height="26" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e5" value="«entity»&lt;br&gt;&lt;b&gt;SharedVehicle&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="460" y="320" width="320" height="188" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="- id: String&lt;br&gt;- code: String&lt;br&gt;- type: VehicleType&lt;br&gt;- batteryLevel: int&lt;br&gt;- status: VehicleStatus&lt;br&gt;- hubId: String&lt;br&gt;- slotId: String&lt;br&gt;- lastUpdatedAt: DateTime" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="e5">
+          <mxGeometry y="44" width="320" height="124" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" vertex="1" parent="e5">
+          <mxGeometry y="168" width="320" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="e5">
+          <mxGeometry y="176" width="320" height="12" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= TẦNG ENUM ================= -->
+        <mxCell id="en1" value="«enumeration»&lt;br&gt;&lt;b&gt;VehicleType&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="460" y="580" width="260" height="96" as="geometry"/>
+        </mxCell>
+        <mxCell id="en2" value="E_BIKE&lt;br&gt;E_MOTORBIKE" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="en1">
+          <mxGeometry y="44" width="260" height="52" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= CÁC ĐƯỜNG NỐI (RELATIONSHIPS) ================= -->
+        <mxCell id="ed1" value="gọi API" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0;exitDy=22;entryX=0;entryY=0;entryDy=22;" edge="1" parent="1" source="v1" target="c1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed2" value="" style="endArrow=open;endSize=10;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0;exitDy=22;entryX=0;entryY=0;entryDy=22;" edge="1" parent="1" source="c1" target="s1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed3" value="" style="endArrow=open;endSize=10;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0;exitDy=22;entryX=0;entryY=0;entryDy=22;" edge="1" parent="1" source="s1" target="r1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed4" value="chứa" style="endArrow=none;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;entryX=0;exitY=0;exitDy=70;entryY=0;entryDy=70;" edge="1" parent="1" source="e1" target="e5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed4_1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;" vertex="1" connectable="0" parent="ed4">
+          <mxGeometry x="-0.8" y="-12" relative="1" as="geometry">
+            <mxPoint as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ed4_2" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;" vertex="1" connectable="0" parent="ed4">
+          <mxGeometry x="0.8" y="-12" relative="1" as="geometry">
+            <mxPoint as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ed5" value="" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.35;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e5" target="en1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

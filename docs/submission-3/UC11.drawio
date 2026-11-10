@@ -1,0 +1,109 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="uc11-incident" name="UC11 - Handle Operational Incident">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2120" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        
+        <mxCell id="v1_11" value="«boundary»&lt;br&gt;&lt;b&gt;OperationalIncidentView&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="380" height="188" as="geometry"/>
+        </mxCell>
+        <mxCell id="v2_11" value="- resourceId: String&lt;br&gt;- description: String&lt;br&gt;- impactLevel: ImpactLevel&lt;br&gt;- affectedScope: AffectedScope" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="v1_11">
+          <mxGeometry y="44" width="380" height="68" as="geometry"/>
+        </mxCell>
+        <mxCell id="v3_11" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#6c8ebf;" vertex="1" parent="v1_11">
+          <mxGeometry y="112" width="380" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="v4_11" value="+ reportIncident(): void&lt;br&gt;+ submitHandlingPlan(plan: HandlingPlan): void&lt;br&gt;+ verifyResolution(result: ResolutionResult): void" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="v1_11">
+          <mxGeometry y="120" width="380" height="68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="c1_11" value="«control»&lt;br&gt;&lt;b&gt;IncidentController&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="480" y="40" width="600" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2_11" value="- incidentService: IncidentService" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="c1_11">
+          <mxGeometry y="44" width="600" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3_11" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" vertex="1" parent="c1_11">
+          <mxGeometry y="70" width="600" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="c4_11" value="+ report(resourceId: String, description: String, impactLevel: ImpactLevel, affectedScope: AffectedScope): Incident&lt;br&gt;+ handlingPlan(id: String, plan: HandlingPlan): Incident&lt;br&gt;+ verify(id: String, resolutionResult: ResolutionResult): Incident" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="c1_11">
+          <mxGeometry y="78" width="600" height="68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s1_11" value="«control»&lt;br&gt;&lt;b&gt;IncidentService&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="40" width="680" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_11" value="- incidentRepository: IncidentRepository" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="s1_11">
+          <mxGeometry y="44" width="680" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_11" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d79b00;" vertex="1" parent="s1_11">
+          <mxGeometry y="70" width="680" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4_11" value="+ reportIncident(resourceId: String, description: String, impactLevel: ImpactLevel, affectedScope: AffectedScope, operatorId: String): Incident&lt;br&gt;+ processHandlingPlan(incidentId: String, handlingPlan: HandlingPlan, operatorId: String): Incident&lt;br&gt;+ verifyResolution(incidentId: String, resolutionResult: ResolutionResult, operatorId: String): Incident" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="s1_11">
+          <mxGeometry y="78" width="680" height="68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="r1_11" value="«repository»&lt;br&gt;&lt;b&gt;IncidentRepository&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1880" y="40" width="600" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="r2_11" value="- db: Database" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="r1_11">
+          <mxGeometry y="44" width="600" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="r3_11" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#9673a6;" vertex="1" parent="r1_11">
+          <mxGeometry y="70" width="600" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="r4_11" value="+ findById(incidentId: String): Incident&lt;br&gt;+ atomicReportIncident(input: object): Incident&lt;br&gt;+ atomicApplyHandlingPlan(input: object): Incident&lt;br&gt;+ atomicResolve(input: object): Incident" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="r1_11">
+          <mxGeometry y="78" width="600" height="68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1_11" value="«entity»&lt;br&gt;&lt;b&gt;Incident&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="480" y="320" width="340" height="202" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2_11" value="- id: String&lt;br&gt;- resourceType: ResourceType&lt;br&gt;- resourceId: String&lt;br&gt;- description: String&lt;br&gt;- impactLevel: ImpactLevel&lt;br&gt;- status: IncidentStatus&lt;br&gt;- handlingPlan: json&lt;br&gt;- version: int&lt;br&gt;- createdAt: DateTime" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="e1_11">
+          <mxGeometry y="44" width="340" height="138" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="en1_11" value="«enumeration»&lt;br&gt;&lt;b&gt;IncidentStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="480" y="600" width="220" height="96" as="geometry"/>
+        </mxCell>
+        <mxCell id="en2_11" value="OPEN&lt;br&gt;IN_PROGRESS&lt;br&gt;RESOLVED" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="en1_11">
+          <mxGeometry y="44" width="220" height="52" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="en3_11" value="«enumeration»&lt;br&gt;&lt;b&gt;ImpactLevel&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="740" y="600" width="220" height="96" as="geometry"/>
+        </mxCell>
+        <mxCell id="en4_11" value="LOW&lt;br&gt;MEDIUM&lt;br&gt;HIGH" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="en3_11">
+          <mxGeometry y="44" width="220" height="52" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="en5_11" value="«enumeration»&lt;br&gt;&lt;b&gt;ResourceType&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="600" width="220" height="96" as="geometry"/>
+        </mxCell>
+        <mxCell id="en6_11" value="SHARED_VEHICLE&lt;br&gt;PARKING_SLOT&lt;br&gt;CHARGING_PORT" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="en5_11">
+          <mxGeometry y="44" width="220" height="52" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ed1_11" value="gọi API" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0;exitDy=22;entryX=0;entryY=0;entryDy=22;" edge="1" parent="1" source="v1_11" target="c1_11">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed2_11" value="" style="endArrow=open;endSize=10;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0;exitDy=22;entryX=0;entryY=0;entryDy=22;" edge="1" parent="1" source="c1_11" target="s1_11">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed3_11" value="" style="endArrow=open;endSize=10;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0;exitDy=22;entryX=0;entryY=0;entryDy=22;" edge="1" parent="1" source="s1_11" target="r1_11">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed4_11" value="" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.25;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e1_11" target="en1_11">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed5_11" value="" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e1_11" target="en3_11">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed6_11" value="" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.75;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e1_11" target="en5_11">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

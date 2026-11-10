@@ -1,0 +1,134 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="uc08-reservation" name="UC08 - Schedule Charging Session">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2120" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        
+        <mxCell id="v1_8" value="«boundary»&lt;br&gt;&lt;b&gt;ChargingReservationView&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="380" height="202" as="geometry"/>
+        </mxCell>
+        <mxCell id="v2_8" value="- vehicleId: String&lt;br&gt;- hubId: String&lt;br&gt;- date: DateTime&lt;br&gt;- timeRange: TimeRange&lt;br&gt;- slotOptions: ChargingSlotOption[]" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="v1_8">
+          <mxGeometry y="44" width="380" height="82" as="geometry"/>
+        </mxCell>
+        <mxCell id="v3_8" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#6c8ebf;" vertex="1" parent="v1_8">
+          <mxGeometry y="126" width="380" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="v4_8" value="+ searchSlots(): void&lt;br&gt;+ displaySlots(options: ChargingSlotOption[]): void&lt;br&gt;+ confirmSlot(slotOptionId: String): void&lt;br&gt;+ displayConfirmation(reservation: ChargingReservation): void" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="v1_8">
+          <mxGeometry y="134" width="380" height="68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="c1_8" value="«control»&lt;br&gt;&lt;b&gt;ChargingReservationController&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="480" y="40" width="700" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2_8" value="- chargingReservationService: ChargingReservationService" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="c1_8">
+          <mxGeometry y="44" width="700" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3_8" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" vertex="1" parent="c1_8">
+          <mxGeometry y="70" width="700" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="c4_8" value="+ search(vehicleId: String, hubId: String, date: DateTime, timeRange: TimeRange, need: ChargingNeed): ChargingSlotOption[]&lt;br&gt;+ confirm(slotOptionId: String): ChargingReservation&lt;br&gt;+ detail(id: String): ChargingReservation" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="c1_8">
+          <mxGeometry y="78" width="700" height="68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s1_8" value="«control»&lt;br&gt;&lt;b&gt;ChargingReservationService&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="40" width="760" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_8" value="- chargingReservationRepository: ChargingReservationRepository" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="s1_8">
+          <mxGeometry y="44" width="760" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_8" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d79b00;" vertex="1" parent="s1_8">
+          <mxGeometry y="70" width="760" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4_8" value="+ findChargingSlots(studentId: String, vehicleId: String, hubId: String, date: DateTime, timeRange: TimeRange, need: ChargingNeed): ChargingSlotOption[]&lt;br&gt;+ confirmChargingReservation(studentId: String, slotOptionId: String): ChargingReservation" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="s1_8">
+          <mxGeometry y="78" width="760" height="68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="r1_8" value="«repository»&lt;br&gt;&lt;b&gt;ChargingReservationRepository&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="2060" y="40" width="700" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="r2_8" value="- db: Database" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="r1_8">
+          <mxGeometry y="44" width="700" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="r3_8" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#9673a6;" vertex="1" parent="r1_8">
+          <mxGeometry y="70" width="700" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="r4_8" value="+ findFreePorts(hubId: String, connectorType: String, startTime: DateTime, endTime: DateTime, excludeReservationId: String): ChargingPort[]&lt;br&gt;+ atomicCreateReservation(input: object): ChargingReservation" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="r1_8">
+          <mxGeometry y="78" width="700" height="68" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1_8" value="«entity»&lt;br&gt;&lt;b&gt;PrivateVehicle&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="320" width="300" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2_8" value="- id: String&lt;br&gt;- ownerId: String&lt;br&gt;- plate: String&lt;br&gt;- type: VehicleType&lt;br&gt;- connectorType: ConnectorType" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="e1_8">
+          <mxGeometry y="44" width="300" height="82" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e3_8" value="«entity»&lt;br&gt;&lt;b&gt;ChargingReservation&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="480" y="320" width="340" height="202" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4_8" value="- id: String&lt;br&gt;- studentId: String&lt;br&gt;- privateVehicleId: String&lt;br&gt;- portId: String&lt;br&gt;- startTime: DateTime&lt;br&gt;- endTime: DateTime&lt;br&gt;- status: ChargingReservationStatus&lt;br&gt;- version: int&lt;br&gt;- createdAt: DateTime" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="e3_8">
+          <mxGeometry y="44" width="340" height="138" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e5_8" value="«entity»&lt;br&gt;&lt;b&gt;ChargingPort&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="320" width="280" height="146" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6_8" value="- id: String&lt;br&gt;- slotId: String&lt;br&gt;- connectorType: ConnectorType&lt;br&gt;- maxPowerKw: double&lt;br&gt;- status: ChargingPortStatus" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="e5_8">
+          <mxGeometry y="44" width="280" height="82" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="en1_8" value="«enumeration»&lt;br&gt;&lt;b&gt;ChargingReservationStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="480" y="600" width="260" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="en2_8" value="CONFIRMED&lt;br&gt;CHARGING&lt;br&gt;AWAITING_DISCONNECT&lt;br&gt;COMPLETED&lt;br&gt;CANCELLED&lt;br&gt;EXPIRED" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="en1_8">
+          <mxGeometry y="44" width="260" height="96" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="en3_8" value="«enumeration»&lt;br&gt;&lt;b&gt;ConnectorType&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="600" width="260" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="en4_8" value="TYPE_2&lt;br&gt;STANDARD_PLUG" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="en3_8">
+          <mxGeometry y="44" width="260" height="36" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ed1_8" value="gọi API" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0;exitDy=22;entryX=0;entryY=0;entryDy=22;" edge="1" parent="1" source="v1_8" target="c1_8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed2_8" value="" style="endArrow=open;endSize=10;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0;exitDy=22;entryX=0;entryY=0;entryDy=22;" edge="1" parent="1" source="c1_8" target="s1_8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed3_8" value="" style="endArrow=open;endSize=10;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0;exitDy=22;entryX=0;entryY=0;entryDy=22;" edge="1" parent="1" source="s1_8" target="r1_8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed4_8" value="đặt" style="endArrow=none;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;entryX=0;exitY=0;exitDy=70;entryY=0;entryDy=70;" edge="1" parent="1" source="e1_8" target="e3_8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed4_8_1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;" vertex="1" connectable="0" parent="ed4_8">
+          <mxGeometry x="-0.8" y="-12" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ed4_8_2" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;" vertex="1" connectable="0" parent="ed4_8">
+          <mxGeometry x="0.8" y="-12" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ed5_8" value="giữ chỗ" style="endArrow=none;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=0;entryX=1;exitY=0;exitDy=70;entryY=0;entryDy=70;" edge="1" parent="1" source="e5_8" target="e3_8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed5_8_1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;" vertex="1" connectable="0" parent="ed5_8">
+          <mxGeometry x="-0.8" y="-12" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ed5_8_2" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;" vertex="1" connectable="0" parent="ed5_8">
+          <mxGeometry x="0.8" y="-12" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ed6_8" value="" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.35;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e3_8" target="en1_8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed7_8" value="" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.35;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e1_8" target="en3_8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed8_8" value="" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.35;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e5_8" target="en3_8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
