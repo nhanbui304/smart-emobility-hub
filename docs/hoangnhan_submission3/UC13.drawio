@@ -1,0 +1,119 @@
+<mxfile host="65bd71144e">
+    <diagram id="twFFTT7LFD0B4aw1EVBo" name="Page-1">
+        <mxGraphModel dx="1120" dy="453" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="iK57dbaez91-s88ckh31-1" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#dae8fc;swimlaneFillColor=#ffffff;strokeColor=#6c8ebf;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«boundary»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingScheduleView&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="384" width="305" x="110" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-2" parent="iK57dbaez91-s88ckh31-1" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ selectHubAndTimeRange(&lt;br&gt;&amp;nbsp;&amp;nbsp;hubId: String, timeRange:&lt;br&gt;&amp;nbsp;&amp;nbsp;TimeRange): void&lt;br&gt;+ selectPriorityRule(&lt;br&gt;&amp;nbsp;&amp;nbsp;ruleId: String): void&lt;br&gt;+ adjustPlan( planDraftId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String, changes:&lt;br&gt;&amp;nbsp;&amp;nbsp;PlanAdjustment[]): void&lt;br&gt;+ requestPlanValidation(&lt;br&gt;&amp;nbsp;&amp;nbsp;planDraftId: String): void&lt;br&gt;+ confirmSchedule(&lt;br&gt;&amp;nbsp;&amp;nbsp;planDraftId: String): void&lt;/div&gt;&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ cancelApply( plantDraftId:&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; String): void&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="324" width="305" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-3" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#fff2cc;swimlaneFillColor=#ffffff;strokeColor=#d6b656;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«control»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingScheduleController&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="346" width="382" x="480" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-4" parent="iK57dbaez91-s88ckh31-3" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ loadChargingContext( hubId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String, timeRange: TimeRange):&lt;br&gt;&amp;nbsp;&amp;nbsp;ChargingContext&lt;br&gt;+ generateProposedSchedule( hubId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String, timeRange: TimeRange,&lt;br&gt;&amp;nbsp;&amp;nbsp;ruleId: String): PlanDraft&lt;br&gt;+ validatePlan( planDraftId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;adjustments: PlanAdjustment[]):&lt;br&gt;&amp;nbsp;&amp;nbsp;ValidatedPlan&lt;br&gt;+ applyChargingSchedule( requestId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String, planDraftId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;baseVersion: int): ScheduleResult&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="286" width="382" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-5" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffe6cc;swimlaneFillColor=#ffffff;strokeColor=#d79b00;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«control»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;SmartChargingService&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="324" width="466" x="910" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-6" parent="iK57dbaez91-s88ckh31-5" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ getChargingContext( hubId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;timeRange: TimeRange): ChargingContext&lt;br&gt;+ generateProposedSchedule( hubId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;timeRange: TimeRange, ruleId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;PlanDraft&lt;br&gt;+ validatePlan( planDraftId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;adjustments: PlanAdjustment[]):&lt;br&gt;&amp;nbsp;&amp;nbsp;ValidatedPlan&lt;br&gt;+ applyChargingSchedule( requestId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;planDraftId: String, baseVersion: int):&lt;br&gt;&amp;nbsp;&amp;nbsp;ScheduleResult&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="264" width="466" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-7" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#e1d5e7;swimlaneFillColor=#ffffff;strokeColor=#9673a6;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«repository»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;OperationalRepository&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="236" width="478" x="1440" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-8" parent="iK57dbaez91-s88ckh31-7" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ queryChargingContext( hubId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;timeRange: TimeRange): ChargingContext&lt;br&gt;+ atomicApplyChargingSchedule( requestId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String, planDraftId: String, baseVersion:&lt;br&gt;&amp;nbsp;&amp;nbsp;int): ApplyResult&lt;br&gt;+ markNotificationPending( scheduleVersionId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String): void&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="176" width="478" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-9" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«dataType»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;PlanDraft&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="170" width="485" x="110" y="490" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-10" parent="iK57dbaez91-s88ckh31-9" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- planDraftId: String&lt;br&gt;- servedRequests: String[]&lt;br&gt;- waitingRequests: String[]&lt;/div&gt;&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- proposedAllocations: PlanAllocation[]&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="110" width="485" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-11" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«dataType»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ValidatedPlan&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="126" width="320" x="780" y="471" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-12" parent="iK57dbaez91-s88ckh31-11" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- planDraftId: String&lt;br&gt;- baseVersion: int&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="66" width="320" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-13" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#d5e8d4;swimlaneFillColor=#ffffff;strokeColor=#82b366;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«entity»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;ChargingScheduleVersion&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="148" width="302" x="1121" y="471" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-14" parent="iK57dbaez91-s88ckh31-13" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- scheduleVersionId: String&lt;br&gt;- allocations:&lt;br&gt;&amp;nbsp;&amp;nbsp;PlanAllocation[]&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="88" width="302" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-15" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffe6cc;swimlaneFillColor=#ffffff;strokeColor=#d79b00;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«control»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;NotificationService&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="148" width="478" x="1464" y="471" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-16" parent="iK57dbaez91-s88ckh31-15" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ notifyAffectedParties( scheduleVersionId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String, changeSummary: ChangeSummary):&lt;br&gt;&amp;nbsp;&amp;nbsp;NotificationResult&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="88" width="478" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-17" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«dataType»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingContext&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="236" width="485" x="210" y="700" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-18" parent="iK57dbaez91-s88ckh31-17" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- demands: ChargingDemand[]&lt;br&gt;- batteryLevels: BatteryReading[]&lt;br&gt;- activeSessions: ChargingSession[]&lt;br&gt;- confirmedReservations: ChargingReservation[]&lt;br&gt;- activeHolds: PositionHold[]&lt;br&gt;- hubPowerCapacityKw: double&lt;br&gt;- restrictedResources: ResourceRestriction[]&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="176" width="485" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-19" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«dataType»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;PlanAllocation&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="170" width="302" x="1121" y="677" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-20" parent="iK57dbaez91-s88ckh31-19" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- portId: String&lt;br&gt;- positionId: String&lt;br&gt;- timeRange: TimeRange&lt;br&gt;- allocatedPowerKw: double&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="110" width="302" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-21" edge="1" parent="1" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;entryPerimeter=0;entryX=0.000000;entryY=0.112717;" target="iK57dbaez91-s88ckh31-3">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="420" y="100" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-22" edge="1" parent="1" source="iK57dbaez91-s88ckh31-3" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=0;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=1.000000;exitY=0.112717;entryX=0.000000;entryY=0.120370;" target="iK57dbaez91-s88ckh31-5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-23" edge="1" parent="1" source="iK57dbaez91-s88ckh31-5" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=0;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=1.000000;exitY=0.120370;entryX=0.000000;entryY=0.165254;" target="iK57dbaez91-s88ckh31-7">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-24" edge="1" parent="1" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;">
+                    <mxGeometry relative="1" x="0.0989" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="919.79" y="425"/>
+                            <mxPoint x="480" y="425"/>
+                        </Array>
+                        <mxPoint x="919.79" y="390" as="sourcePoint"/>
+                        <mxPoint x="480" y="480" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-26" edge="1" parent="1" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;entryPerimeter=0;entryX=0.500000;entryY=0.000000;" target="iK57dbaez91-s88ckh31-15">
+                    <mxGeometry relative="1" x="-0.0259" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1280" y="440"/>
+                            <mxPoint x="1703" y="440"/>
+                        </Array>
+                        <mxPoint x="1280" y="386.64" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-27" edge="1" parent="1" source="iK57dbaez91-s88ckh31-5" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;exitX=0.105000;exitY=1.000000;">
+                    <mxGeometry relative="1" x="-0.2032" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="958.93" y="450"/>
+                            <mxPoint x="740" y="450"/>
+                            <mxPoint x="740" y="740"/>
+                        </Array>
+                        <mxPoint x="700" y="740" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-28" edge="1" parent="1" source="iK57dbaez91-s88ckh31-13" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=0.500000;exitY=1.000000;entryX=0.500000;entryY=0.000000;" target="iK57dbaez91-s88ckh31-19">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="iK57dbaez91-s88ckh31-42" edge="1" parent="1" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;entryPerimeter=0;entryX=0.674;entryY=0.014;entryDx=0;entryDy=0;">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="1000" y="390" as="sourcePoint"/>
+                        <mxPoint x="1000.0000000000001" y="471.004" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
