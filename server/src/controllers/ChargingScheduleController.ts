@@ -2,7 +2,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { sendOk } from "../lib/response";
-import { timeRangeSchema, versionField } from "../lib/schemas";
+import { requestIdField, timeRangeSchema, versionField } from "../lib/schemas";
 import { currentUser } from "../middleware/auth";
 import { parseOrThrow } from "../middleware/validate";
 import { smartChargingService } from "../services/SmartChargingService";
@@ -24,6 +24,7 @@ export const validatePlanSchema = z.object({
   ),
 });
 export const applyPlanSchema = z.object({
+  requestId: requestIdField,
   planDraftId: z.string().min(1),
   baseVersion: versionField,
 });
@@ -50,7 +51,10 @@ export const chargingScheduleController = {
 
   /** POST /api/charging-schedules/apply */
   async apply(req: Request, res: Response): Promise<void> {
-    const { planDraftId, baseVersion } = req.body;
-    sendOk(res, await smartChargingService.applyChargingSchedule(planDraftId, baseVersion, currentUser(req).id));
+    const { requestId, planDraftId, baseVersion } = req.body;
+    sendOk(
+      res,
+      await smartChargingService.applyChargingSchedule(requestId, planDraftId, baseVersion, currentUser(req).id),
+    );
   },
 };

@@ -20,6 +20,7 @@ import {
   PARKING_ALLOCATION_STATUSES,
   REDISTRIBUTION_ITEM_STATUSES,
   REDISTRIBUTION_STATUSES,
+  REQUEST_OPERATIONS,
   RESOURCE_TYPES,
   ROLES,
   SIMULATION_RUN_STATUSES,
@@ -232,6 +233,9 @@ export const chargingReservations = sqliteTable(
       .references(() => chargingPorts.id),
     startTime: timestamp("start_time").notNull(),
     endTime: timestamp("end_time").notNull(),
+    /** Nhu cầu sạc lúc đặt / đổi lịch (UC08 bước 3, UC09 bước 6): % pin hiện tại và % pin mong muốn. */
+    currentBattery: integer("current_battery"),
+    targetBattery: integer("target_battery"),
     status: text("status", { enum: CHARGING_RESERVATION_STATUSES }).notNull(),
     /** Tăng mỗi lần đổi lịch; dùng để phát hiện lịch đã bị người khác sửa (UC09). */
     version: integer("version").notNull().default(1),
@@ -328,20 +332,68 @@ export const chargingPlans = sqliteTable("charging_plans", {
   version: integer("version").notNull().default(1),
   payload: text("payload", { mode: "json" }).notNull(),
   appliedAt: timestamp("applied_at"),
+  appliedBy: text("applied_by").references(() => users.id),
+  /** UC13 Ext 9a: áp dụng xong nhưng gửi thông báo thất bại → đánh dấu để gửi lại sau. */
+  notificationPending: integer("notification_pending", { mode: "boolean" }).notNull().default(false),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
 
-/** Lần chạy mô phỏng What-if (UC14). Snapshot/kịch bản/kết quả lưu JSON, tách khỏi dữ liệu vận hành. */
+/**
+ * Bản chụp dữ liệu vận hành cho mô phỏng (UC14 bước 1–2). Lưu TRƯỚC khi tạo lần chạy để
+ * Operator xem, chấp nhận dữ liệu cũ (Ext 2b) và chạy nhiều kịch bản trên cùng một bản chụp.
+ */
+export const simulationSnapshots = sqliteTable("simulation_snapshots", {
+  id: id(),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id),
+  hubIds: text("hub_ids", { mode: "json" }).notNull(),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  capturedAt: timestamp("captured_at").notNull(),
+  /** Dữ liệu vận hành đã chụp (danh sách HubStatus). */
+  payload: text("payload", { mode: "json" }).notNull(),
+  /** Nguồn dữ liệu đã đọc, ví dụ ["hubs", "charging_reservations"]. */
+  sources: text("sources", { mode: "json" }).notNull(),
+  /** Mức độ đầy đủ của dữ liệu, 0–1. */
+  completeness: real("completeness").notNull(),
+  isStale: integer("is_stale", { mode: "boolean" }).notNull().default(false),
+  staleAccepted: integer("stale_accepted", { mode: "boolean" }).notNull().default(false),
+  dataLimitation: text("data_limitation"),
+  createdAt: createdAt(),
+});
+
+/** Lần chạy mô phỏng What-if (UC14). Kịch bản/kết quả lưu JSON, tách khỏi dữ liệu vận hành. */
 export const simulationRuns = sqliteTable("simulation_runs", {
   id: id(),
-  snapshot: text("snapshot", { mode: "json" }).notNull(),
+  snapshotId: text("snapshot_id")
+    .notNull()
+    .references(() => simulationSnapshots.id),
+  operatorId: text("operator_id")
+    .notNull()
+    .references(() => users.id),
   scenario: text("scenario", { mode: "json" }).notNull(),
   result: text("result", { mode: "json" }),
   status: text("status", { enum: SIMULATION_RUN_STATUSES }).notNull(),
   dataLimitation: text("data_limitation"),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
+});
+
+/**
+ * Yêu cầu ghi đã xử lý – chống gửi lặp (UC08, UC09, UC13, UC14).
+ * Ghi trong CÙNG transaction với thao tác chính; gặp lại requestId của cùng người thì trả resultId cũ.
+ */
+export const processedRequests = sqliteTable("processed_requests", {
+  requestId: text("request_id").primaryKey(),
+  actorId: text("actor_id")
+    .notNull()
+    .references(() => users.id),
+  operation: text("operation", { enum: REQUEST_OPERATIONS }).notNull(),
+  /** Id bản ghi kết quả (lịch sạc, kế hoạch sạc, lần chạy mô phỏng). */
+  resultId: text("result_id").notNull(),
+  createdAt: createdAt(),
 });
 
 // ---------- Kiểu dữ liệu suy ra từ bảng ----------
@@ -362,4 +414,6 @@ export type Alert = typeof alerts.$inferSelect;
 export type RedistributionOrder = typeof redistributionOrders.$inferSelect;
 export type RedistributionItem = typeof redistributionItems.$inferSelect;
 export type ChargingPlan = typeof chargingPlans.$inferSelect;
+export type SimulationSnapshot = typeof simulationSnapshots.$inferSelect;
 export type SimulationRun = typeof simulationRuns.$inferSelect;
+export type ProcessedRequest = typeof processedRequests.$inferSelect;

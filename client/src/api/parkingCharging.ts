@@ -20,8 +20,18 @@ export const chargingApi = {
   }) => api.post<unknown>("/charging-requests", body),
   cancelRequest: (id: string) => api.post<unknown>(`/charging-requests/${id}/cancel`, {}),
   searchSlots: (body: Record<string, unknown>) => api.post<unknown>("/charging-reservations/search", body),
-  confirmReservation: (slotOptionId: string) => api.post<unknown>("/charging-reservations", { slotOptionId }),
+  /** requestId: crypto.randomUUID() sinh một lần cho mỗi lần bấm xác nhận; thử lại thì gửi lại cùng mã. */
+  confirmReservation: (requestId: string, slotOptionId: string) =>
+    api.post<unknown>("/charging-reservations", { requestId, slotOptionId }),
   reservationDetail: (id: string) => api.get<unknown>(`/charging-reservations/${id}`),
-  cancelReservation: (id: string, expectedVersion: number) =>
-    api.post<unknown>(`/charging-reservations/${id}/cancel`, { expectedVersion }),
+  startReschedule: (id: string) => api.post<unknown>(`/charging-reservations/${id}/reschedule/start`, {}),
+  rescheduleOptions: (
+    id: string,
+    body: { hubId: string; timeRange: TimeRange; need: { currentBattery: number; targetBattery: number } },
+  ) => api.post<unknown>(`/charging-reservations/${id}/reschedule/options`, body),
+  confirmReschedule: (id: string, requestId: string, optionId: string, expectedVersion: number) =>
+    api.post<unknown>(`/charging-reservations/${id}/reschedule/confirm`, { requestId, optionId, expectedVersion }),
+  checkCancellation: (id: string) => api.get<unknown>(`/charging-reservations/${id}/cancellation-check`),
+  cancelReservation: (id: string, requestId: string, expectedVersion: number) =>
+    api.post<unknown>(`/charging-reservations/${id}/cancel`, { requestId, expectedVersion }),
 };

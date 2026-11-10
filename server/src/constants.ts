@@ -96,6 +96,19 @@ export type RedistributionItemStatus = (typeof REDISTRIBUTION_ITEM_STATUSES)[num
 export const SIMULATION_RUN_STATUSES = ["RUNNING", "COMPLETED", "FAILED", "CANCELLED"] as const;
 export type SimulationRunStatus = (typeof SIMULATION_RUN_STATUSES)[number];
 
+/**
+ * Các thao tác ghi có chống gửi lặp bằng requestId (Sequence Sub #2: nhánh duplicateRequest).
+ * Mỗi lần xử lý xong ghi một dòng ProcessedRequest; gửi lại cùng requestId thì trả kết quả cũ.
+ */
+export const REQUEST_OPERATIONS = [
+  "CONFIRM_CHARGING_RESERVATION",
+  "RESCHEDULE_CHARGING_RESERVATION",
+  "CANCEL_CHARGING_RESERVATION",
+  "APPLY_CHARGING_PLAN",
+  "START_SIMULATION_RUN",
+] as const;
+export type RequestOperation = (typeof REQUEST_OPERATIONS)[number];
+
 export const ALERT_TYPES = ["LOW_VEHICLE", "NEAR_FULL", "RESOURCE_FAULT", "DATA_STALE"] as const;
 export type AlertType = (typeof ALERT_TYPES)[number];
 
