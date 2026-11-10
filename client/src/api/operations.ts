@@ -4,7 +4,14 @@ import { api } from "./client";
 export const operationsApi = {
   overview: () => api.get<unknown>("/monitoring/overview"),
   hubDetail: (hubId: string) => api.get<unknown>(`/monitoring/hubs/${hubId}`),
+  incidentContext: (resourceId: string) => api.get<unknown>("/incidents/context", { resourceId }),
+  incidentDetail: (incidentId: string) => api.get<unknown>(`/incidents/${incidentId}`),
+  /** body gồm requestId (crypto.randomUUID()), resourceId, description, impactLevel, affectedScope. */
   reportIncident: (body: Record<string, unknown>) => api.post<unknown>("/incidents", body),
+  processHandlingPlan: (incidentId: string, requestId: string, handlingPlan: Record<string, unknown>) =>
+    api.post<unknown>(`/incidents/${incidentId}/handling-plan`, { requestId, handlingPlan }),
+  verifyResolution: (incidentId: string, requestId: string, resolutionResult: { resolved: boolean; note?: string }) =>
+    api.post<unknown>(`/incidents/${incidentId}/verify`, { requestId, resolutionResult }),
   createRedistributionOrder: (body: Record<string, unknown>) => api.post<unknown>("/redistribution-orders", body),
   chargingContext: (params: { hubId: string; startTime: string; endTime: string }) =>
     api.get<unknown>("/charging-schedules/context", params),

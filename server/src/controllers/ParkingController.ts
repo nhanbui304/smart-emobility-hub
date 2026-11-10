@@ -2,7 +2,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { sendOk } from "../lib/response";
-import { timeRangeSchema } from "../lib/schemas";
+import { requestIdField, timeRangeSchema } from "../lib/schemas";
 import { currentUser } from "../middleware/auth";
 import { parseOrThrow } from "../middleware/validate";
 import { parkingService } from "../services/ParkingService";
@@ -14,10 +14,13 @@ const searchQuery = z.object({
   endTime: z.coerce.date(),
 });
 export const holdSchema = z.object({
+  requestId: requestIdField,
   slotId: z.string().min(1),
   vehicleId: z.string().min(1),
   timeRange: timeRangeSchema,
 });
+
+export const parkingRequestSchema = z.object({ requestId: requestIdField });
 
 export const parkingController = {
   /** GET /api/parking/slots?hubId=&vehicleId=&startTime=&endTime= */
@@ -29,20 +32,25 @@ export const parkingController = {
 
   /** POST /api/parking/holds */
   async hold(req: Request, res: Response): Promise<void> {
-    const { slotId, vehicleId, timeRange } = req.body;
-    sendOk(res, await parkingService.holdSlot(currentUser(req).id, slotId, vehicleId, timeRange), 201);
+    const { requestId, slotId, vehicleId, timeRange } = req.body;
+    sendOk(res, await parkingService.holdSlot(requestId, currentUser(req).id, slotId, vehicleId, timeRange), 201);
   },
 
   /** POST /api/parking/holds/:holdToken/confirm */
   async confirm(req: Request, res: Response): Promise<void> {
     const { holdToken } = parseOrThrow(z.object({ holdToken: z.string().min(1) }), req.params);
-    sendOk(res, await parkingService.confirmReservation(currentUser(req).id, holdToken));
+    sendOk(res, await parkingService.confirmReservation(req.body.requestId, currentUser(req).id, holdToken));
   },
 
   /** POST /api/parking/holds/:holdToken/cancel */
   async cancelHold(req: Request, res: Response): Promise<void> {
     const { holdToken } = parseOrThrow(z.object({ holdToken: z.string().min(1) }), req.params);
-    sendOk(res, await parkingService.cancelHold(currentUser(req).id, holdToken));
+    sendOk(res, await parkingService.cancelHold(req.body.requestId, currentUser(req).id, holdToken));
+  },
+
+  /** GET /api/parking/holds/active – Sequence: getActiveHold() */
+  async activeHold(req: Request, res: Response): Promise<void> {
+    sendOk(res, await parkingService.getActiveHold(currentUser(req).id));
   },
 
   /** POST /api/parking/bookings/:bookingId/cancel */

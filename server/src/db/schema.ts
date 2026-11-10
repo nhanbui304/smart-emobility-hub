@@ -267,8 +267,19 @@ export const incidents = sqliteTable("incidents", {
   description: text("description").notNull(),
   impactLevel: text("impact_level", { enum: IMPACT_LEVELS }).notNull(),
   status: text("status", { enum: INCIDENT_STATUSES }).notNull(),
+  reportedBy: text("reported_by").references(() => users.id),
+  /** Phạm vi ảnh hưởng Operator xác nhận khi ghi nhận (UC11 bước 3). */
+  affectedScope: text("affected_scope", { mode: "json" }),
+  /** UC11 bước 4 (markPriorityHandling): có lượt giữ / đặt chỗ / chuyến đi / lịch sạc bị ảnh hưởng cần xử lý trước. */
+  priorityHandling: integer("priority_handling", { mode: "boolean" }).notNull().default(false),
   /** Phương án xử lý, lưu dạng JSON. */
   handlingPlan: text("handling_plan", { mode: "json" }),
+  /** Các thay đổi cần sinh viên đồng ý (UC11 bước 6: consentPlan / pendingConsentList), lưu dạng JSON. */
+  consentPlan: text("consent_plan", { mode: "json" }),
+  /** UC11 Ext 6a: gửi thông báo thất bại → đánh dấu để gửi lại sau. */
+  notificationPending: integer("notification_pending", { mode: "boolean" }).notNull().default(false),
+  resolutionNote: text("resolution_note"),
+  resolvedAt: timestamp("resolved_at"),
   version: integer("version").notNull().default(1),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
