@@ -4,6 +4,13 @@ import type { Hub, ParkingAllocation, ParkingSlot, PrivateVehicle } from "../db/
 import { db } from "../lib/db";
 import { notImplemented } from "../lib/errors";
 
+/** UC06 bước 2 (queryHubAcceptance → hubAcceptance). */
+export interface HubAcceptance {
+  hub?: Hub;
+  /** Hub đang hoạt động và tiếp nhận loại xe này. */
+  accepting: boolean;
+}
+
 export const parkingRepository = {
   /** UC06 bước 2 (findVehicleRight): xe cá nhân thuộc sinh viên. */
   findVehicleRight(studentId: string, vehicleId: string): PrivateVehicle | undefined {
@@ -11,7 +18,7 @@ export const parkingRepository = {
   },
 
   /** UC06 bước 2 (queryHubAcceptance): Hub đang hoạt động và tiếp nhận loại xe này. */
-  queryHubAcceptance(hubId: string, vehicleType: VehicleType): { hub: Hub | undefined; accepting: boolean } {
+  queryHubAcceptance(hubId: string, vehicleType: VehicleType): HubAcceptance {
     throw notImplemented("ParkingRepository.queryHubAcceptance (UC06)");
   },
 
