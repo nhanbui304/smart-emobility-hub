@@ -2,7 +2,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { sendOk } from "../lib/response";
-import { idParams, timeRangeSchema, versionField } from "../lib/schemas";
+import { chargingNeedSchema, idParams, requestIdField, timeRangeSchema, versionField } from "../lib/schemas";
 import { currentUser } from "../middleware/auth";
 import { parseOrThrow } from "../middleware/validate";
 import { chargingReservationService } from "../services/ChargingReservationService";
@@ -12,18 +12,21 @@ export const findSlotsSchema = z.object({
   hubId: z.string().min(1),
   date: z.coerce.date(),
   timeRange: timeRangeSchema,
-  need: z.object({
-    currentBattery: z.number().int().min(0).max(100),
-    targetBattery: z.number().int().min(1).max(100),
-  }),
+  need: chargingNeedSchema,
 });
-export const confirmChargingSchema = z.object({ slotOptionId: z.string().min(1) });
-export const rescheduleOptionsSchema = z.object({ timeRange: timeRangeSchema });
+export const confirmChargingSchema = z.object({ requestId: requestIdField, slotOptionId: z.string().min(1) });
+/** UC09 bước 6: sinh viên gửi Hub, khung giờ và nhu cầu sạc mới. */
+export const rescheduleOptionsSchema = z.object({
+  hubId: z.string().min(1),
+  timeRange: timeRangeSchema,
+  need: chargingNeedSchema,
+});
 export const confirmRescheduleSchema = z.object({
+  requestId: requestIdField,
   optionId: z.string().min(1),
   expectedVersion: versionField,
 });
-export const cancelChargingSchema = z.object({ expectedVersion: versionField });
+export const cancelChargingSchema = z.object({ requestId: requestIdField, expectedVersion: versionField });
 
 export const chargingReservationController = {
   /** POST /api/charging-reservations/search */
@@ -37,8 +40,12 @@ export const chargingReservationController = {
 
   /** POST /api/charging-reservations */
   async confirm(req: Request, res: Response): Promise<void> {
-    const { slotOptionId } = req.body;
-    sendOk(res, await chargingReservationService.confirmChargingReservation(currentUser(req).id, slotOptionId), 201);
+    const { requestId, slotOptionId } = req.body;
+    sendOk(
+      res,
+      await chargingReservationService.confirmChargingReservation(requestId, currentUser(req).id, slotOptionId),
+      201,
+    );
   },
 
   /** GET /api/charging-reservations/:id */
@@ -56,14 +63,21 @@ export const chargingReservationController = {
   /** POST /api/charging-reservations/:id/reschedule/options */
   async rescheduleOptions(req: Request, res: Response): Promise<void> {
     const { id } = parseOrThrow(idParams, req.params);
-    sendOk(res, await chargingReservationService.findRescheduleOptions(currentUser(req).id, id, req.body.timeRange));
+    const { hubId, timeRange, need } = req.body;
+    sendOk(
+      res,
+      await chargingReservationService.findRescheduleOptions(currentUser(req).id, id, hubId, timeRange, need),
+    );
   },
 
   /** POST /api/charging-reservations/:id/reschedule/confirm */
   async confirmReschedule(req: Request, res: Response): Promise<void> {
     const { id } = parseOrThrow(idParams, req.params);
-    const { optionId, expectedVersion } = req.body;
-    sendOk(res, await chargingReservationService.confirmReschedule(currentUser(req).id, id, optionId, expectedVersion));
+    const { requestId, optionId, expectedVersion } = req.body;
+    sendOk(
+      res,
+      await chargingReservationService.confirmReschedule(requestId, currentUser(req).id, id, optionId, expectedVersion),
+    );
   },
 
   /** GET /api/charging-reservations/:id/cancellation-check */
@@ -75,7 +89,7 @@ export const chargingReservationController = {
   /** POST /api/charging-reservations/:id/cancel */
   async cancel(req: Request, res: Response): Promise<void> {
     const { id } = parseOrThrow(idParams, req.params);
-    const { expectedVersion } = req.body;
-    sendOk(res, await chargingReservationService.cancelReservation(currentUser(req).id, id, expectedVersion));
+    const { requestId, expectedVersion } = req.body;
+    sendOk(res, await chargingReservationService.cancelReservation(requestId, currentUser(req).id, id, expectedVersion));
   },
 };

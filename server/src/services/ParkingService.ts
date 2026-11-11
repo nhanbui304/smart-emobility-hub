@@ -14,7 +14,7 @@ export const parkingService = {
     throw notImplemented("ParkingService.searchAvailableSlots (UC06)");
   },
 
-  /** UC06 bước 4: giữ tạm vị trí trong parkingHoldMinutes. holdToken = id của ParkingAllocation. */
+  /** UC06 bước 4: giữ tạm tới min(now + parkingHoldMinutes, startTime); mỗi sinh viên một lượt giữ còn hạn. holdToken = id. */
   async holdSlot(
     studentId: string,
     slotId: string,

@@ -44,7 +44,9 @@ async function main() {
   db.transaction(() => {
     // Xóa dữ liệu cũ (con trước, cha sau để không vướng khóa ngoại)
     for (const table of [
+      s.processedRequests,
       s.simulationRuns,
+      s.simulationSnapshots,
       s.chargingPlans,
       s.redistributionItems,
       s.redistributionOrders,

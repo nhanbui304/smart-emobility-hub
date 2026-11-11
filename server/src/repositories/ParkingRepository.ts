@@ -15,7 +15,8 @@ export const parkingRepository = {
 
   /**
    * UC06 – trong db.transaction: kiểm tra lại vị trí còn trống trong khoảng thời gian,
-   * tạo ParkingAllocation HELD với holdExpiresAt = now + parkingHoldMinutes.
+   * tạo ParkingAllocation HELD. holdExpiresAt = min(now + parkingHoldMinutes, startTime) do service tính.
+   * HELD đã quá holdExpiresAt không tính là chồng lấn (kể cả khi scheduler chưa chạy).
    */
   atomicCheckAndHold(input: {
     studentId: string;

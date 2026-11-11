@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="jG5C8UG0ahzjZAt3Otcm" name="Page-1">
-        <mxGraphModel dx="840" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="2450" dy="1788" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -106,6 +106,90 @@
                 </mxCell>
                 <mxCell id="HrDw57INMavKvIYuuxPY-30" edge="1" parent="1" source="HrDw57INMavKvIYuuxPY-16" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#475B70;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=1.000000;exitY=0.165254;entryX=0.000000;entryY=0.229412;" target="HrDw57INMavKvIYuuxPY-18">
                     <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-1" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;NetworkOverview&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="166" width="430" x="130" y="1030" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-2" parent="AyjMkBM7LFaDr8CJ8kJE-1" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- hubs: HubStatus[]&lt;br&gt;- activeAlerts: AlertDto[]&lt;br&gt;- generatedAt: DateTime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="88" width="430" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-3" parent="AyjMkBM7LFaDr8CJ8kJE-1" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
+                    <mxGeometry height="1" width="430" y="148" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-4" parent="AyjMkBM7LFaDr8CJ8kJE-1" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="18" width="430" y="148" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-5" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;OperatorHubDetail&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="144" width="430" x="585" y="1030" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-6" parent="AyjMkBM7LFaDr8CJ8kJE-5" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- activeAlerts: AlertDto[]&lt;br&gt;- isDataStale: boolean&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="66" width="430" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-7" parent="AyjMkBM7LFaDr8CJ8kJE-5" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
+                    <mxGeometry height="1" width="430" y="126" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-8" parent="AyjMkBM7LFaDr8CJ8kJE-5" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="18" width="430" y="126" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-9" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;HubDetail&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="122" width="430" x="1040" y="1030" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-10" parent="AyjMkBM7LFaDr8CJ8kJE-9" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- vehicles: VehicleSummary[]&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="44" width="430" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-11" parent="AyjMkBM7LFaDr8CJ8kJE-9" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
+                    <mxGeometry height="1" width="430" y="104" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-12" parent="AyjMkBM7LFaDr8CJ8kJE-9" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="18" width="430" y="104" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-13" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;HubStatus&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="342" width="430" x="130" y="1221" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-14" parent="AyjMkBM7LFaDr8CJ8kJE-13" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- id: String&lt;br&gt;- name: String&lt;br&gt;- location: String&lt;br&gt;- availableVehicles: int&lt;br&gt;- totalVehicles: int&lt;br&gt;- freeSlots: int&lt;br&gt;- totalSlots: int&lt;br&gt;- freeChargingPorts: int&lt;br&gt;- totalChargingPorts: int&lt;br&gt;- averageBattery: int&lt;br&gt;- lastUpdatedAt: DateTime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="264" width="430" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-15" parent="AyjMkBM7LFaDr8CJ8kJE-13" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
+                    <mxGeometry height="1" width="430" y="324" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-16" parent="AyjMkBM7LFaDr8CJ8kJE-13" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="18" width="430" y="324" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-17" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;AlertDto&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="254" width="430" x="585" y="1221" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-18" parent="AyjMkBM7LFaDr8CJ8kJE-17" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- id: String&lt;br&gt;- hubId: String&lt;br&gt;- type: AlertType&lt;br&gt;- value: double&lt;br&gt;- threshold: double&lt;br&gt;- active: boolean&lt;br&gt;- updatedAt: DateTime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="176" width="430" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-19" parent="AyjMkBM7LFaDr8CJ8kJE-17" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
+                    <mxGeometry height="1" width="430" y="236" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-20" parent="AyjMkBM7LFaDr8CJ8kJE-17" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="18" width="430" y="236" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-21" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;VehicleSummary&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="276" width="430" x="1040" y="1221" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-22" parent="AyjMkBM7LFaDr8CJ8kJE-21" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- id: String&lt;br&gt;- code: String&lt;br&gt;- type: VehicleType&lt;br&gt;- batteryLevel: int&lt;br&gt;- status: VehicleStatus&lt;br&gt;- hubId: String [0..1]&lt;br&gt;- slotId: String [0..1]&lt;br&gt;- lastUpdatedAt: DateTime&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="198" width="430" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-23" parent="AyjMkBM7LFaDr8CJ8kJE-21" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
+                    <mxGeometry height="1" width="430" y="258" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-24" parent="AyjMkBM7LFaDr8CJ8kJE-21" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="18" width="430" y="258" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-25" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingPortWithHub&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="232" width="430" x="130" y="1588" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-26" parent="AyjMkBM7LFaDr8CJ8kJE-25" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- id: String&lt;br&gt;- slotId: String&lt;br&gt;- hubId: String&lt;br&gt;- connectorType: ConnectorType&lt;br&gt;- maxPowerKw: double&lt;br&gt;- status: ChargingPortStatus&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="154" width="430" y="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-27" parent="AyjMkBM7LFaDr8CJ8kJE-25" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
+                    <mxGeometry height="1" width="430" y="214" as="geometry"/>
+                </mxCell>
+                <mxCell id="AyjMkBM7LFaDr8CJ8kJE-28" parent="AyjMkBM7LFaDr8CJ8kJE-25" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="18" width="430" y="214" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
