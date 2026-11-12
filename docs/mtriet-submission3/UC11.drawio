@@ -1,0 +1,66 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="uc11-incident" name="UC11 - Handle Operational Incident">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2120" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        
+        <!-- BOUNDARY -->
+        <mxCell id="v1" value="«boundary»&lt;br&gt;&lt;b&gt;IncidentUI&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="340" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="v2" value="- resourceId: String&lt;br&gt;- incidentId: String&lt;br&gt;- description: String" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="v1">
+          <mxGeometry y="44" width="340" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="v3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#6c8ebf;" vertex="1" parent="v1">
+          <mxGeometry y="104" width="340" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="v4" value="+ submitIncident(): void&lt;br&gt;+ submitHandlingPlan(): void&lt;br&gt;+ submitResolutionResult(): void" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="v1">
+          <mxGeometry y="112" width="340" height="60" as="geometry"/>
+        </mxCell>
+        
+        <!-- CONTROLLER -->
+        <mxCell id="c1" value="«control»&lt;br&gt;&lt;b&gt;IncidentController&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="420" y="40" width="480" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="- incidentService: IncidentService" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="c1">
+          <mxGeometry y="44" width="480" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" vertex="1" parent="c1">
+          <mxGeometry y="70" width="480" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="c4" value="+ openIncidentManagement(resourceId): IncidentContext&lt;br&gt;+ submitIncident(reqId, resourceId, desc, impact, scope): Result&lt;br&gt;+ submitHandlingPlan(reqId, incidentId, plan): Result&lt;br&gt;+ submitResolutionResult(reqId, incidentId, result): Result" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="c1">
+          <mxGeometry y="78" width="480" height="72" as="geometry"/>
+        </mxCell>
+        
+        <!-- SERVICE -->
+        <mxCell id="s1" value="«control»&lt;br&gt;&lt;b&gt;IncidentService&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="940" y="40" width="600" height="280" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2" value="- opRepo: OperationalRepository" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="s1">
+          <mxGeometry y="44" width="600" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d79b00;" vertex="1" parent="s1">
+          <mxGeometry y="70" width="600" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4" value="+ queryResourceStatusAndOpenIncidents(resourceId): Context&lt;br&gt;+ createIncidentAndRestrictNewAllocations(...): Result&lt;br&gt;+ processHandlingPlan(reqId, incidentId, plan): Result&lt;br&gt;+ verifyResolution(reqId, incidentId, result): Result&lt;br&gt;- validateIncidentData(resourceId, desc, impact, scope): void&lt;br&gt;- identifyChangesToConfirmedCommitments(plan): List&lt;br&gt;- saveHandlingPlanAndProgress(...): void&lt;br&gt;- evaluateResolutionEvidence(result, context): void&lt;br&gt;- closeIncidentKeepResourceRestricted(...): void&lt;br&gt;- closeIncidentAndRestoreService(...): void" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="s1">
+          <mxGeometry y="78" width="600" height="202" as="geometry"/>
+        </mxCell>
+        
+        <!-- REPOSITORY -->
+        <mxCell id="r1" value="«repository»&lt;br&gt;&lt;b&gt;OperationalRepository&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1580" y="40" width="460" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="r2" value="- db: Database" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="r1">
+          <mxGeometry y="44" width="460" height="26" as="geometry"/>
+        </mxCell>
+        <mxCell id="r3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#9673a6;" vertex="1" parent="r1">
+          <mxGeometry y="70" width="460" height="8" as="geometry"/>
+        </mxCell>
+        <mxCell id="r4" value="+ saveIncident(incident: Incident): void&lt;br&gt;+ updateIncidentStatus(incidentId: String, status: String): void" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="r1">
+          <mxGeometry y="78" width="460" height="50" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

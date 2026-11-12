@@ -15,13 +15,13 @@
         <mxCell id="v3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#6c8ebf;" vertex="1" parent="v1">
           <mxGeometry y="112" width="340" height="8" as="geometry"/>
         </mxCell>
-        <mxCell id="v4" value="+ inputCriteria(criteria: SearchCriteria): void&lt;br&gt;+ displayOptions(result: SearchResult): void&lt;br&gt;+ selectOption(optionId: String): void" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="v1">
+        <mxCell id="v4" value="+ inputCriteria(criteria: SearchCriteria): void&lt;br&gt;+ displaySearchResults(result: SearchResult): void&lt;br&gt;+ selectOption(optionId: String): void" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="v1">
           <mxGeometry y="120" width="340" height="68" as="geometry"/>
         </mxCell>
 
         <!-- ================= TẦNG CONTROL (CONTROLLER) ================= -->
         <mxCell id="c1" value="«control»&lt;br&gt;&lt;b&gt;SearchController&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="460" y="40" width="480" height="160" as="geometry"/>
+          <mxGeometry x="460" y="40" width="480" height="132" as="geometry"/>
         </mxCell>
         <mxCell id="c2" value="- searchService: SearchService" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="c1">
           <mxGeometry y="44" width="480" height="26" as="geometry"/>
@@ -29,22 +29,22 @@
         <mxCell id="c3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" vertex="1" parent="c1">
           <mxGeometry y="70" width="480" height="8" as="geometry"/>
         </mxCell>
-        <mxCell id="c4" value="+ findOptions(criteria: SearchCriteria): SearchResult&lt;br&gt;+ filterOptions(criteria: SearchCriteria, sessionId: String): SearchResult&lt;br&gt;+ selectOption(sessionId: String, optionId: String): void" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="c1">
-          <mxGeometry y="78" width="480" height="82" as="geometry"/>
+        <mxCell id="c4" value="+ searchMobilityOptions(criteria: SearchCriteria): SearchResult&lt;br&gt;+ confirmOptionSelection(sessionId: String, optionId: String): OptionSelectionResult" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="c1">
+          <mxGeometry y="78" width="480" height="54" as="geometry"/>
         </mxCell>
 
         <!-- ================= TẦNG CONTROL (SERVICE) ================= -->
         <mxCell id="s1" value="«control»&lt;br&gt;&lt;b&gt;SearchService&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
-          <mxGeometry x="1020" y="40" width="560" height="160" as="geometry"/>
+          <mxGeometry x="1020" y="40" width="580" height="250" as="geometry"/>
         </mxCell>
         <mxCell id="s2" value="- searchRepository: SearchRepository" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="s1">
-          <mxGeometry y="44" width="560" height="26" as="geometry"/>
+          <mxGeometry y="44" width="580" height="26" as="geometry"/>
         </mxCell>
         <mxCell id="s3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d79b00;" vertex="1" parent="s1">
-          <mxGeometry y="70" width="560" height="8" as="geometry"/>
+          <mxGeometry y="70" width="580" height="8" as="geometry"/>
         </mxCell>
-        <mxCell id="s4" value="+ findSuitableOptions(criteria: SearchCriteria): SearchResult&lt;br&gt;+ filterSuitableOptions(criteria: SearchCriteria, context: object): SearchResult&lt;br&gt;+ confirmOptionSelection(sessionId: String, optionId: String): MobilityOption" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="s1">
-          <mxGeometry y="78" width="560" height="82" as="geometry"/>
+        <mxCell id="s4" value="+ searchMobilityOptions(criteria: SearchCriteria): SearchResult&lt;br&gt;+ confirmOptionSelection(sessionId: String, optionId: String): OptionSelectionResult&lt;br&gt;- validateCriteria(criteria: SearchCriteria): void&lt;br&gt;- queryMobilityContext(criteria: SearchCriteria): MobilityContext&lt;br&gt;- assessDataFreshness(context: MobilityContext): void&lt;br&gt;- markUnverifiedResources(context: MobilityContext): void&lt;br&gt;- filterSuitableOptions(criteria: SearchCriteria, ctx: MobilityContext): List&amp;lt;MobilityOption&amp;gt;&lt;br&gt;- validateSelectedOption(optionId: String): boolean&lt;br&gt;- queryCurrentOptionState(optionId: String): OptionState&lt;br&gt;- recordSessionSelection(sessionId: String, optionId: String): void" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="s1">
+          <mxGeometry y="78" width="580" height="172" as="geometry"/>
         </mxCell>
 
         <!-- ================= TẦNG REPOSITORY ================= -->
@@ -61,7 +61,7 @@
           <mxGeometry y="78" width="480" height="54" as="geometry"/>
         </mxCell>
 
-        <!-- ================= TẦNG ENTITY ================= -->
+        <!-- ================= TẦNG ENTITY & DTO ================= -->
         <mxCell id="e1" value="«entity»&lt;br&gt;&lt;b&gt;Hub&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="40" y="320" width="260" height="146" as="geometry"/>
         </mxCell>
@@ -86,6 +86,20 @@
         </mxCell>
         <mxCell id="e8" value="" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="e5">
           <mxGeometry y="176" width="320" height="12" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="dto1" value="«dto»&lt;br&gt;&lt;b&gt;SearchResult&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="580" width="300" height="116" as="geometry"/>
+        </mxCell>
+        <mxCell id="dto1_attr" value="- options: List&amp;lt;MobilityOption&amp;gt;&lt;br&gt;- updatedAt: DateTime&lt;br&gt;- unverifiedFlags: List&amp;lt;String&amp;gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="dto1">
+          <mxGeometry y="44" width="300" height="72" as="geometry"/>
+        </mxCell>
+        
+        <mxCell id="dto2" value="«dto»&lt;br&gt;&lt;b&gt;OptionSelectionResult&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="840" y="580" width="300" height="116" as="geometry"/>
+        </mxCell>
+        <mxCell id="dto2_attr" value="- optionChanged: boolean&lt;br&gt;- nextActions: List&amp;lt;String&amp;gt;&lt;br&gt;- updatedResult: SearchResult" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=11;" vertex="1" parent="dto2">
+          <mxGeometry y="44" width="300" height="72" as="geometry"/>
         </mxCell>
 
         <!-- ================= TẦNG ENUM ================= -->
@@ -122,7 +136,16 @@
         <mxCell id="ed5" value="" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=0.35;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e5" target="en1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
-        
+        <mxCell id="ed6" value="&lt;font style=&quot;font-size: 11px;&quot;&gt;sử dụng&lt;/font&gt;" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="c1" target="dto1">
+          <mxGeometry x="-0.8166" y="20" relative="1" as="geometry">
+            <mxPoint as="offset"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ed7" value="&lt;font style=&quot;font-size: 11px;&quot;&gt;sử dụng&lt;/font&gt;" style="endArrow=open;endSize=10;dashed=1;html=1;rounded=0;edgeStyle=orthogonalEdgeStyle;fontSize=11;labelBackgroundColor=#ffffff;exitX=1;exitY=0.75;entryX=0.5;entryY=0;" edge="1" parent="1" source="c1" target="dto2">
+          <mxGeometry x="-0.818" y="-20" relative="1" as="geometry">
+            <mxPoint as="offset"/>
+          </mxGeometry>
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
