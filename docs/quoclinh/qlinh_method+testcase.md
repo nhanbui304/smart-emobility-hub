@@ -80,7 +80,7 @@ Dữ liệu dùng theo dữ liệu mẫu của nhóm: tài khoản `student1`, `
 | **Pre-condition** | student1 đã đăng nhập và có lượt đặt xe còn hiệu lực ở trạng thái RESERVED. Simulator sẵn sàng phản hồi mở khóa thành công. |
 | **Test Data** | student1, mã lượt đặt xe hợp lệ, kết quả simulator = thành công |
 | **Test Steps** | 1. student1 mở lượt đặt xe cần nhận<br>2. Chọn Nhận xe và xác nhận thao tác<br>3. Hệ thống gửi lệnh mở khóa đến simulator |
-| **Expected results** | Simulator trả kết quả mở khóa thành công. Hệ thống ghi nhận sinh viên đã nhận xe, bắt đầu chuyến đi và cập nhật trạng thái lượt đặt, xe tương ứng. |
+| **Expected results** | Hệ thống cập nhật trạng thái thành công: lượt đặt chuyển sang USED, chuyến đi chuyển sang ACTIVE và xe chuyển sang IN_USE. |
 | **Result** | |
 | **Comments** | Sub #1 UC04 – luồng chính, phạm vi MVP yêu cầu mở khóa bằng simulator. |
 
@@ -97,18 +97,18 @@ Dữ liệu dùng theo dữ liệu mẫu của nhóm: tài khoản `student1`, `
 | **Result** | |
 | **Comments** | Sub #1 UC12 – luồng cơ bản theo phạm vi MVP. |
 
-### TC-2.3.2-01
+### TC-HUB-01
 
 | Mục | Nội dung |
 | --- | --- |
 | **Test Case ID** | TC-2.3.2-01 |
-| **Test Items** | Mục 2.3.2 – xem trạng thái Hub và tài nguyên |
+| **Test Items** | View Hub and Resource Status – xem trạng thái Hub và tài nguyên |
 | **Pre-condition** | Người dùng đã đăng nhập. Hệ thống có dữ liệu Hub và trạng thái tài nguyên. |
 | **Test Data** | Các Hub và tài nguyên có trong dữ liệu mẫu của nhóm |
 | **Test Steps** | 1. Người dùng mở màn hình Home/Hub<br>2. Quan sát danh sách Hub và trạng thái tài nguyên<br>3. Chọn một Hub để xem thông tin chi tiết |
 | **Expected results** | Hệ thống hiển thị danh sách Hub và trạng thái tài nguyên tương ứng. Khi chọn một Hub, thông tin chi tiết của Hub đó được hiển thị và khớp với dữ liệu hệ thống. |
 | **Result** | |
-| **Comments** | Sub #1 mục 2.3.2 – View Hub and Resource Status. |
+| **Comments** | Sub #1 – View Hub and Resource Status. |
 
 ### TC-MYRES-01
 
@@ -121,4 +121,17 @@ Dữ liệu dùng theo dữ liệu mẫu của nhóm: tài khoản `student1`, `
 | **Test Steps** | 1. student1 mở màn hình My Reservations<br>2. Hệ thống tải danh sách lượt đặt thuộc tài khoản đang đăng nhập<br>3. Quan sát thông tin và trạng thái các lượt đặt |
 | **Expected results** | Hệ thống chỉ hiển thị các lượt đặt thuộc student1. Thông tin và trạng thái từng lượt đặt khớp với dữ liệu đã lưu, không hiển thị lượt đặt của sinh viên khác. |
 | **Result** | |
-| **Comments** | Sub #1 mục 2.3.2 – View My Reservations. |
+| **Comments** | Sub #1 – View My Reservations. |
+
+### TC-2.3.2-01
+
+| Mục | Nội dung |
+| --- | --- |
+| **Test Case ID** | TC-MYRES-01 |
+| **Test Items** | Mục 2.3.2 – tự động giải phóng xe khi sinh viên không nhận xe đúng thời hạn. |
+| **Pre-condition** | student1 đã đăng nhập và có một lượt đặt xe ở trạng thái RESERVED. Thời hạn nhận xe đã kết thúc. Tác vụ định kỳ chưa chạy. |
+| **Test Data** | student1, mã lượt đặt xe hợp lệ, xe thuộc lượt đặt. |
+| **Test Steps** | 1. student1 tạo lượt đặt xe thành công. <br>2. Chờ đến khi thời hạn nhận xe kết thúc. <br>3. Trước khi tác vụ định kỳ chạy, student1 thực hiện thao tác Nhận xe. <br>4. Kiểm tra phản hồi hệ thống.<br>5. Chờ tác vụ định kỳ chạy. <br>6. Kiểm tra trạng thái lượt đặt và khả năng đặt lại xe. |
+| **Expected results** | Hệ thống từ chối thao tác nhận xe vì lượt đặt đã quá thời hạn, mặc dù tác vụ định kỳ chưa chạy. Sau khi tác vụ định kỳ chạy, lượt đặt chuyển sang trạng thái EXPIRED. Xe được giải phóng và có thể được đặt lại nếu vẫn đáp ứng điều kiện khả dụng. |
+| **Result** | |
+| **Comments** | Sub #1 – Automatic Release of Vehicle After Pickup Deadline (Section 2.3.2). |
