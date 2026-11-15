@@ -2,220 +2,220 @@
     <diagram id="XrvXA1zzMtlmIU4Sz7sK" name="Page-1">
         <mxGraphModel dx="187" dy="176" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
-                <mxCell id="0"/>
-                <mxCell id="1" parent="0"/>
+                <mxCell id="0" />
+                <mxCell id="1" parent="0" />
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-1" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#dae8fc;swimlaneFillColor=#ffffff;strokeColor=#6c8ebf;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«boundary»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;ChargingReservationView&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="500" width="312" x="120" y="100" as="geometry"/>
+                    <mxGeometry height="500" width="312" x="120" y="100" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-2" parent="vEwn-3R3Cp_KWsxjwIIQ-1" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ selectReservation(&lt;br&gt;&amp;nbsp;&amp;nbsp;reservationId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;void&lt;br&gt;+ chooseReschedule(&lt;br&gt;&amp;nbsp;&amp;nbsp;reservationId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;void&lt;br&gt;+ submitNewCriteria( hubId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String, timeRange:&lt;br&gt;&amp;nbsp;&amp;nbsp;TimeRange, chargingNeed:&lt;br&gt;&amp;nbsp;&amp;nbsp;ChargingNeed): void&lt;br&gt;+ selectOption( optionId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String): void&lt;br&gt;+ confirmReschedule(): void&lt;br&gt;+ chooseCancel(&lt;br&gt;&amp;nbsp;&amp;nbsp;reservationId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;void&lt;br&gt;+ confirmCancel(): void&lt;/div&gt;&lt;div style=&quot;line-height: 22px;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;DejaVu Sans Mono&amp;quot;, monospace; font-size: 16px;&quot;&gt;+ cancelReschedule(): void&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;line-height: 22px;&quot;&gt;&lt;span style=&quot;font-family: &amp;quot;DejaVu Sans Mono&amp;quot;, monospace; font-size: 16px;&quot;&gt;+ keepReservation(): void&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="440" width="312" y="60" as="geometry"/>
+                    <mxGeometry height="440" width="312" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-3" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#fff2cc;swimlaneFillColor=#ffffff;strokeColor=#d6b656;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«control»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingReservationController&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="522" width="382" x="510" y="100" as="geometry"/>
+                    <mxGeometry height="522" width="382" x="510" y="100" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-4" parent="vEwn-3R3Cp_KWsxjwIIQ-3" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ getReservationDetail(&lt;br&gt;&amp;nbsp;&amp;nbsp;reservationId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;ReservationDetail&lt;br&gt;+ startReschedule( reservationId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String): RescheduleForm&lt;br&gt;+ findRescheduleOptions(&lt;br&gt;&amp;nbsp;&amp;nbsp;reservationId: String, hubId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String, timeRange: TimeRange,&lt;br&gt;&amp;nbsp;&amp;nbsp;chargingNeed: ChargingNeed):&lt;br&gt;&amp;nbsp;&amp;nbsp;ChargingSlotOption[]&lt;br&gt;+ confirmReschedule( requestId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String, reservationId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;optionId: String, expectedVersion:&lt;br&gt;&amp;nbsp;&amp;nbsp;int): UpdatedReservation&lt;br&gt;+ checkCancellation( reservationId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String): CancellationCheck&lt;br&gt;+ cancelReservation( requestId:&lt;br&gt;&amp;nbsp;&amp;nbsp;String, reservationId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;expectedVersion: int):&lt;br&gt;&amp;nbsp;&amp;nbsp;CancellationResult&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="462" width="382" y="60" as="geometry"/>
+                    <mxGeometry height="462" width="382" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-5" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffe6cc;swimlaneFillColor=#ffffff;strokeColor=#d79b00;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«control»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingReservationService&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="720" width="466" x="960" y="100" as="geometry"/>
+                    <mxGeometry height="720" width="466" x="960" y="100" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-6" parent="vEwn-3R3Cp_KWsxjwIIQ-5" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ getReservationDetail( studentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;reservationId: String): ReservationDetail&lt;br&gt;+ startReschedule( studentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;reservationId: String): RescheduleForm&lt;br&gt;+ findRescheduleOptions( studentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;reservationId: String, hubId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;timeRange: TimeRange, chargingNeed:&lt;br&gt;&amp;nbsp;&amp;nbsp;ChargingNeed): ChargingSlotOption[]&lt;br&gt;+ confirmReschedule( requestId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;studentId: String, reservationId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;optionId: String, expectedVersion: int):&lt;br&gt;&amp;nbsp;&amp;nbsp;UpdatedReservation&lt;br&gt;+ checkCancellation( studentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;reservationId: String): CancellationCheck&lt;br&gt;+ cancelReservation( requestId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;studentId: String, reservationId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;expectedVersion: int): CancellationResult&lt;/div&gt;&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;span style=&quot;color: rgb(63, 63, 63);&quot;&gt;- determineAllowedActions( reservation:&lt;/span&gt;&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgba(168, 169, 170, 0.52) rgb(18, 19, 20);&quot;&gt;&lt;span style=&quot;color: rgb(63, 63, 63);&quot;&gt;&amp;nbsp;&amp;nbsp;ChargingReservation, now: DateTime):&lt;/span&gt;&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgba(168, 169, 170, 0.52) rgb(18, 19, 20);&quot;&gt;&lt;span style=&quot;color: rgb(63, 63, 63);&quot;&gt;&amp;nbsp;&amp;nbsp;String[]&lt;/span&gt;&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgba(168, 169, 170, 0.52) rgb(18, 19, 20);&quot;&gt;&lt;span style=&quot;color: rgb(63, 63, 63);&quot;&gt;- checkModifiable( reservation:&lt;/span&gt;&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgba(168, 169, 170, 0.52) rgb(18, 19, 20);&quot;&gt;&lt;span style=&quot;color: rgb(63, 63, 63);&quot;&gt;&amp;nbsp;&amp;nbsp;ChargingReservation, now: DateTime):&lt;/span&gt;&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgba(168, 169, 170, 0.52) rgb(18, 19, 20);&quot;&gt;&lt;span style=&quot;color: rgb(63, 63, 63);&quot;&gt;&amp;nbsp;&amp;nbsp;boolean&lt;/span&gt;&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgba(168, 169, 170, 0.52) rgb(18, 19, 20);&quot;&gt;&lt;span style=&quot;color: rgb(63, 63, 63);&quot;&gt;- validateNewCriteria( vehicleId: String,&lt;/span&gt;&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgba(168, 169, 170, 0.52) rgb(18, 19, 20);&quot;&gt;&lt;span style=&quot;color: rgb(63, 63, 63);&quot;&gt;&amp;nbsp;&amp;nbsp;hubId: String, timeRange: TimeRange,&lt;/span&gt;&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgba(168, 169, 170, 0.52) rgb(18, 19, 20);&quot;&gt;&lt;span style=&quot;color: rgb(63, 63, 63);&quot;&gt;&amp;nbsp;&amp;nbsp;chargingNeed: ChargingNeed): boolean&lt;/span&gt;&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgba(168, 169, 170, 0.52) rgb(18, 19, 20);&quot;&gt;&lt;span style=&quot;color: rgb(63, 63, 63);&quot;&gt;- checkCancellable( reservation:&lt;/span&gt;&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgba(168, 169, 170, 0.52) rgb(18, 19, 20);&quot;&gt;&lt;span style=&quot;color: rgb(63, 63, 63);&quot;&gt;&amp;nbsp;&amp;nbsp;ChargingReservation, now: DateTime):&lt;/span&gt;&lt;br style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgba(168, 169, 170, 0.52) rgb(18, 19, 20);&quot;&gt;&lt;span style=&quot;color: rgb(63, 63, 63);&quot;&gt;&amp;nbsp;&amp;nbsp;boolean&lt;/span&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="660" width="466" y="60" as="geometry"/>
+                    <mxGeometry height="660" width="466" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-7" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#e1d5e7;swimlaneFillColor=#ffffff;strokeColor=#9673a6;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«repository»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;OperationalRepository&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="412" width="478" x="1510" y="100" as="geometry"/>
+                    <mxGeometry height="412" width="478" x="1510" y="100" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-8" parent="vEwn-3R3Cp_KWsxjwIIQ-7" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;+ findReservation( reservationId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;ChargingReservation [0..1]&lt;br&gt;+ queryAvailableChargingSlots( hubId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;vehicleId: String, timeRange: TimeRange,&lt;br&gt;&amp;nbsp;&amp;nbsp;chargingNeed: ChargingNeed, now: DateTime,&lt;br&gt;&amp;nbsp;&amp;nbsp;excludeReservationId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;SlotQueryResult&lt;br&gt;+ atomicReschedule( requestId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;studentId: String, reservationId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;optionId: String, expectedVersion: int):&lt;br&gt;&amp;nbsp;&amp;nbsp;RescheduleResult&lt;br&gt;+ atomicCancelReservation( requestId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;studentId: String, reservationId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;expectedVersion: int, now: DateTime):&lt;br&gt;&amp;nbsp;&amp;nbsp;CancellationResult&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="352" width="478" y="60" as="geometry"/>
+                    <mxGeometry height="352" width="478" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-9" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#d5e8d4;swimlaneFillColor=#ffffff;strokeColor=#82b366;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«entity»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingReservation&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="258" width="470" x="120" y="900" as="geometry"/>
+                    <mxGeometry height="258" width="470" x="120" y="900" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-10" parent="vEwn-3R3Cp_KWsxjwIIQ-9" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- id: String&lt;br&gt;- studentId: String&lt;br&gt;- privateVehicleId: String&lt;br&gt;- portId: String&lt;br&gt;- startTime: DateTime&lt;br&gt;- endTime: DateTime&lt;br&gt;- status: ChargingReservationStatus&lt;br&gt;- version: int&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="198" width="470" y="60" as="geometry"/>
+                    <mxGeometry height="198" width="470" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-11" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«enumeration»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingReservationStatus&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="214" width="465" x="662" y="900" as="geometry"/>
+                    <mxGeometry height="214" width="465" x="662" y="900" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-12" parent="vEwn-3R3Cp_KWsxjwIIQ-11" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;CONFIRMED&lt;br&gt;CHARGING&lt;br&gt;AWAITING_DISCONNECT&lt;br&gt;COMPLETED&lt;br&gt;CANCELLED&lt;br&gt;EXPIRED&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="154" width="465" y="60" as="geometry"/>
+                    <mxGeometry height="154" width="465" y="60" as="geometry" />
                 </mxCell>
-                <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-13" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;TimeRange&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="126" width="312" x="1198" y="910" as="geometry"/>
+                <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-13" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;TimeRange&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="126" width="312" x="1198" y="910" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-14" parent="vEwn-3R3Cp_KWsxjwIIQ-13" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- startTime: DateTime&lt;br&gt;- endTime: DateTime&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="66" width="312" y="60" as="geometry"/>
+                    <mxGeometry height="66" width="312" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-15" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#d5e8d4;swimlaneFillColor=#ffffff;strokeColor=#82b366;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«entity»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingPort&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="126" width="470" x="120" y="1270" as="geometry"/>
+                    <mxGeometry height="126" width="470" x="120" y="1270" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-16" parent="vEwn-3R3Cp_KWsxjwIIQ-15" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- id: String&lt;br&gt;- slotId: String&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="66" width="470" y="60" as="geometry"/>
+                    <mxGeometry height="66" width="470" y="60" as="geometry" />
                 </mxCell>
-                <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-17" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ReservationDetail&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="214" width="465" x="640" y="1270" as="geometry"/>
+                <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-17" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ReservationDetail&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="214" width="465" x="640" y="1270" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-18" parent="vEwn-3R3Cp_KWsxjwIIQ-17" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- vehicle: PrivateVehicle&lt;br&gt;- hubId: String&lt;br&gt;- portId: String&lt;br&gt;- timeRange: TimeRange&lt;br&gt;- status: ChargingReservationStatus&lt;br&gt;- allowedActions: String[]&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="154" width="465" y="60" as="geometry"/>
+                    <mxGeometry height="154" width="465" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-19" edge="1" parent="1" source="vEwn-3R3Cp_KWsxjwIIQ-1" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=1.000000;exitY=0.085526;entryX=-0.001;entryY=0.082;entryDx=0;entryDy=0;" target="vEwn-3R3Cp_KWsxjwIIQ-3">
-                    <mxGeometry relative="1" as="geometry"/>
+                    <mxGeometry relative="1" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-20" edge="1" parent="1" source="vEwn-3R3Cp_KWsxjwIIQ-3" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=0;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;exitX=1;exitY=0.078;entryX=0;entryY=0.056;entryDx=0;entryDy=0;entryPerimeter=0;exitDx=0;exitDy=0;" target="vEwn-3R3Cp_KWsxjwIIQ-5">
                     <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="930" y="140" as="targetPoint"/>
+                        <mxPoint x="930" y="140" as="targetPoint" />
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-21" edge="1" parent="1" source="vEwn-3R3Cp_KWsxjwIIQ-5" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=0;dashPattern=7 5;strokeColor=#475B70;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=1;exitY=0.055;entryX=0.000000;entryY=0.094660;exitDx=0;exitDy=0;" target="vEwn-3R3Cp_KWsxjwIIQ-7">
-                    <mxGeometry relative="1" as="geometry"/>
+                    <mxGeometry relative="1" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-22" edge="1" parent="1" source="vEwn-3R3Cp_KWsxjwIIQ-9" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=1.000000;exitY=0.151163;entryX=0.000000;entryY=0.182243;" target="vEwn-3R3Cp_KWsxjwIIQ-11">
-                    <mxGeometry relative="1" as="geometry"/>
+                    <mxGeometry relative="1" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-23" edge="1" parent="1" source="vEwn-3R3Cp_KWsxjwIIQ-6" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitX=0.773;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.391;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="vEwn-3R3Cp_KWsxjwIIQ-13">
                     <mxGeometry relative="1" x="0.1111" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1320" y="840"/>
-                            <mxPoint x="1320" y="870"/>
+                            <mxPoint x="1320" y="840" />
+                            <mxPoint x="1320" y="870" />
                         </Array>
-                        <mxPoint x="1340" y="830" as="sourcePoint"/>
-                        <mxPoint x="1320" y="911.23" as="targetPoint"/>
+                        <mxPoint x="1340" y="830" as="sourcePoint" />
+                        <mxPoint x="1320" y="911.23" as="targetPoint" />
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-24" edge="1" parent="1" source="vEwn-3R3Cp_KWsxjwIIQ-17" style="noEdgeStyle=1;html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitPerimeter=0;entryPerimeter=0;exitX=1.000000;exitY=0.154206;entryX=0.000000;entryY=0.515873;" target="vEwn-3R3Cp_KWsxjwIIQ-13" value="">
                     <mxGeometry relative="1" x="0.1021" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1160" y="1303"/>
-                            <mxPoint x="1160" y="975"/>
+                            <mxPoint x="1160" y="1303" />
+                            <mxPoint x="1160" y="975" />
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-25" edge="1" parent="1" source="z-km-AclcGkT0LOt4jM8-6" style="noEdgeStyle=1;html=1;rounded=0;endArrow=none;endFill=0;dashed=0;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.8;exitX=0.513;exitY=1.031;entryX=0.513;entryY=-0.002;exitDx=0;exitDy=0;entryDx=0;entryDy=0;exitPerimeter=0;entryPerimeter=0;" target="vEwn-3R3Cp_KWsxjwIIQ-15">
-                    <mxGeometry relative="1" as="geometry"/>
+                    <mxGeometry relative="1" as="geometry" />
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-26" connectable="0" parent="vEwn-3R3Cp_KWsxjwIIQ-25" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;" value="0..*" vertex="1">
                     <mxGeometry relative="1" x="-1" as="geometry">
-                        <mxPoint x="26" y="32" as="offset"/>
+                        <mxPoint x="26" y="32" as="offset" />
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-27" connectable="0" parent="vEwn-3R3Cp_KWsxjwIIQ-25" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;fontSize=15;fontStyle=1;labelBackgroundColor=#ffffff;" value="1" vertex="1">
                     <mxGeometry relative="1" x="1" as="geometry">
-                        <mxPoint x="19" y="-15" as="offset"/>
+                        <mxPoint x="19" y="-15" as="offset" />
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-1" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;RescheduleForm&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="122" width="430" x="110" y="1560" as="geometry"/>
+                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-1" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;RescheduleForm&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="122" width="430" x="110" y="1560" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-2" parent="ao-Ve3aVnC-Gdwv6eIqK-1" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- reservation: ChargingReservation&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="44" width="430" y="60" as="geometry"/>
+                    <mxGeometry height="44" width="430" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-3" parent="ao-Ve3aVnC-Gdwv6eIqK-1" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
-                    <mxGeometry height="1" width="430" y="104" as="geometry"/>
+                    <mxGeometry height="1" width="430" y="104" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-4" parent="ao-Ve3aVnC-Gdwv6eIqK-1" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="18" width="430" y="104" as="geometry"/>
+                    <mxGeometry height="18" width="430" y="104" as="geometry" />
                 </mxCell>
-                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-5" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;UpdatedReservation&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="210" width="430" x="565" y="1560" as="geometry"/>
+                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-5" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;UpdatedReservation&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="210" width="430" x="565" y="1560" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-6" parent="ao-Ve3aVnC-Gdwv6eIqK-5" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- reservationId: String&lt;br&gt;- hubId: String&lt;br&gt;- portId: String&lt;br&gt;- timeRange: TimeRange&lt;br&gt;- usageGuide: String&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="132" width="430" y="60" as="geometry"/>
+                    <mxGeometry height="132" width="430" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-7" parent="ao-Ve3aVnC-Gdwv6eIqK-5" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
-                    <mxGeometry height="1" width="430" y="192" as="geometry"/>
+                    <mxGeometry height="1" width="430" y="192" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-8" parent="ao-Ve3aVnC-Gdwv6eIqK-5" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="18" width="430" y="192" as="geometry"/>
+                    <mxGeometry height="18" width="430" y="192" as="geometry" />
                 </mxCell>
-                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-9" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingNeed&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="144" width="430" x="1020" y="1560" as="geometry"/>
+                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-9" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingNeed&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="144" width="430" x="1020" y="1560" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-10" parent="ao-Ve3aVnC-Gdwv6eIqK-9" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- currentBattery: int&lt;br&gt;- targetBattery: int&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="66" width="430" y="60" as="geometry"/>
+                    <mxGeometry height="66" width="430" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-11" parent="ao-Ve3aVnC-Gdwv6eIqK-9" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
-                    <mxGeometry height="1" width="430" y="126" as="geometry"/>
+                    <mxGeometry height="1" width="430" y="126" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-12" parent="ao-Ve3aVnC-Gdwv6eIqK-9" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="18" width="430" y="126" as="geometry"/>
+                    <mxGeometry height="18" width="430" y="126" as="geometry" />
                 </mxCell>
-                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-13" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingSlotOption&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="232" width="430" x="110" y="1795" as="geometry"/>
+                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-13" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingSlotOption&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="232" width="430" x="110" y="1795" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-14" parent="ao-Ve3aVnC-Gdwv6eIqK-13" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- slotOptionId: String&lt;br&gt;- portId: String&lt;br&gt;- hubId: String&lt;br&gt;- startTime: DateTime&lt;br&gt;- endTime: DateTime&lt;br&gt;- maxPowerKw: double&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="154" width="430" y="60" as="geometry"/>
+                    <mxGeometry height="154" width="430" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-15" parent="ao-Ve3aVnC-Gdwv6eIqK-13" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
-                    <mxGeometry height="1" width="430" y="214" as="geometry"/>
+                    <mxGeometry height="1" width="430" y="214" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-16" parent="ao-Ve3aVnC-Gdwv6eIqK-13" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="18" width="430" y="214" as="geometry"/>
+                    <mxGeometry height="18" width="430" y="214" as="geometry" />
                 </mxCell>
-                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-17" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;SlotQueryResult&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="144" width="430" x="565" y="1795" as="geometry"/>
+                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-17" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;SlotQueryResult&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="144" width="430" x="565" y="1795" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-18" parent="ao-Ve3aVnC-Gdwv6eIqK-17" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- options: ChargingSlotOption[]&lt;br&gt;- verified: boolean&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="66" width="430" y="60" as="geometry"/>
+                    <mxGeometry height="66" width="430" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-19" parent="ao-Ve3aVnC-Gdwv6eIqK-17" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
-                    <mxGeometry height="1" width="430" y="126" as="geometry"/>
+                    <mxGeometry height="1" width="430" y="126" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-20" parent="ao-Ve3aVnC-Gdwv6eIqK-17" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="18" width="430" y="126" as="geometry"/>
+                    <mxGeometry height="18" width="430" y="126" as="geometry" />
                 </mxCell>
-                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-21" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;RescheduleResult&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="122" width="430" x="1020" y="1795" as="geometry"/>
+                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-21" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;RescheduleResult&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="122" width="430" x="1020" y="1795" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-22" parent="ao-Ve3aVnC-Gdwv6eIqK-21" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- reservation: ChargingReservation&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="44" width="430" y="60" as="geometry"/>
+                    <mxGeometry height="44" width="430" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-23" parent="ao-Ve3aVnC-Gdwv6eIqK-21" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
-                    <mxGeometry height="1" width="430" y="104" as="geometry"/>
+                    <mxGeometry height="1" width="430" y="104" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-24" parent="ao-Ve3aVnC-Gdwv6eIqK-21" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="18" width="430" y="104" as="geometry"/>
+                    <mxGeometry height="18" width="430" y="104" as="geometry" />
                 </mxCell>
-                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-25" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;CancellationCheck&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="166" width="430" x="110" y="2052" as="geometry"/>
+                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-25" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;CancellationCheck&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="166" width="430" x="110" y="2052" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-26" parent="ao-Ve3aVnC-Gdwv6eIqK-25" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- canCancel: boolean&lt;br&gt;- reason: String [0..1]&lt;br&gt;- version: int&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="88" width="430" y="60" as="geometry"/>
+                    <mxGeometry height="88" width="430" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-27" parent="ao-Ve3aVnC-Gdwv6eIqK-25" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
-                    <mxGeometry height="1" width="430" y="148" as="geometry"/>
+                    <mxGeometry height="1" width="430" y="148" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-28" parent="ao-Ve3aVnC-Gdwv6eIqK-25" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="18" width="430" y="148" as="geometry"/>
+                    <mxGeometry height="18" width="430" y="148" as="geometry" />
                 </mxCell>
-                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-29" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;CancellationResult&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="144" width="430" x="565" y="2052" as="geometry"/>
+                <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-29" parent="1" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;CancellationResult&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="144" width="430" x="565" y="2052" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-30" parent="ao-Ve3aVnC-Gdwv6eIqK-29" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- reservationId: String&lt;br&gt;- status: ChargingReservationStatus&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="66" width="430" y="60" as="geometry"/>
+                    <mxGeometry height="66" width="430" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-31" parent="ao-Ve3aVnC-Gdwv6eIqK-29" style="shape=line;strokeColor=#666666;movable=0;resizable=0;connectable=0;" value="" vertex="1">
-                    <mxGeometry height="1" width="430" y="126" as="geometry"/>
+                    <mxGeometry height="1" width="430" y="126" as="geometry" />
                 </mxCell>
                 <mxCell id="ao-Ve3aVnC-Gdwv6eIqK-32" parent="ao-Ve3aVnC-Gdwv6eIqK-29" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;connectable=0;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="18" width="430" y="126" as="geometry"/>
+                    <mxGeometry height="18" width="430" y="126" as="geometry" />
                 </mxCell>
                 <mxCell id="z-km-AclcGkT0LOt4jM8-4" parent="1" style="swimlane;startSize=0;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#d5e8d4;swimlaneFillColor=#ffffff;strokeColor=#82b366;strokeWidth=1.4;" value="&lt;div style=&quot;font-size: 14px; color: rgb(66, 86, 108);&quot;&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="18" width="470" x="120" y="1396" as="geometry"/>
+                    <mxGeometry height="18" width="470" x="120" y="1396" as="geometry" />
                 </mxCell>
                 <mxCell id="z-km-AclcGkT0LOt4jM8-6" parent="1" style="swimlane;startSize=0;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#d5e8d4;swimlaneFillColor=#ffffff;strokeColor=#82b366;strokeWidth=1.4;" value="&lt;div style=&quot;font-size: 14px; color: rgb(66, 86, 108);&quot;&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="18" width="470" x="120" y="1158" as="geometry"/>
+                    <mxGeometry height="18" width="470" x="120" y="1158" as="geometry" />
                 </mxCell>
                 <mxCell id="z-km-AclcGkT0LOt4jM8-10" parent="1" style="swimlane;startSize=0;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size: 14px; color: rgb(66, 86, 108);&quot;&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="18" width="312" x="1198" y="1036" as="geometry"/>
+                    <mxGeometry height="18" width="312" x="1198" y="1036" as="geometry" />
                 </mxCell>
                 <mxCell id="z-km-AclcGkT0LOt4jM8-11" parent="z-km-AclcGkT0LOt4jM8-10" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="66" width="312" y="60" as="geometry"/>
+                    <mxGeometry height="66" width="312" y="60" as="geometry" />
                 </mxCell>
                 <mxCell id="z-km-AclcGkT0LOt4jM8-13" parent="1" style="swimlane;startSize=0;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" value="&lt;div style=&quot;font-size: 14px; color: rgb(66, 86, 108);&quot;&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="18" width="465" x="640" y="1484" as="geometry"/>
+                    <mxGeometry height="18" width="465" x="640" y="1484" as="geometry" />
                 </mxCell>
                 <mxCell id="z-km-AclcGkT0LOt4jM8-14" parent="z-km-AclcGkT0LOt4jM8-13" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
-                    <mxGeometry height="66" width="312" y="60" as="geometry"/>
+                    <mxGeometry height="66" width="312" y="60" as="geometry" />
                 </mxCell>
             </root>
         </mxGraphModel>
