@@ -1,112 +1,119 @@
 <mxfile host="app.diagrams.net">
   <diagram id="uc01-search" name="UC01 - Search Options">
-    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2300" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2360" pageHeight="1160" background="#ffffff" math="0" shadow="0">
       <root>
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
         
         <!-- ================= BOUNDARY (VIEW) ================= -->
         <mxCell id="v1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«boundary»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;SearchHubView&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#dae8fc;swimlaneFillColor=#ffffff;strokeColor=#6c8ebf;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="40" y="60" width="400" height="180" as="geometry"/>
+          <mxGeometry x="40" y="60" width="460" height="210" as="geometry"/>
         </mxCell>
-        <mxCell id="v2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;+ openMobilitySearch(): void&lt;br&gt;+ loadSearchForm(config: SearchFormConfig): void&lt;br&gt;+ inputCriteria(criteria: SearchCriteria): void&lt;br&gt;+ reviseCriteria(): void&lt;br&gt;+ displaySearchResults(result: SearchResult): void&lt;br&gt;+ selectOption(optionId: String): void&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="v1">
-          <mxGeometry y="54" width="400" height="126" as="geometry"/>
+        <mxCell id="v2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;+ openMobilitySearch(): void&lt;br&gt;+ loadSearchForm(config: SearchFormConfig): void&lt;br&gt;+ submitSearch(criteria: SearchCriteria): void&lt;br&gt;+ reviseCriteria(): void&lt;br&gt;+ displaySearchResults(result: SearchResult): void&lt;br&gt;+ selectMobilityOption(optionId: String): void&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="v1">
+          <mxGeometry y="54" width="460" height="156" as="geometry"/>
         </mxCell>
 
         <!-- ================= CONTROL (CONTROLLER) ================= -->
         <mxCell id="c1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«control»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;SearchController&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#fff2cc;swimlaneFillColor=#ffffff;strokeColor=#d6b656;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="480" y="60" width="500" height="180" as="geometry"/>
+          <mxGeometry x="540" y="60" width="500" height="210" as="geometry"/>
         </mxCell>
-        <mxCell id="c2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;+ loadSearchForm(): SearchFormConfig&lt;br&gt;+ searchMobilityOptions(criteria: SearchCriteria):&lt;br&gt;&amp;nbsp;&amp;nbsp;SearchResult&lt;br&gt;+ confirmOptionSelection(sessionId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;optionId: String): OptionSelectionResult&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="c1">
-          <mxGeometry y="54" width="500" height="126" as="geometry"/>
+        <mxCell id="c2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;+ loadSearchForm(): SearchFormConfig&lt;br&gt;+ searchMobilityOptions(criteria: SearchCriteria):&lt;br&gt;&amp;nbsp;&amp;nbsp;SearchResult&lt;br&gt;+ confirmOptionSelection(sessionId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;optionId: String): OptionSelectionResult&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="c1">
+          <mxGeometry y="54" width="500" height="156" as="geometry"/>
         </mxCell>
 
         <!-- ================= CONTROL (SERVICE) ================= -->
         <mxCell id="s1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«control»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;SearchService&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffe6cc;swimlaneFillColor=#ffffff;strokeColor=#d79b00;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="1020" y="60" width="580" height="280" as="geometry"/>
+          <mxGeometry x="1080" y="60" width="600" height="390" as="geometry"/>
         </mxCell>
-        <mxCell id="s2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;+ loadSearchForm(): SearchFormConfig&lt;br&gt;+ findSuitableOptions(criteria: SearchCriteria):&lt;br&gt;&amp;nbsp;&amp;nbsp;SearchResult&lt;br&gt;+ confirmOptionSelection(sessionId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;optionId: String): OptionSelectionResult&lt;br&gt;- validateCriteria(criteria: SearchCriteria): boolean&lt;br&gt;- assessDataFreshness(context: MobilityContext): void&lt;br&gt;- markUnverifiedResources(context: MobilityContext): void&lt;br&gt;- filterSuitableOptions(criteria: SearchCriteria,&lt;br&gt;&amp;nbsp;&amp;nbsp;ctx: MobilityContext): MobilityOption[]&lt;br&gt;- validateSelectedOption(optionId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;criteria: SearchCriteria): boolean&lt;br&gt;- recordSessionSelection(sessionId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;optionId: String): void&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="s1">
-          <mxGeometry y="54" width="580" height="226" as="geometry"/>
+        <mxCell id="s2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;+ loadSearchForm(): SearchFormConfig&lt;br&gt;+ findSuitableOptions(criteria: SearchCriteria):&lt;br&gt;&amp;nbsp;&amp;nbsp;SearchResult&lt;br&gt;+ confirmOptionSelection(sessionId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;optionId: String): OptionSelectionResult&lt;br&gt;+ validateCriteria(criteria: SearchCriteria): boolean&lt;br&gt;+ validateSelectedOption(optionId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;criteria: SearchCriteria): boolean&lt;br&gt;- assessDataFreshness(context: MobilityContext): void&lt;br&gt;- markUnverifiedResources(context: MobilityContext): void&lt;br&gt;- filterSuitableOptions(criteria: SearchCriteria,&lt;br&gt;&amp;nbsp;&amp;nbsp;ctx: MobilityContext): MobilityOption[]&lt;br&gt;- recordSessionSelection(sessionId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;optionId: String): void&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="s1">
+          <mxGeometry y="54" width="600" height="336" as="geometry"/>
         </mxCell>
 
         <!-- ================= REPOSITORY ================= -->
         <mxCell id="r1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«repository»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;MobilityRepository&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#e1d5e7;swimlaneFillColor=#ffffff;strokeColor=#9673a6;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="1640" y="60" width="520" height="180" as="geometry"/>
+          <mxGeometry x="1720" y="60" width="540" height="220" as="geometry"/>
         </mxCell>
-        <mxCell id="r2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;+ queryMobilityContext(criteria: SearchCriteria):&lt;br&gt;&amp;nbsp;&amp;nbsp;MobilityContext&lt;br&gt;+ queryCurrentOptionState(optionId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;OptionState&lt;br&gt;+ findCandidateVehicles(criteria: SearchCriteria):&lt;br&gt;&amp;nbsp;&amp;nbsp;SharedVehicle[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="r1">
-          <mxGeometry y="54" width="520" height="126" as="geometry"/>
+        <mxCell id="r2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;+ queryMobilityContext(criteria: SearchCriteria):&lt;br&gt;&amp;nbsp;&amp;nbsp;MobilityContext&lt;br&gt;+ queryCurrentOptionState(optionId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;OptionState&lt;br&gt;+ findCandidateVehicles(criteria: SearchCriteria):&lt;br&gt;&amp;nbsp;&amp;nbsp;SharedVehicle[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="r1">
+          <mxGeometry y="54" width="540" height="166" as="geometry"/>
         </mxCell>
 
         <!-- ================= ENTITY ================= -->
         <mxCell id="e1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«entity»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;Hub&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#d5e8d4;swimlaneFillColor=#ffffff;strokeColor=#82b366;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="40" y="380" width="340" height="160" as="geometry"/>
+          <mxGeometry x="40" y="380" width="340" height="170" as="geometry"/>
         </mxCell>
-        <mxCell id="e2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- id: String&lt;br&gt;- name: String&lt;br&gt;- location: String&lt;br&gt;- lastUpdatedAt: DateTime&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="e1">
-          <mxGeometry y="54" width="340" height="106" as="geometry"/>
+        <mxCell id="e2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;- id: String&lt;br&gt;- name: String&lt;br&gt;- location: String&lt;br&gt;- lastUpdatedAt: DateTime&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="e1">
+          <mxGeometry y="54" width="340" height="116" as="geometry"/>
         </mxCell>
 
         <mxCell id="e3" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«entity»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;SharedVehicle&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#d5e8d4;swimlaneFillColor=#ffffff;strokeColor=#82b366;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="480" y="380" width="340" height="200" as="geometry"/>
+          <mxGeometry x="480" y="380" width="340" height="230" as="geometry"/>
         </mxCell>
-        <mxCell id="e4" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- id: String&lt;br&gt;- code: String&lt;br&gt;- type: VehicleType&lt;br&gt;- batteryLevel: int&lt;br&gt;- status: String&lt;br&gt;- hubId: String&lt;br&gt;- lastUpdatedAt: DateTime&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="e3">
-          <mxGeometry y="54" width="340" height="146" as="geometry"/>
+        <mxCell id="e4" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;- id: String&lt;br&gt;- code: String&lt;br&gt;- type: VehicleType&lt;br&gt;- batteryLevel: int&lt;br&gt;- status: VehicleStatus&lt;br&gt;- hubId: String&lt;br&gt;- lastUpdatedAt: DateTime&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="e3">
+          <mxGeometry y="54" width="340" height="176" as="geometry"/>
         </mxCell>
 
         <mxCell id="en1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«enumeration»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;VehicleType&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="860" y="380" width="280" height="120" as="geometry"/>
+          <mxGeometry x="860" y="380" width="200" height="120" as="geometry"/>
         </mxCell>
-        <mxCell id="en2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;E_BIKE&lt;br&gt;E_MOTORBIKE&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="en1">
-          <mxGeometry y="54" width="280" height="66" as="geometry"/>
+        <mxCell id="en2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;E_BIKE&lt;br&gt;E_MOTORBIKE&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="en1">
+          <mxGeometry y="54" width="200" height="66" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="en3" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«enumeration»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;VehicleStatus&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="860" y="520" width="260" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="en4" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;AVAILABLE&lt;br&gt;RESERVED&lt;br&gt;HANDING_OVER&lt;br&gt;IN_USE&lt;br&gt;PENDING_VERIFICATION&lt;br&gt;UNDER_MAINTENANCE&lt;br&gt;CHARGING&lt;br&gt;IN_TRANSIT&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="en3">
+          <mxGeometry y="54" width="260" height="176" as="geometry"/>
         </mxCell>
 
         <!-- ================= DATATYPES ================= -->
         <mxCell id="dt1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;SearchResult&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="40" y="620" width="400" height="140" as="geometry"/>
+          <mxGeometry x="40" y="690" width="400" height="140" as="geometry"/>
         </mxCell>
-        <mxCell id="dt1_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- options: MobilityOption[]&lt;br&gt;- updatedAt: DateTime&lt;br&gt;- unverifiedFlags: String[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt1">
+        <mxCell id="dt1_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;- options: MobilityOption[]&lt;br&gt;- updatedAt: DateTime&lt;br&gt;- unverifiedFlags: String[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt1">
           <mxGeometry y="54" width="400" height="86" as="geometry"/>
         </mxCell>
 
         <mxCell id="dt2" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;OptionSelectionResult&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="480" y="620" width="380" height="140" as="geometry"/>
+          <mxGeometry x="480" y="690" width="350" height="140" as="geometry"/>
         </mxCell>
-        <mxCell id="dt2_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- optionChanged: boolean&lt;br&gt;- nextActions: String[]&lt;br&gt;- updatedResult: SearchResult&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt2">
-          <mxGeometry y="54" width="380" height="86" as="geometry"/>
+        <mxCell id="dt2_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;- optionChanged: boolean&lt;br&gt;- nextActions: String[]&lt;br&gt;- updatedResult: SearchResult&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt2">
+          <mxGeometry y="54" width="350" height="86" as="geometry"/>
         </mxCell>
 
         <mxCell id="dt3" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;SearchCriteria&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="900" y="620" width="340" height="160" as="geometry"/>
+          <mxGeometry x="1150" y="690" width="340" height="165" as="geometry"/>
         </mxCell>
-        <mxCell id="dt3_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- purpose: String&lt;br&gt;- originHubId: String&lt;br&gt;- vehicleType: String&lt;br&gt;- minBattery: int&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt3">
-          <mxGeometry y="54" width="340" height="106" as="geometry"/>
+        <mxCell id="dt3_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;- purpose: String&lt;br&gt;- originHubId: String&lt;br&gt;- vehicleType: String&lt;br&gt;- minBattery: int&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt3">
+          <mxGeometry y="54" width="340" height="111" as="geometry"/>
         </mxCell>
 
         <mxCell id="dt4" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;MobilityOption&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="1280" y="620" width="380" height="160" as="geometry"/>
+          <mxGeometry x="1510" y="690" width="380" height="165" as="geometry"/>
         </mxCell>
-        <mxCell id="dt4_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- optionId: String&lt;br&gt;- hubId: String&lt;br&gt;- vehicle: SharedVehicle&lt;br&gt;- estimatedDistance: double&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt4">
-          <mxGeometry y="54" width="380" height="106" as="geometry"/>
+        <mxCell id="dt4_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;- optionId: String&lt;br&gt;- hubId: String&lt;br&gt;- vehicle: SharedVehicle&lt;br&gt;- estimatedDistance: double&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt4">
+          <mxGeometry y="54" width="380" height="111" as="geometry"/>
         </mxCell>
 
         <mxCell id="dt5" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;MobilityContext&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="1700" y="620" width="360" height="140" as="geometry"/>
+          <mxGeometry x="1910" y="690" width="360" height="140" as="geometry"/>
         </mxCell>
-        <mxCell id="dt5_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- hubs: Hub[]&lt;br&gt;- vehicles: SharedVehicle[]&lt;br&gt;- lastUpdatedAt: DateTime&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt5">
+        <mxCell id="dt5_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;- hubs: Hub[]&lt;br&gt;- vehicles: SharedVehicle[]&lt;br&gt;- lastUpdatedAt: DateTime&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt5">
           <mxGeometry y="54" width="360" height="86" as="geometry"/>
         </mxCell>
 
         <mxCell id="dt6" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;OptionState&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="40" y="800" width="340" height="120" as="geometry"/>
+          <mxGeometry x="40" y="860" width="340" height="125" as="geometry"/>
         </mxCell>
-        <mxCell id="dt6_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- isAvailable: boolean&lt;br&gt;- currentBattery: int&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt6">
-          <mxGeometry y="54" width="340" height="66" as="geometry"/>
+        <mxCell id="dt6_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;- isAvailable: boolean&lt;br&gt;- currentBattery: int&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt6">
+          <mxGeometry y="54" width="340" height="71" as="geometry"/>
         </mxCell>
 
         <mxCell id="dt7" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;SearchFormConfig&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="420" y="800" width="400" height="120" as="geometry"/>
+          <mxGeometry x="420" y="860" width="400" height="125" as="geometry"/>
         </mxCell>
-        <mxCell id="dt7_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- defaultHubId: String&lt;br&gt;- availableVehicleTypes: String[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt7">
-          <mxGeometry y="54" width="400" height="66" as="geometry"/>
+        <mxCell id="dt7_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:22px;&quot;&gt;- defaultHubId: String&lt;br&gt;- availableVehicleTypes: String[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt7">
+          <mxGeometry y="54" width="400" height="71" as="geometry"/>
         </mxCell>
 
         <!-- ================= EDGES ================= -->
@@ -121,7 +128,7 @@
         </mxCell>
 
         <!-- Relations Hub / Vehicle -->
-        <mxCell id="ed4" style="html=1;rounded=0;endArrow=none;endFill=0;dashed=0;strokeColor=#000000;strokeWidth=1.6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="e1" target="e3">
+        <mxCell id="ed4" style="html=1;rounded=0;endArrow=none;endFill=0;dashed=0;strokeColor=#000000;strokeWidth=1.6;exitX=1;exitY=0.5;entryX=0;entryY=0.45;" edge="1" parent="1" source="e1" target="e3">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="ed4_m1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;fontSize=13;fontStyle=1;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="ed4">
@@ -131,26 +138,29 @@
           <mxGeometry x="0.7" y="-14" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
         </mxCell>
         
-        <mxCell id="ed5" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="e3" target="en1">
+        <mxCell id="ed5" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.6;exitX=1;exitY=0.26;entryX=0;entryY=0.5;" edge="1" parent="1" source="e3" target="en1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed5_status" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.6;exitX=1;exitY=0.55;entryX=0;entryY=0.5;" edge="1" parent="1" source="e3" target="en3">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
 
-        <!-- Datatype Usage Relations (Optional visually, but adds clarity) -->
-        <mxCell id="ed6" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.6;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="dt1" target="dt4">
+        <!-- Datatype Usage Relations (Clean bottom routing) -->
+        <mxCell id="ed6" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.6;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.5;entryY=1;" edge="1" parent="1" source="dt1" target="dt4">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="240" y="780"/>
-              <mxPoint x="1470" y="780"/>
+              <mxPoint x="240" y="885"/>
+              <mxPoint x="1700" y="885"/>
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="ed7" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.6;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="dt5" target="e1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1880" y="780"/>
-              <mxPoint x="2080" y="780"/>
-              <mxPoint x="2080" y="350"/>
-              <mxPoint x="210" y="350"/>
+              <mxPoint x="2090" y="885"/>
+              <mxPoint x="2320" y="885"/>
+              <mxPoint x="2320" y="355"/>
+              <mxPoint x="210" y="355"/>
             </Array>
           </mxGeometry>
         </mxCell>
