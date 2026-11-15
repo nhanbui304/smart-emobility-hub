@@ -101,7 +101,7 @@ Dữ liệu dùng theo dữ liệu mẫu của nhóm: tài khoản `student1`, `
 
 | Mục | Nội dung |
 | --- | --- |
-| **Test Case ID** | TC-2.3.2-01 |
+| **Test Case ID** | TC-HUB-01 |
 | **Test Items** | View Hub and Resource Status – xem trạng thái Hub và tài nguyên |
 | **Pre-condition** | Người dùng đã đăng nhập. Hệ thống có dữ liệu Hub và trạng thái tài nguyên. |
 | **Test Data** | Các Hub và tài nguyên có trong dữ liệu mẫu của nhóm |
@@ -127,9 +127,9 @@ Dữ liệu dùng theo dữ liệu mẫu của nhóm: tài khoản `student1`, `
 
 | Mục | Nội dung |
 | --- | --- |
-| **Test Case ID** | TC-MYRES-01 |
+| **Test Case ID** | TC-2.3.2-01 |
 | **Test Items** | Mục 2.3.2 – tự động giải phóng xe khi sinh viên không nhận xe đúng thời hạn. |
-| **Pre-condition** | student1 đã đăng nhập và có một lượt đặt xe ở trạng thái RESERVED. Thời hạn nhận xe đã kết thúc. Tác vụ định kỳ chưa chạy. |
+| **Pre-condition** | student1 đã đăng nhập. Hub có xe dùng chung khả dụng, student1 chưa có lượt đặt xe nào còn hiệu lực. |
 | **Test Data** | student1, mã lượt đặt xe hợp lệ, xe thuộc lượt đặt. |
 | **Test Steps** | 1. student1 tạo lượt đặt xe thành công. <br>2. Chờ đến khi thời hạn nhận xe kết thúc. <br>3. Trước khi tác vụ định kỳ chạy, student1 thực hiện thao tác Nhận xe. <br>4. Kiểm tra phản hồi hệ thống.<br>5. Chờ tác vụ định kỳ chạy. <br>6. Kiểm tra trạng thái lượt đặt và khả năng đặt lại xe. |
 | **Expected results** | Hệ thống từ chối thao tác nhận xe vì lượt đặt đã quá thời hạn, mặc dù tác vụ định kỳ chưa chạy. Sau khi tác vụ định kỳ chạy, lượt đặt chuyển sang trạng thái EXPIRED. Xe được giải phóng và có thể được đặt lại nếu vẫn đáp ứng điều kiện khả dụng. |
