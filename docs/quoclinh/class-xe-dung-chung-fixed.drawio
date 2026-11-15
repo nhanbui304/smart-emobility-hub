@@ -409,7 +409,7 @@
                 <mxCell id="oYscFj-QVfHK5pvsqPVF-5" parent="oYscFj-QVfHK5pvsqPVF-4" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" value="" vertex="1">
                     <mxGeometry height="8" width="520" y="44" as="geometry" />
                 </mxCell>
-                <mxCell id="oYscFj-QVfHK5pvsqPVF-6" parent="oYscFj-QVfHK5pvsqPVF-4" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" value="&lt;div&gt;&lt;pre dir=&quot;ltr&quot;&gt;&lt;code&gt;+ notifyOperator(alert: OperatorAlert): void&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;/p&gt;" vertex="1">
+                <mxCell id="oYscFj-QVfHK5pvsqPVF-6" parent="oYscFj-QVfHK5pvsqPVF-4" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" value="&lt;div&gt;&lt;pre dir=&quot;ltr&quot;&gt;&lt;code&gt;+ notifyOperator(alert: OperatorAlert): NotificationResult&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;/p&gt;" vertex="1">
                     <mxGeometry height="48" width="520" y="52" as="geometry" />
                 </mxCell>
                 <mxCell id="oYscFj-QVfHK5pvsqPVF-7" parent="1" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" value="«datatype»&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;&lt;b&gt;OperatorAlert&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;" vertex="1">
@@ -420,6 +420,15 @@
                 </mxCell>
                 <mxCell id="oYscFj-QVfHK5pvsqPVF-9" parent="oYscFj-QVfHK5pvsqPVF-7" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" value="" vertex="1">
                     <mxGeometry height="8" width="370" y="110" as="geometry" />
+                </mxCell>
+                <mxCell id="ql_notif_result" parent="1" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" value="«datatype»&lt;div&gt;&lt;b&gt;NotificationResult&lt;/b&gt;&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="86" width="300" x="1780" y="2034" as="geometry" />
+                </mxCell>
+                <mxCell id="ql_notif_result_attr" parent="ql_notif_result" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" value="&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- sent: boolean&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- failedRecipientIds: String[]&lt;/span&gt;&lt;/div&gt;" vertex="1">
+                    <mxGeometry height="34" width="300" y="44" as="geometry" />
+                </mxCell>
+                <mxCell id="ql_notif_result_line" parent="ql_notif_result" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" value="" vertex="1">
+                    <mxGeometry height="8" width="300" y="78" as="geometry" />
                 </mxCell>
                 <mxCell id="oYscFj-QVfHK5pvsqPVF-10" edge="1" parent="1" source="p1_pickup_service_m" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;exitX=0.463;exitY=0.977;exitDx=0;exitDy=0;entryX=0.461;entryY=0.02;entryDx=0;entryDy=0;entryPerimeter=0;exitPerimeter=0;" target="oYscFj-QVfHK5pvsqPVF-4" value="">
                     <mxGeometry relative="1" x="-0.3761" as="geometry">
