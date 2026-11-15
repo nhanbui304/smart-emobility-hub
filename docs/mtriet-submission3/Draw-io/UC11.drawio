@@ -1,0 +1,186 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="uc11-incident" name="UC11 - Handle Operational Incident">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2480" pageHeight="1300" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        
+        <!-- ================= BOUNDARY (VIEW) ================= -->
+        <mxCell id="v1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«boundary»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;IncidentUI&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#dae8fc;swimlaneFillColor=#ffffff;strokeColor=#6c8ebf;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="460" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="v2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;+ openIncidentManagement(resourceId: String): void&lt;br&gt;+ openExistingIncident(incidentId: String): void&lt;br&gt;+ submitIncident(description: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;impactLevel: String, affectedScope: String): void&lt;br&gt;+ submitHandlingPlan(incidentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;plan: HandlingPlan): void&lt;br&gt;+ submitResolutionResult(incidentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;result: ResolutionResult): void&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="v1">
+          <mxGeometry y="54" width="460" height="146" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= CONTROL (CONTROLLER) ================= -->
+        <mxCell id="c1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«control»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;IncidentController&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#fff2cc;swimlaneFillColor=#ffffff;strokeColor=#d6b656;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="540" y="40" width="560" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;+ openIncidentManagement(resourceId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;IncidentContext&lt;br&gt;+ openExistingIncident(incidentId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;IncidentDetails&lt;br&gt;+ submitIncident(reqId: String, resourceId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;desc: String, impact: String, scope: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;IncidentResult&lt;br&gt;+ submitHandlingPlan(reqId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;incidentId: String, plan: HandlingPlan): IncidentResult&lt;br&gt;+ submitResolutionResult(reqId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;incidentId: String, result: ResolutionResult): IncidentResult&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="c1">
+          <mxGeometry y="54" width="560" height="166" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= CONTROL (SERVICE) ================= -->
+        <mxCell id="s1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«control»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;IncidentService&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffe6cc;swimlaneFillColor=#ffffff;strokeColor=#d79b00;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="40" width="600" height="300" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;+ getIncidentContext(resourceId: String): IncidentContext&lt;br&gt;+ getIncidentDetails(incidentId: String): IncidentDetails&lt;br&gt;+ reportIncident(reqId: String, resourceId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;desc: String, impact: String, scope: String): IncidentResult&lt;br&gt;+ processHandlingPlan(reqId: String, incidentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;plan: HandlingPlan): IncidentResult&lt;br&gt;+ verifyResolution(reqId: String, incidentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;result: ResolutionResult): IncidentResult&lt;br&gt;- validateIncidentData(resourceId: String, desc: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;impact: String, scope: String): boolean&lt;br&gt;- identifyChangesToConfirmedCommitments(&lt;br&gt;&amp;nbsp;&amp;nbsp;plan: HandlingPlan): String[]&lt;br&gt;- evaluateResolutionEvidence(result: ResolutionResult,&lt;br&gt;&amp;nbsp;&amp;nbsp;context: VerificationContext): boolean&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="s1">
+          <mxGeometry y="54" width="600" height="246" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= REPOSITORY ================= -->
+        <mxCell id="r1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«repository»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;OperationalRepository&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#e1d5e7;swimlaneFillColor=#ffffff;strokeColor=#9673a6;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="40" width="640" height="420" as="geometry"/>
+        </mxCell>
+        <mxCell id="r2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;+ queryResourceStatusAndOpenIncidents(resourceId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;IncidentContext&lt;br&gt;+ findIncidentWithAffectedServices(incidentId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;IncidentDetails&lt;br&gt;+ createIncidentAndRestrictNewAllocations(reqId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;resourceId: String, desc: String, impact: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;scope: String): IncidentResult&lt;br&gt;+ queryAffectedHoldsBookingsTripsAndSchedules(&lt;br&gt;&amp;nbsp;&amp;nbsp;resourceId: String, scope: String): AffectedContext&lt;br&gt;+ queryAllocationAvailability(changes: String[]): boolean&lt;br&gt;+ checkChangePermission(plan: HandlingPlan, avail: boolean): boolean&lt;br&gt;+ saveHandlingPlanAndProgress(reqId: String, incidentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;plan: HandlingPlan, consentPlan: ConsentPlan,&lt;br&gt;&amp;nbsp;&amp;nbsp;expectedVersion: int): IncidentResult&lt;br&gt;+ saveIncidentProgress(reqId: String, incidentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;result: ResolutionResult): IncidentResult&lt;br&gt;+ queryResourceAndRemainingImpacts(incidentId: String):&lt;br&gt;&amp;nbsp;&amp;nbsp;VerificationContext&lt;br&gt;+ checkOtherActiveIncidentsOrRestrictions(&lt;br&gt;&amp;nbsp;&amp;nbsp;context: VerificationContext): boolean&lt;br&gt;+ closeIncidentKeepResourceRestricted(reqId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;incidentId: String, auditEntry: String): IncidentResult&lt;br&gt;+ closeIncidentAndRestoreService(reqId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;incidentId: String, auditEntry: String): IncidentResult&lt;br&gt;+ findProcessedRequest(reqId: String): IncidentResult [0..1]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="r1">
+          <mxGeometry y="54" width="640" height="366" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= EXTERNAL SERVICE ================= -->
+        <mxCell id="ext1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«service»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;NotificationService&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f8cecc;swimlaneFillColor=#ffffff;strokeColor=#b85450;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="380" width="580" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="ext2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;+ notifyAffectedUsers(incidentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;affectedContext: AffectedContext): boolean&lt;br&gt;+ requestUserConsent(incidentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;pendingChanges: String[], deadline: DateTime): boolean&lt;br&gt;+ markNotificationPending(incidentId: String): void&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="ext1">
+          <mxGeometry y="54" width="580" height="106" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= ENTITY ================= -->
+        <mxCell id="e1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«entity»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;Incident&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#d5e8d4;swimlaneFillColor=#ffffff;strokeColor=#82b366;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="520" width="340" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- id: String&lt;br&gt;- resourceId: String&lt;br&gt;- description: String&lt;br&gt;- impactLevel: IncidentImpact&lt;br&gt;- status: IncidentStatus&lt;br&gt;- createdAt: DateTime&lt;br&gt;- resolvedAt: DateTime [0..1]&lt;br&gt;- version: int&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="e1">
+          <mxGeometry y="54" width="340" height="166" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= ENUMERATIONS ================= -->
+        <mxCell id="en1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«enumeration»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;IncidentStatus&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="2160" y="520" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="en2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;OPEN&lt;br&gt;IN_PROGRESS&lt;br&gt;CLOSED&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="en1">
+          <mxGeometry y="54" width="260" height="66" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="en3" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«enumeration»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;IncidentImpact&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="2160" y="660" width="260" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="en4" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;LOW&lt;br&gt;MEDIUM&lt;br&gt;HIGH&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="en3">
+          <mxGeometry y="54" width="260" height="66" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= DATATYPES (WHITE BACKGROUND) ================= -->
+        <mxCell id="dt1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;IncidentContext&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="40" y="620" width="380" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="dt1_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- resourceId: String&lt;br&gt;- resourceStatus: String&lt;br&gt;- openIncidents: Incident[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt1">
+          <mxGeometry y="54" width="380" height="86" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="dt2" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;IncidentDetails&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="460" y="620" width="380" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="dt2_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- incident: Incident&lt;br&gt;- affectedServices: String[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt2">
+          <mxGeometry y="54" width="380" height="66" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="dt3" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;IncidentResult&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="880" y="620" width="340" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="dt3_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- success: boolean&lt;br&gt;- message: String&lt;br&gt;- incidentId: String [0..1]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt3">
+          <mxGeometry y="54" width="340" height="86" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="dt4" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;HandlingPlan&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="620" width="400" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="dt4_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- actionType: String&lt;br&gt;- allocationChanges: String[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt4">
+          <mxGeometry y="54" width="400" height="66" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="dt5" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;ConsentPlan&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="40" y="780" width="380" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="dt5_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- pendingChanges: String[]&lt;br&gt;- responseDeadline: DateTime&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt5">
+          <mxGeometry y="54" width="380" height="66" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="dt6" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;ResolutionResult&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="460" y="780" width="380" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="dt6_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- isResolved: boolean&lt;br&gt;- evidence: String&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt6">
+          <mxGeometry y="54" width="380" height="66" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="dt7" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;VerificationContext&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="880" y="780" width="400" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="dt7_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- resourceStatus: String&lt;br&gt;- remainingImpacts: String[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt7">
+          <mxGeometry y="54" width="400" height="66" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="dt8" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;AffectedContext&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="780" width="400" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="dt8_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- affectedHolds: String[]&lt;br&gt;- affectedBookings: String[]&lt;br&gt;- affectedTrips: String[]&lt;br&gt;- affectedSchedules: String[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt8">
+          <mxGeometry y="54" width="400" height="106" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= EDGES ================= -->
+        <mxCell id="ed1" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.6;exitX=1;exitY=0.4;entryX=0;entryY=0.36;" edge="1" parent="1" source="v1" target="c1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed2" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=0;strokeColor=#000000;strokeWidth=1.6;exitX=1;exitY=0.36;entryX=0;entryY=0.26;" edge="1" parent="1" source="c1" target="s1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed3" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=0;strokeColor=#000000;strokeWidth=1.6;exitX=1;exitY=0.26;entryX=0;entryY=0.18;" edge="1" parent="1" source="s1" target="r1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- IncidentService uses NotificationService -->
+        <mxCell id="ed4" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="s1" target="ext1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        
+        <!-- Repository manages Incident Entity -->
+        <mxCell id="ed5" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=0;strokeColor=#000000;strokeWidth=1.6;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="r1" target="e1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed5_m1" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;fontSize=13;fontStyle=1;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="ed5">
+          <mxGeometry x="-0.85" y="-12" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ed5_m2" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;fontSize=13;fontStyle=1;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="ed5">
+          <mxGeometry x="0.88" y="-14" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry>
+        </mxCell>
+
+        <!-- Incident to Enums -->
+        <mxCell id="ed6" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.6;exitX=1;exitY=0.25;entryX=0;entryY=0.5;" edge="1" parent="1" source="e1" target="en1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ed7" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.6;exitX=1;exitY=0.75;entryX=0;entryY=0.5;" edge="1" parent="1" source="e1" target="en3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Datatypes references -->
+        <mxCell id="ed8" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.6;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0;entryY=0.5;" edge="1" parent="1" source="dt1" target="e1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="230" y="980"/>
+              <mxPoint x="1750" y="980"/>
+              <mxPoint x="1750" y="630"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ed9" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.6;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0;entryY=0.75;" edge="1" parent="1" source="dt2" target="e1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="650" y="960"/>
+              <mxPoint x="1760" y="960"/>
+              <mxPoint x="1760" y="685"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
