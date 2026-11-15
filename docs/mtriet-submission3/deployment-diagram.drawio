@@ -1,0 +1,71 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="deployment-overall" name="Deployment Diagram - Smart E-Mobility Hub">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="920" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ================= CLIENT DEVICE: STUDENT BROWSER ================= -->
+        <mxCell id="n_stu" value="«device»&lt;br&gt;&lt;b&gt;Student Client Device&lt;/b&gt;&lt;br&gt;(Desktop / Mobile Browser)" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;size=16;verticalAlign=top;align=center;spacingTop=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="60" y="80" width="360" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_stu_app" value="«artifact»&lt;br&gt;&lt;b&gt;Student Web SPA&lt;/b&gt;&lt;br&gt;(React + Vite + Tailwind CSS)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="100" y="180" width="260" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= CLIENT DEVICE: OPERATOR BROWSER ================= -->
+        <mxCell id="n_ope" value="«device»&lt;br&gt;&lt;b&gt;Operator Workstation&lt;/b&gt;&lt;br&gt;(Desktop Browser)" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;size=16;verticalAlign=top;align=center;spacingTop=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="60" y="420" width="360" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_ope_app" value="«artifact»&lt;br&gt;&lt;b&gt;Operator Dashboard SPA&lt;/b&gt;&lt;br&gt;(React + Vite + Tailwind CSS)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="100" y="520" width="260" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= DEMO HOST MACHINE ================= -->
+        <mxCell id="n_host" value="«device»&lt;br&gt;&lt;b&gt;Local Demo Host Machine&lt;/b&gt;&lt;br&gt;(Single-Machine Deployment)" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;size=20;verticalAlign=top;align=center;spacingTop=8;fillColor=#f5f5f5;strokeColor=#666666;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="620" y="60" width="1080" height="680" as="geometry"/>
+        </mxCell>
+
+        <!-- EXECUTION ENVIRONMENT: NODE.JS SERVER -->
+        <mxCell id="ee_node" value="«executionEnvironment»&lt;br&gt;&lt;b&gt;Node.js Runtime (TypeScript)&lt;/b&gt;" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;size=16;verticalAlign=top;align=center;spacingTop=8;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="670" y="160" width="540" height="530" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a_api" value="«artifact»&lt;br&gt;&lt;b&gt;Express REST API Server&lt;/b&gt;&lt;br&gt;- Auth: express-session (Cookie) + bcrypt&lt;br&gt;- Business Services &amp;amp; Controllers&lt;br&gt;- Concurrency Control: db.transaction" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="710" y="250" width="440" height="130" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a_sim" value="«artifact»&lt;br&gt;&lt;b&gt;Vehicle &amp;amp; Hub Simulator&lt;/b&gt;&lt;br&gt;- Internal event loop (setInterval)&lt;br&gt;- Simulates lock/unlock, battery &amp;amp; charging" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="710" y="410" width="440" height="110" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a_cron" value="«artifact»&lt;br&gt;&lt;b&gt;Periodic Background Workers&lt;/b&gt;&lt;br&gt;- Scheduled checks (setInterval)&lt;br&gt;- Hold/Reservation expiry &amp;amp; Hub threshold alerts" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="710" y="550" width="440" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- EXECUTION ENVIRONMENT: SQLITE STORAGE -->
+        <mxCell id="ee_db" value="«executionEnvironment»&lt;br&gt;&lt;b&gt;Local File System Storage&lt;/b&gt;" style="shape=cube;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;darkOpacity=0.05;darkOpacity2=0.1;size=16;verticalAlign=top;align=center;spacingTop=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="250" width="370" height="320" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a_sqlite" value="«artifact»&lt;br&gt;&lt;b&gt;SQLite Database File&lt;/b&gt;&lt;br&gt;(smart_mobility.db)&lt;br&gt;- Operational &amp;amp; Simulation Tables&lt;br&gt;- Processed Request Logs" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=13;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="350" width="280" height="150" as="geometry"/>
+        </mxCell>
+
+        <!-- ================= COMMUNICATION PATHS ================= -->
+        <mxCell id="c_stu_node" value="«HTTP / JSON»&lt;br&gt;REST API + Polling (3s)" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.6;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.25;" edge="1" parent="1" source="n_stu" target="ee_node">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="c_ope_node" value="«HTTP / JSON»&lt;br&gt;REST API + Polling (3s)" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.6;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.72;" edge="1" parent="1" source="n_ope" target="ee_node">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="c_node_db" value="«Drizzle ORM»&lt;br&gt;Local File I/O" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;strokeWidth=1.6;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.47;entryX=0;entryY=0.5;" edge="1" parent="1" source="ee_node" target="ee_db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
