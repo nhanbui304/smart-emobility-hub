@@ -29,10 +29,10 @@
                     <mxGeometry y="60" width="478" height="352" as="geometry"/>
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-9" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«entity»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingReservation&lt;/div&gt;" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#d5e8d4;swimlaneFillColor=#ffffff;strokeColor=#82b366;strokeWidth=1.4;" parent="1" vertex="1">
-                    <mxGeometry x="120" y="900" width="470" height="258" as="geometry"/>
+                    <mxGeometry x="120" y="900" width="470" height="302" as="geometry"/>
                 </mxCell>
-                <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-10" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- id: String&lt;br&gt;- studentId: String&lt;br&gt;- privateVehicleId: String&lt;br&gt;- portId: String&lt;br&gt;- startTime: DateTime&lt;br&gt;- endTime: DateTime&lt;br&gt;- status: ChargingReservationStatus&lt;br&gt;- version: int&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" parent="vEwn-3R3Cp_KWsxjwIIQ-9" vertex="1">
-                    <mxGeometry y="60" width="470" height="198" as="geometry"/>
+                <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-10" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:16px;line-height:22px;&quot;&gt;- id: String&lt;br&gt;- studentId: String&lt;br&gt;- privateVehicleId: String&lt;br&gt;- portId: String&lt;br&gt;- startTime: DateTime&lt;br&gt;- endTime: DateTime&lt;br&gt;- currentBattery: int [0..1]&lt;br&gt;- targetBattery: int [0..1]&lt;br&gt;- status: ChargingReservationStatus&lt;br&gt;- version: int&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" parent="vEwn-3R3Cp_KWsxjwIIQ-9" vertex="1">
+                    <mxGeometry y="60" width="470" height="242" as="geometry"/>
                 </mxCell>
                 <mxCell id="vEwn-3R3Cp_KWsxjwIIQ-11" value="&lt;div style=&quot;font-size:14px;color:#42566c;&quot;&gt;«enumeration»&lt;/div&gt;&lt;div style=&quot;font-size:20px;font-weight:bold;&quot;&gt;ChargingReservationStatus&lt;/div&gt;" style="swimlane;startSize=60;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" parent="1" vertex="1">
                     <mxGeometry x="662" y="900" width="465" height="214" as="geometry"/>
@@ -203,7 +203,7 @@
                     <mxGeometry x="120" y="1396" width="470" height="18" as="geometry"/>
                 </mxCell>
                 <mxCell id="z-km-AclcGkT0LOt4jM8-6" value="&lt;div style=&quot;font-size: 14px; color: rgb(66, 86, 108);&quot;&gt;&lt;br&gt;&lt;/div&gt;" style="swimlane;startSize=0;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#d5e8d4;swimlaneFillColor=#ffffff;strokeColor=#82b366;strokeWidth=1.4;" parent="1" vertex="1">
-                    <mxGeometry x="120" y="1158" width="470" height="18" as="geometry"/>
+                    <mxGeometry x="120" y="1202" width="470" height="18" as="geometry"/>
                 </mxCell>
                 <mxCell id="z-km-AclcGkT0LOt4jM8-10" value="&lt;div style=&quot;font-size: 14px; color: rgb(66, 86, 108);&quot;&gt;&lt;br&gt;&lt;/div&gt;" style="swimlane;startSize=0;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#f5f5f5;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" parent="1" vertex="1">
                     <mxGeometry x="1198" y="1036" width="312" height="18" as="geometry"/>
