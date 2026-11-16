@@ -39,18 +39,18 @@
 
         
         <mxCell id="ext1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«control»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;NotificationService&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffe6cc;swimlaneFillColor=#ffffff;strokeColor=#d79b00;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="1140" y="476.0" width="580" height="176.0" as="geometry" />
+          <mxGeometry x="1140" y="476.0" width="580" height="196.0" as="geometry" />
         </mxCell>
-        <mxCell id="ext2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;+ notifyAffectedUsers(incidentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;affectedContext: AffectedContext): boolean&lt;br&gt;+ requestUserConsent(incidentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;pendingChanges: String[], deadline: DateTime): boolean&lt;br&gt;+ markNotificationPending(incidentId: String): void&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="ext1">
-          <mxGeometry y="54" width="580" height="122.0" as="geometry" />
+        <mxCell id="ext2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;+ notifyAffectedUsers(incidentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;affectedContext: AffectedContext): NotificationResult&lt;br&gt;+ requestUserConsent(incidentId: String,&lt;br&gt;&amp;nbsp;&amp;nbsp;pendingChanges: String[], deadline: DateTime):&lt;br&gt;&amp;nbsp;&amp;nbsp;NotificationResult&lt;br&gt;+ markNotificationPending(incidentId: String): void&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="ext1">
+          <mxGeometry y="54" width="580" height="142.0" as="geometry" />
         </mxCell>
 
         
         <mxCell id="e1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«entity»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;Incident&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#d5e8d4;swimlaneFillColor=#ffffff;strokeColor=#82b366;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="1780" y="676.0" width="340" height="236.0" as="geometry" />
+          <mxGeometry x="1780" y="676.0" width="340" height="396.0" as="geometry" />
         </mxCell>
-        <mxCell id="e2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- id: String&lt;br&gt;- resourceId: String&lt;br&gt;- description: String&lt;br&gt;- impactLevel: IncidentImpact&lt;br&gt;- status: IncidentStatus&lt;br&gt;- createdAt: DateTime&lt;br&gt;- resolvedAt: DateTime [0..1]&lt;br&gt;- version: int&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="e1">
-          <mxGeometry y="54" width="340" height="182.0" as="geometry" />
+        <mxCell id="e2" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- id: String&lt;br&gt;- resourceType: ResourceType&lt;br&gt;- resourceId: String&lt;br&gt;- description: String&lt;br&gt;- impactLevel: IncidentImpact&lt;br&gt;- affectedScope: String&lt;br&gt;- status: IncidentStatus&lt;br&gt;- reportedBy: String&lt;br&gt;- priorityHandling: boolean&lt;br&gt;- handlingPlan: HandlingPlan [0..1]&lt;br&gt;- consentPlan: ConsentPlan [0..1]&lt;br&gt;- notificationPending: boolean&lt;br&gt;- resolutionNote: String [0..1]&lt;br&gt;- createdAt: DateTime&lt;br&gt;- resolvedAt: DateTime [0..1]&lt;br&gt;- version: int&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="e1">
+          <mxGeometry y="54" width="340" height="342.0" as="geometry" />
         </mxCell>
 
         
@@ -70,56 +70,56 @@
 
         
         <mxCell id="dt1" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;IncidentContext&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="40" y="732.0" width="380" height="140" as="geometry" />
+          <mxGeometry x="40" y="752.0" width="380" height="140" as="geometry" />
         </mxCell>
         <mxCell id="dt1_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- resourceId: String&lt;br&gt;- resourceStatus: String&lt;br&gt;- openIncidents: Incident[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt1">
           <mxGeometry y="54" width="380" height="86" as="geometry" />
         </mxCell>
 
         <mxCell id="dt2" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;IncidentDetails&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="460" y="732.0" width="380" height="120" as="geometry" />
+          <mxGeometry x="460" y="752.0" width="380" height="120" as="geometry" />
         </mxCell>
         <mxCell id="dt2_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- incident: Incident&lt;br&gt;- affectedServices: String[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt2">
           <mxGeometry y="54" width="380" height="66" as="geometry" />
         </mxCell>
 
         <mxCell id="dt3" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;IncidentResult&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="880" y="732.0" width="340" height="140" as="geometry" />
+          <mxGeometry x="880" y="752.0" width="340" height="140" as="geometry" />
         </mxCell>
         <mxCell id="dt3_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- success: boolean&lt;br&gt;- message: String&lt;br&gt;- incidentId: String [0..1]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt3">
           <mxGeometry y="54" width="340" height="86" as="geometry" />
         </mxCell>
 
         <mxCell id="dt4" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;HandlingPlan&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="1260" y="732.0" width="400" height="120" as="geometry" />
+          <mxGeometry x="1260" y="752.0" width="400" height="120" as="geometry" />
         </mxCell>
         <mxCell id="dt4_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- actionType: String&lt;br&gt;- allocationChanges: String[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt4">
           <mxGeometry y="54" width="400" height="66" as="geometry" />
         </mxCell>
 
         <mxCell id="dt5" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;ConsentPlan&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="40" y="892.0" width="380" height="120" as="geometry" />
+          <mxGeometry x="40" y="912.0" width="380" height="120" as="geometry" />
         </mxCell>
         <mxCell id="dt5_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- pendingChanges: String[]&lt;br&gt;- responseDeadline: DateTime&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt5">
           <mxGeometry y="54" width="380" height="66" as="geometry" />
         </mxCell>
 
         <mxCell id="dt6" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;ResolutionResult&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="460" y="892.0" width="380" height="120" as="geometry" />
+          <mxGeometry x="460" y="912.0" width="380" height="120" as="geometry" />
         </mxCell>
         <mxCell id="dt6_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- isResolved: boolean&lt;br&gt;- evidence: String&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt6">
           <mxGeometry y="54" width="380" height="66" as="geometry" />
         </mxCell>
 
         <mxCell id="dt7" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;VerificationContext&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="880" y="892.0" width="400" height="120" as="geometry" />
+          <mxGeometry x="880" y="912.0" width="400" height="120" as="geometry" />
         </mxCell>
         <mxCell id="dt7_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- resourceStatus: String&lt;br&gt;- remainingImpacts: String[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt7">
           <mxGeometry y="54" width="400" height="66" as="geometry" />
         </mxCell>
 
         <mxCell id="dt8" value="&lt;div style=&quot;font-size:13px;color:#42566c;&quot;&gt;«datatype»&lt;/div&gt;&lt;div style=&quot;font-size:18px;font-weight:bold;&quot;&gt;AffectedContext&lt;/div&gt;" style="swimlane;startSize=54;horizontal=1;html=1;rounded=0;recursiveResize=0;collapsible=0;align=left;verticalAlign=middle;spacingLeft=12;fontColor=#182C43;fillColor=#ffffff;swimlaneFillColor=#ffffff;strokeColor=#666666;strokeWidth=1.4;" vertex="1" parent="1">
-          <mxGeometry x="1320" y="892.0" width="400" height="160" as="geometry" />
+          <mxGeometry x="1320" y="912.0" width="400" height="160" as="geometry" />
         </mxCell>
         <mxCell id="dt8_a" value="&lt;div style=&quot;font-family:DejaVu Sans Mono, monospace;font-size:14px;line-height:20px;&quot;&gt;- affectedHolds: String[]&lt;br&gt;- affectedBookings: String[]&lt;br&gt;- affectedTrips: String[]&lt;br&gt;- affectedSchedules: String[]&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=top;spacingTop=8;spacingLeft=12;strokeColor=none;fillColor=none;whiteSpace=wrap;overflow=hidden;" vertex="1" parent="dt8">
           <mxGeometry y="54" width="400" height="106" as="geometry" />
@@ -164,18 +164,18 @@
         <mxCell id="ed8" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.6;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0;entryY=0.5;" edge="1" parent="1" source="dt1" target="e1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="230" y="1168.0" />
-              <mxPoint x="1750" y="1168.0" />
-              <mxPoint x="1750" y="786.0" />
+              <mxPoint x="230" y="1112" />
+              <mxPoint x="1750" y="1112" />
+              <mxPoint x="1750" y="874" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="ed9" style="html=1;rounded=0;endArrow=open;endFill=0;dashed=1;dashPattern=7 5;strokeColor=#000000;strokeWidth=1.6;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0;entryY=0.75;" edge="1" parent="1" source="dt2" target="e1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="650" y="1148.0" />
-              <mxPoint x="1760" y="1148.0" />
-              <mxPoint x="1760" y="857.0" />
+              <mxPoint x="650" y="1092" />
+              <mxPoint x="1760" y="1092" />
+              <mxPoint x="1760" y="973" />
             </Array>
           </mxGeometry>
         </mxCell>
