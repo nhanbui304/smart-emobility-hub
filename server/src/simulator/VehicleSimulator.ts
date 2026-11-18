@@ -6,12 +6,16 @@
  *   Client tự gọi lại API mỗi 3 giây nên sẽ thấy số liệu thay đổi.
  * - requestUnlock / sendLockCommand: trả kết quả giả lập SUCCESS / FAILED / UNKNOWN
  *   để thử được các nhánh lỗi trong UC04, UC05.
+ *
+ * Class «boundary» VehicleSimulator trong class diagram Sub #3 có requestUnlock, readVehiclePosition,
+ * sendLockCommand. start/tick là phần hạ tầng chạy nền của bộ giả lập, không thuộc thiết kế nghiệp vụ.
  */
 import { eq, inArray } from "drizzle-orm";
 import { systemConfig } from "../config/systemConfig";
-import type { DeviceCommandResult } from "../constants";
+import type { DeviceCommandResult, VehicleTechStatus } from "../constants";
 import { hubs, sharedVehicles } from "../db/schema";
 import { db } from "../lib/db";
+import type { LockResult, VehiclePosition } from "../types/dto";
 
 /** Tỉ lệ lệnh thiết bị thành công – giảm xuống để thử nhánh lỗi khi demo. */
 const SUCCESS_RATE = 0.9;
@@ -73,11 +77,23 @@ export const vehicleSimulator = {
     return result;
   },
 
-  /** UC05: gửi lệnh khóa xe khi trả. Gọi NGOÀI transaction. */
-  async sendLockCommand(vehicleId: string): Promise<DeviceCommandResult> {
+  /**
+   * UC05 bước 6: đọc vị trí xe do thiết bị báo (Hub, vị trí đỗ). Bản giả lập trả vị trí đang lưu của xe;
+   * xe chưa đỗ ở vị trí nào thì trả undefined.
+   */
+  readVehiclePosition(vehicleId: string): VehiclePosition | undefined {
+    const v = db.select().from(sharedVehicles).where(eq(sharedVehicles.id, vehicleId)).get();
+    if (!v || !v.hubId || !v.slotId) return undefined;
+    return { hubId: v.hubId, slotId: v.slotId, reportedAt: new Date() };
+  },
+
+  /** UC05 bước 7: gửi lệnh khóa xe khi trả; kèm mức pin và tình trạng kỹ thuật thiết bị báo về. Gọi NGOÀI transaction. */
+  async sendLockCommand(vehicleId: string): Promise<LockResult> {
     await wait(DEVICE_DELAY_MS);
-    const result = randomResult();
-    console.log(`[simulator] sendLockCommand(${vehicleId}) → ${result}`);
-    return result;
+    const status = randomResult();
+    const v = db.select().from(sharedVehicles).where(eq(sharedVehicles.id, vehicleId)).get();
+    const techStatus: VehicleTechStatus = status === "SUCCESS" ? "OK" : "UNKNOWN";
+    console.log(`[simulator] sendLockCommand(${vehicleId}) → ${status}`);
+    return { status, batteryLevel: status === "SUCCESS" ? v?.batteryLevel : undefined, techStatus };
   },
 };

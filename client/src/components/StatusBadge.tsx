@@ -18,7 +18,7 @@ const statusTone: Record<string, keyof typeof tone> = {
   CONFIRMED: "good",
   ALLOCATED: "good",
   COMPLETED: "good",
-  RESOLVED: "good",
+  CLOSED: "good",
   ACTIVE: "info",
   IN_USE: "info",
   RESERVED: "info",

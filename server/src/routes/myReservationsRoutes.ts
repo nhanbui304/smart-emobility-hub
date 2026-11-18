@@ -4,5 +4,6 @@ import { myReservationsController } from "../controllers/MyReservationsControlle
 import { requireAuth, requireRole } from "../middleware/auth";
 
 export const myReservationsRoutes = Router();
+myReservationsRoutes.use(requireAuth, requireRole("STUDENT"));
 
-myReservationsRoutes.get("/reservations", requireAuth, requireRole("STUDENT"), myReservationsController.list);
+myReservationsRoutes.get("/reservations", myReservationsController.list);

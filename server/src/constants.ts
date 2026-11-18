@@ -56,7 +56,7 @@ export type ChargingPortStatus = (typeof CHARGING_PORT_STATUSES)[number];
 export const CONNECTOR_TYPES = ["TYPE_2", "STANDARD_PLUG"] as const;
 export type ConnectorType = (typeof CONNECTOR_TYPES)[number];
 
-export const CHARGING_REQUEST_STATUSES = ["ALLOCATED", "WAITING", "CHARGING", "COMPLETED", "CANCELLED"] as const;
+export const CHARGING_REQUEST_STATUSES = ["ALLOCATED", "WAITING", "CHARGING", "COMPLETED", "CANCELLED", "EXPIRED"] as const;
 export type ChargingRequestStatus = (typeof CHARGING_REQUEST_STATUSES)[number];
 
 export const CHARGING_RESERVATION_STATUSES = [
@@ -72,11 +72,11 @@ export type ChargingReservationStatus = (typeof CHARGING_RESERVATION_STATUSES)[n
 export const CHARGING_SESSION_STATUSES = ["ACTIVE", "ENDED"] as const;
 export type ChargingSessionStatus = (typeof CHARGING_SESSION_STATUSES)[number];
 
-export const INCIDENT_STATUSES = ["OPEN", "IN_PROGRESS", "RESOLVED"] as const;
+export const INCIDENT_STATUSES = ["OPEN", "IN_PROGRESS", "CLOSED"] as const;
 export type IncidentStatus = (typeof INCIDENT_STATUSES)[number];
 
-export const IMPACT_LEVELS = ["LOW", "MEDIUM", "HIGH"] as const;
-export type ImpactLevel = (typeof IMPACT_LEVELS)[number];
+export const INCIDENT_IMPACTS = ["LOW", "MEDIUM", "HIGH"] as const;
+export type IncidentImpact = (typeof INCIDENT_IMPACTS)[number];
 
 export const RESOURCE_TYPES = ["SHARED_VEHICLE", "PARKING_SLOT", "CHARGING_PORT"] as const;
 export type ResourceType = (typeof RESOURCE_TYPES)[number];
@@ -97,10 +97,21 @@ export const SIMULATION_RUN_STATUSES = ["RUNNING", "COMPLETED", "FAILED", "CANCE
 export type SimulationRunStatus = (typeof SIMULATION_RUN_STATUSES)[number];
 
 /**
- * Các thao tác ghi có chống gửi lặp bằng requestId (Sequence Sub #2: nhánh duplicateRequest).
+ * Các thao tác ghi có chống gửi lặp bằng requestId (enum RequestOperation, Hình 4.8 Sub #3).
  * Mỗi lần xử lý xong ghi một dòng ProcessedRequest; gửi lại cùng requestId thì trả kết quả cũ.
  */
 export const REQUEST_OPERATIONS = [
+  "RESERVE_VEHICLE",
+  "CONFIRM_PICKUP",
+  "PREPARE_RETURN",
+  "CONFIRM_RETURN",
+  "ABANDON_RETURN",
+  "HOLD_PARKING_SLOT",
+  "CONFIRM_PARKING_RESERVATION",
+  "CANCEL_PARKING_HOLD",
+  "REPORT_INCIDENT",
+  "PROCESS_INCIDENT_HANDLING_PLAN",
+  "VERIFY_INCIDENT_RESOLUTION",
   "CONFIRM_CHARGING_RESERVATION",
   "RESCHEDULE_CHARGING_RESERVATION",
   "CANCEL_CHARGING_RESERVATION",
@@ -112,5 +123,13 @@ export type RequestOperation = (typeof REQUEST_OPERATIONS)[number];
 export const ALERT_TYPES = ["LOW_VEHICLE", "NEAR_FULL", "RESOURCE_FAULT", "DATA_STALE"] as const;
 export type AlertType = (typeof ALERT_TYPES)[number];
 
+export const SCENARIO_TYPES = ["DEMAND_SURGE", "HUB_CLOSURE", "ADD_CHARGERS", "ADD_VEHICLES"] as const;
+export type ScenarioType = (typeof SCENARIO_TYPES)[number];
+
 /** Kết quả giả lập từ thiết bị xe khi mở khóa / khóa. */
-export type DeviceCommandResult = "SUCCESS" | "FAILED" | "UNKNOWN";
+export const DEVICE_COMMAND_RESULTS = ["SUCCESS", "FAILED", "UNKNOWN"] as const;
+export type DeviceCommandResult = (typeof DEVICE_COMMAND_RESULTS)[number];
+
+/** Tình trạng kỹ thuật xe do thiết bị báo khi khóa (UC05 – LockResult). */
+export const VEHICLE_TECH_STATUSES = ["OK", "FAULT", "UNKNOWN"] as const;
+export type VehicleTechStatus = (typeof VEHICLE_TECH_STATUSES)[number];

@@ -25,7 +25,7 @@ export const statusLabels: Record<string, string> = {
   AWAITING_DISCONNECT: "Chờ rút sạc",
   OPEN: "Mới ghi nhận",
   IN_PROGRESS: "Đang xử lý",
-  RESOLVED: "Đã khắc phục",
+  CLOSED: "Đã đóng",
   CREATED: "Mới tạo",
   PARTIALLY_COMPLETED: "Hoàn tất một phần",
   RUNNING: "Đang chạy",

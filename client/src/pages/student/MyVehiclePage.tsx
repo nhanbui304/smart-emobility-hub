@@ -12,9 +12,9 @@ export function MyVehiclePage() {
         owner="Bùi Quang Nhân (UC06) · Ngô Minh Triết (UC08) · Nguyễn Hoàng Nhân (UC09)"
         useCases="UC06, UC08, UC09"
         todo={[
-          "Đặt chỗ đỗ: chọn Hub + khung giờ → parkingApi.searchSlots → hold (đếm ngược 30 phút) → confirm (UC06)",
+          "Đặt chỗ đỗ: chọn Hub + khung giờ → parkingApi.searchAvailableSlots → holdSlot (đếm ngược 30 phút) → confirmReservation (UC06)",
           "Hủy giữ tạm / hủy đặt chỗ (Cancel Parking Reservation)",
-          "Đặt lịch sạc: chargingApi.searchSlots → confirmReservation (UC08)",
+          "Đặt lịch sạc: chargingReservationApi.findChargingSlots → confirmChargingReservation (UC08)",
           "Xem / đổi / hủy lịch sạc, gửi kèm expectedVersion (UC09)",
         ]}
       />

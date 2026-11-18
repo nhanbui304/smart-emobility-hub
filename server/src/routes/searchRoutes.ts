@@ -1,12 +1,12 @@
 // Owner: Ngô Minh Triết – UC01 Find Suitable Hub and Mobility Option
 import { Router } from "express";
-import { filterSchema, searchController, searchCriteriaSchema, selectSchema } from "../controllers/SearchController";
+import { confirmOptionSelectionBody, searchController, searchMobilityOptionsBody } from "../controllers/SearchController";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { validateBody } from "../middleware/validate";
 
 export const searchRoutes = Router();
 searchRoutes.use(requireAuth, requireRole("STUDENT"));
 
-searchRoutes.post("/options", validateBody(searchCriteriaSchema), searchController.findOptions);
-searchRoutes.post("/filter", validateBody(filterSchema), searchController.filterOptions);
-searchRoutes.post("/sessions/:sessionId/select", validateBody(selectSchema), searchController.selectOption);
+searchRoutes.get("/form", searchController.loadSearchForm);
+searchRoutes.post("/options", validateBody(searchMobilityOptionsBody), searchController.searchMobilityOptions);
+searchRoutes.post("/selections", validateBody(confirmOptionSelectionBody), searchController.confirmOptionSelection);

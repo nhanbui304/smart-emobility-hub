@@ -18,7 +18,7 @@ export function SimulationPage() {
         owner="Nguyễn Hoàng Nhân"
         useCases="UC14"
         todo={[
-          "Chọn Hub + khung giờ → operationsApi.captureSnapshot",
+          "Chọn Hub + khung giờ → simulationApi.prepareSimulation",
           "Chọn loại kịch bản + giả định → prepareScenario → startSimulation",
           "Nghe SIMULATION_FINISHED, hiển thị so sánh baseline và kịch bản (biểu đồ cột)",
         ]}

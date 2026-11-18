@@ -1,6 +1,6 @@
 // Owner: Lê Quốc Linh – View My Reservations
 import { Link } from "react-router-dom";
-import { hubApi } from "../../api/hubs";
+import { myReservationsApi } from "../../api/myReservations";
 import { ErrorMessage } from "../../components/ErrorMessage";
 import { PageHeader } from "../../components/PageHeader";
 import { Spinner } from "../../components/Spinner";
@@ -8,7 +8,7 @@ import { StubNotice } from "../../components/StubNotice";
 import { useAsync } from "../../hooks/useAsync";
 
 export function MyReservationsPage() {
-  const { loading, error, reload } = useAsync(() => hubApi.myReservations(), []);
+  const { loading, error, reload } = useAsync(() => myReservationsApi.list(), []);
 
   return (
     <div className="space-y-4">

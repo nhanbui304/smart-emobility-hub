@@ -1,42 +1,51 @@
-// Owner: Lê Quốc Linh – UC02 Reserve Shared Vehicle, UC03 Cancel Vehicle Reservation
-import type { SharedVehicle, VehicleReservation } from "../db/schema";
+// Owner: Lê Quốc Linh – UC02, UC03, mục 2.3.2
+// Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
+import type { ProcessedRequest, SharedVehicle, VehicleReservation } from "../db/schema";
+import type { ReservationContext } from "../types/dto";
 import { db } from "../lib/db";
 import { notImplemented } from "../lib/errors";
 
 export const reservationRepository = {
-  /** UC02: xe AVAILABLE tại Hub, pin >= ngưỡng có thể đặt. */
-  findReservableVehicles(hubId: string, minBattery: number): SharedVehicle[] {
-    throw notImplemented("ReservationRepository.findReservableVehicles (UC02)");
-  },
-
-  /** Đặt xe còn hiệu lực của sinh viên (để chặn đặt 2 xe cùng lúc). */
-  findActiveByStudent(studentId: string): VehicleReservation | undefined {
-    throw notImplemented("ReservationRepository.findActiveByStudent (UC02)");
+  queryReservableVehicles(hubId: string, reservableBatteryThreshold: number, now: Date): SharedVehicle[] {
+    throw notImplemented("ReservationRepository.queryReservableVehicles");
   },
 
   findById(reservationId: string): VehicleReservation | undefined {
     throw notImplemented("ReservationRepository.findById");
   },
 
+  loadReservationContext(studentId: string, vehicleId: string): ReservationContext {
+    throw notImplemented("ReservationRepository.loadReservationContext");
+  },
+
+  findProcessedRequest(requestId: string): ProcessedRequest | undefined {
+    throw notImplemented("ReservationRepository.findProcessedRequest");
+  },
+
   /**
    * UC02 – chạy bên trong db.transaction. Kiểm tra lại xe còn AVAILABLE và sinh viên chưa có đặt xe khác,
    * rồi tạo VehicleReservation (RESERVED) + chuyển xe sang RESERVED trong cùng transaction.
    */
-  atomicReserveVehicle(input: {
-    studentId: string;
-    hubId: string;
-    vehicleId: string;
-    pickupDeadline: Date;
-    now: Date;
-  }): VehicleReservation {
-    throw notImplemented("ReservationRepository.atomicReserveVehicle (UC02)");
+  atomicReserveVehicle(
+    requestId: string,
+    studentId: string,
+    hubId: string,
+    vehicleId: string,
+    pickupDeadlineDuration: number,
+    now: Date,
+  ): VehicleReservation {
+    throw notImplemented("ReservationRepository.atomicReserveVehicle");
+  },
+
+  findReservationForCancellation(reservationId: string): VehicleReservation {
+    throw notImplemented("ReservationRepository.findReservationForCancellation");
   },
 
   /**
    * UC03 – chạy bên trong db.transaction. Kiểm tra đặt xe còn RESERVED và thuộc sinh viên,
    * chuyển sang CANCELLED và trả xe về AVAILABLE.
    */
-  atomicCancelReservation(input: { studentId: string; reservationId: string; now: Date }): VehicleReservation {
-    throw notImplemented("ReservationRepository.atomicCancelReservation (UC03)");
+  atomicCancelReservation(requestId: string, studentId: string, reservationId: string, now: Date): VehicleReservation {
+    throw notImplemented("ReservationRepository.atomicCancelReservation");
   },
 };

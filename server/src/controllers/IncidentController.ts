@@ -1,58 +1,60 @@
 // Owner: Ngô Minh Triết – UC11 Handle Operational Incident
+// Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
+// Controller chỉ đọc request → gọi service → trả response. studentId/operatorId lấy từ phiên đăng nhập.
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { IMPACT_LEVELS, RESOURCE_TYPES } from "../constants";
+import { INCIDENT_IMPACTS } from "../constants";
 import { sendOk } from "../lib/response";
-import { idParams, versionField } from "../lib/schemas";
-import { currentUser } from "../middleware/auth";
+import { requestIdField } from "../lib/schemas";
 import { parseOrThrow } from "../middleware/validate";
 import { incidentService } from "../services/IncidentService";
 
-export const reportIncidentSchema = z.object({
+export const submitIncidentBody = z.object({
+  requestId: requestIdField,
   resourceId: z.string().min(1),
-  description: z.string().trim().min(1),
-  impactLevel: z.enum(IMPACT_LEVELS),
-  affectedScope: z.object({
-    resourceType: z.enum(RESOURCE_TYPES),
-    affectedReservationIds: z.array(z.string()),
-  }),
+  description: z.string().min(1),
+  impactLevel: z.enum(INCIDENT_IMPACTS),
+  affectedScope: z.string().min(1),
 });
-export const handlingPlanSchema = z.object({
-  handlingPlan: z.object({
-    expectedVersion: versionField,
-    actions: z.array(
-      z.object({
-        reservationId: z.string().min(1),
-        action: z.enum(["REALLOCATE", "CANCEL", "KEEP"]),
-        targetResourceId: z.string().optional(),
-      }),
-    ),
-  }),
+export const submitHandlingPlanBody = z.object({
+  requestId: requestIdField,
+  plan: z.object({ actionType: z.string().min(1), allocationChanges: z.array(z.string().min(1)) }),
 });
-export const verifyResolutionSchema = z.object({
-  resolutionResult: z.object({ resolved: z.boolean(), note: z.string().optional() }),
+export const submitResolutionResultBody = z.object({
+  requestId: requestIdField,
+  result: z.object({ isResolved: z.boolean(), evidence: z.string().min(1) }),
 });
 
 export const incidentController = {
+  /** GET /api/incidents/resources/:resourceId */
+  async openIncidentManagement(req: Request, res: Response): Promise<void> {
+    const { resourceId } = parseOrThrow(z.object({ resourceId: z.string().min(1) }), req.params);
+    sendOk(res, await incidentService.getIncidentContext(resourceId));
+  },
+
+  /** GET /api/incidents/:incidentId */
+  async openExistingIncident(req: Request, res: Response): Promise<void> {
+    const { incidentId } = parseOrThrow(z.object({ incidentId: z.string().min(1) }), req.params);
+    sendOk(res, await incidentService.getIncidentDetails(incidentId));
+  },
+
   /** POST /api/incidents */
-  async report(req: Request, res: Response): Promise<void> {
-    const { resourceId, description, impactLevel, affectedScope } = req.body;
-    sendOk(
-      res,
-      await incidentService.reportIncident(resourceId, description, impactLevel, affectedScope, currentUser(req).id),
-      201,
-    );
+  async submitIncident(req: Request, res: Response): Promise<void> {
+    const { requestId, resourceId, description, impactLevel, affectedScope } = req.body as z.infer<typeof submitIncidentBody>;
+    sendOk(res, await incidentService.reportIncident(requestId, resourceId, description, impactLevel, affectedScope));
   },
 
-  /** POST /api/incidents/:id/handling-plan */
-  async handlingPlan(req: Request, res: Response): Promise<void> {
-    const { id } = parseOrThrow(idParams, req.params);
-    sendOk(res, await incidentService.processHandlingPlan(id, req.body.handlingPlan, currentUser(req).id));
+  /** POST /api/incidents/:incidentId/handling-plan */
+  async submitHandlingPlan(req: Request, res: Response): Promise<void> {
+    const { incidentId } = parseOrThrow(z.object({ incidentId: z.string().min(1) }), req.params);
+    const { requestId, plan } = req.body as z.infer<typeof submitHandlingPlanBody>;
+    sendOk(res, await incidentService.processHandlingPlan(requestId, incidentId, plan));
   },
 
-  /** POST /api/incidents/:id/verify */
-  async verify(req: Request, res: Response): Promise<void> {
-    const { id } = parseOrThrow(idParams, req.params);
-    sendOk(res, await incidentService.verifyResolution(id, req.body.resolutionResult, currentUser(req).id));
+  /** POST /api/incidents/:incidentId/resolution */
+  async submitResolutionResult(req: Request, res: Response): Promise<void> {
+    const { incidentId } = parseOrThrow(z.object({ incidentId: z.string().min(1) }), req.params);
+    const { requestId, result } = req.body as z.infer<typeof submitResolutionResultBody>;
+    sendOk(res, await incidentService.verifyResolution(requestId, incidentId, result));
   },
 };

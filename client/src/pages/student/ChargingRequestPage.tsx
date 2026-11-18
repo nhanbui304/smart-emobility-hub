@@ -15,7 +15,7 @@ export function ChargingRequestPage() {
         useCases="UC07"
         todo={[
           "Form: Hub, xe, pin hiện tại, pin mong muốn",
-          "chargingApi.submitRequest → hiển thị cổng được phân hoặc vị trí trong hàng đợi",
+          "chargingRequestApi.submitChargingRequest → hiển thị cổng được phân hoặc vị trí trong hàng đợi",
           "Nút Hủy yêu cầu (Cancel Charging Request)",
         ]}
       />

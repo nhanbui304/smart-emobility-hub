@@ -1,26 +1,17 @@
-// Owner: Ngô Minh Triết (UC08 Schedule Charging Session), Nguyễn Hoàng Nhân (UC09 Manage Scheduled Charging Session)
+// Owner: Ngô Minh Triết – UC08 Schedule Charging Session; Nguyễn Hoàng Nhân – UC09 Manage Scheduled Charging Session
 import { Router } from "express";
-import {
-  cancelChargingSchema,
-  chargingReservationController as c,
-  confirmChargingSchema,
-  confirmRescheduleSchema,
-  findSlotsSchema,
-  rescheduleOptionsSchema,
-} from "../controllers/ChargingReservationController";
+import { cancelReservationBody, chargingReservationController, confirmChargingReservationBody, confirmRescheduleBody, findChargingSlotsBody, findRescheduleOptionsBody } from "../controllers/ChargingReservationController";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { validateBody } from "../middleware/validate";
 
 export const chargingReservationRoutes = Router();
 chargingReservationRoutes.use(requireAuth, requireRole("STUDENT"));
 
-// UC08
-chargingReservationRoutes.post("/search", validateBody(findSlotsSchema), c.search);
-chargingReservationRoutes.post("/", validateBody(confirmChargingSchema), c.confirm);
-// UC09
-chargingReservationRoutes.get("/:id", c.detail);
-chargingReservationRoutes.post("/:id/reschedule/start", c.startReschedule);
-chargingReservationRoutes.post("/:id/reschedule/options", validateBody(rescheduleOptionsSchema), c.rescheduleOptions);
-chargingReservationRoutes.post("/:id/reschedule/confirm", validateBody(confirmRescheduleSchema), c.confirmReschedule);
-chargingReservationRoutes.get("/:id/cancellation-check", c.checkCancellation);
-chargingReservationRoutes.post("/:id/cancel", validateBody(cancelChargingSchema), c.cancel);
+chargingReservationRoutes.post("/search", validateBody(findChargingSlotsBody), chargingReservationController.findChargingSlots);
+chargingReservationRoutes.post("/", validateBody(confirmChargingReservationBody), chargingReservationController.confirmChargingReservation);
+chargingReservationRoutes.get("/:reservationId", chargingReservationController.getReservationDetail);
+chargingReservationRoutes.post("/:reservationId/reschedule/start", chargingReservationController.startReschedule);
+chargingReservationRoutes.post("/:reservationId/reschedule/options", validateBody(findRescheduleOptionsBody), chargingReservationController.findRescheduleOptions);
+chargingReservationRoutes.post("/:reservationId/reschedule/confirm", validateBody(confirmRescheduleBody), chargingReservationController.confirmReschedule);
+chargingReservationRoutes.get("/:reservationId/cancellation-check", chargingReservationController.checkCancellation);
+chargingReservationRoutes.post("/:reservationId/cancel", validateBody(cancelReservationBody), chargingReservationController.cancelReservation);
