@@ -1,0 +1,1145 @@
+<mxfile host="65bd71144e" pages="2">
+    <diagram id="linh-p1" name="Dat xe va nhan xe">
+        <mxGraphModel dx="2060" dy="1136" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3000" pageHeight="2450" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="p1_reserve_view" value="«boundary»&lt;br&gt;&lt;b&gt;ReserveVehicleView&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="50" width="360" height="420" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_reserve_view_a" value="- hubId: String&lt;br&gt;- vehicles: SharedVehicle[]&lt;br&gt;- selectedVehicleId: String [0..1]&lt;br&gt;- summary: ReservationPreview [0..1]&lt;br&gt;- result: VehicleReservation [0..1]&lt;br&gt;- errorMessage: String [0..1]&lt;div&gt;- cancellationPreview: CancellationPreview [0..1]&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_reserve_view" vertex="1">
+                    <mxGeometry y="44" width="360" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_reserve_view_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#6c8ebf;" parent="p1_reserve_view" vertex="1">
+                    <mxGeometry y="164" width="360" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_reserve_view_m" value="+ loadReservableVehicles(): void&lt;br&gt;+ selectVehicle(vehicleId: String): void&lt;br&gt;+ prepareReservation(): void&lt;br&gt;+ confirmReservation(): void&lt;br&gt;+ showReservationSummary(summary: ReservationPreview): void&lt;br&gt;+ showReservationResult(result: VehicleReservation): void&lt;div&gt;&lt;div&gt;+ cancelReservationDraft(): void&lt;/div&gt;&lt;div&gt;+ reopenReservation(): void&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;+ loadMyReservations(): void&lt;/div&gt;&lt;div&gt;+ selectReservation(reservationId: String): void&lt;/div&gt;&lt;div&gt;+ prepareCancellation(reservationId: String): void&lt;/div&gt;&lt;div&gt;+ confirmCancellation(): void&lt;/div&gt;&lt;div&gt;+ cancelCancellationDraft(): void&lt;/div&gt;&lt;div&gt;+ displayCancellationSummary(reservation: VehicleReservation): void&lt;/div&gt;&lt;div&gt;+ displayCancellationResult(reservation: VehicleReservation, message: String): void&lt;/div&gt;&lt;div&gt;+ reopenCancellation(): void&lt;/div&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_reserve_view" vertex="1">
+                    <mxGeometry y="172" width="360" height="248" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_reserve_controller" value="«control»&lt;br&gt;&lt;b&gt;ReservationController&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="60" width="440" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_reserve_controller_a" value="- reservationService: ReservationService" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_reserve_controller" vertex="1">
+                    <mxGeometry y="44" width="440" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_reserve_controller_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" parent="p1_reserve_controller" vertex="1">
+                    <mxGeometry y="74" width="440" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_reserve_controller_m" value="&lt;div&gt;+ getReservableVehicles(hubId: String): SharedVehicle[]&lt;/div&gt;&lt;div&gt;+ prepareReservation(hubId: String, vehicleId: String): ReservationPreview&lt;/div&gt;&lt;div&gt;+ confirmReservation(requestId: String, hubId: String, vehicleId: String): VehicleReservation&lt;/div&gt;&lt;div&gt;+ getReservationResult(requestId: String): VehicleReservation&lt;/div&gt;&lt;div&gt;&lt;div&gt;+ getMyReservations(): VehicleReservation[]&lt;/div&gt;&lt;div&gt;+ prepareCancellation(reservationId: String): CancellationPreview&lt;/div&gt;&lt;div&gt;+ confirmCancellation(requestId: String, reservationId: String): VehicleReservation&lt;/div&gt;&lt;div&gt;+ getCancellationResult(requestId: String): VehicleReservation&lt;/div&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_reserve_controller" vertex="1">
+                    <mxGeometry y="82" width="440" height="148" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_reserve_service" value="«control»&lt;br&gt;&lt;b&gt;ReservationService&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1050" y="60" width="520" height="290" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_reserve_service_a" value="- reservationRepository: ReservationRepository" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_reserve_service" vertex="1">
+                    <mxGeometry y="44" width="520" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_reserve_service_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d79b00;" parent="p1_reserve_service" vertex="1">
+                    <mxGeometry y="74" width="520" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_reserve_service_m" value="+ getReservableVehicles(studentId: String, hubId: String): SharedVehicle[]&lt;br&gt;+ prepareReservation(studentId: String, hubId: String, vehicleId: String): ReservationPreview&lt;br&gt;+ confirmReservation(requestId: String, studentId: String, hubId: String, vehicleId: String): VehicleReservation&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;+ getReservationResult(requestId: String, studentId: String): VehicleReservation&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;+ prepareCancellation(studentId: String, reservationId: String): CancellationPreview&lt;/span&gt;&lt;/div&gt;&lt;div&gt;+ confirmCancellation(requestId: String, studentId: String, reservationId: String): VehicleReservation&lt;/div&gt;&lt;div&gt;+ getCancellationResult(requestId: String, studentId: String): VehicleReservation&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215)); background-color: transparent;&quot;&gt;- checkStudentEligibility(studentContext: Student): boolean&lt;/span&gt;&lt;div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- checkVehicleServiceability(vehicleContext: SharedVehicle): boolean&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;- checkCancellationEligibility(reservation: VehicleReservation, now: DateTime): boolean&lt;/div&gt;&lt;div&gt;- checkReservationOwnership(reservation: VehicleReservation, studentId: String): boolean&lt;br&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_reserve_service" vertex="1">
+                    <mxGeometry y="82" width="520" height="208" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_reserve_repo" value="«repository»&lt;br&gt;&lt;b&gt;ReservationRepository&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1680" y="60" width="650" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_reserve_repo_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#9673a6;" parent="p1_reserve_repo" vertex="1">
+                    <mxGeometry y="44" width="650" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_reserve_repo_m" value="&lt;div&gt;+ queryReservableVehicles(hubId: String, reservableBatteryThreshold: int, now: DateTime): SharedVehicle[]&lt;/div&gt;&lt;div&gt;+ findById(reservationId: String): VehicleReservation [0..1]&lt;/div&gt;&lt;div&gt;+ loadReservationContext(studentId: String, vehicleId: String): ReservationContext&lt;/div&gt;&lt;div&gt;+ findProcessedRequest(requestId: String): ProcessedRequest [0..1]&lt;/div&gt;&lt;div&gt;+ atomicReserveVehicle(requestId: String, studentId: String, hubId: String, vehicleId: String, pickupDeadlineDuration: int, now: DateTime): VehicleReservation&lt;/div&gt;&lt;div&gt;&lt;div&gt;+ findReservationForCancellation(reservationId: String): VehicleReservation&lt;/div&gt;&lt;div&gt;+ atomicCancelReservation(requestId: String, studentId: String, reservationId: String, now: DateTime): VehicleReservation&lt;/div&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_reserve_repo" vertex="1">
+                    <mxGeometry y="52" width="650" height="128" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_active_trip_view" value="«boundary»&lt;br&gt;&lt;b&gt;ActiveTripView&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="540" width="360" height="212" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_active_trip_view_a" value="- reservation: VehicleReservation [0..1]&lt;br&gt;- activeTrip: Trip [0..1]&lt;br&gt;- pickUpPreview: PickUpPreview [0..1]&lt;br&gt;- pickUpResult: PickUpResult [0..1]&lt;br&gt;- errorMessage: String [0..1]" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_active_trip_view" vertex="1">
+                    <mxGeometry y="44" width="360" height="76" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_active_trip_view_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#6c8ebf;" parent="p1_active_trip_view" vertex="1">
+                    <mxGeometry y="120" width="360" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_active_trip_view_m" value="+ preparePickUp(reservationId: String): void&lt;br&gt;+ confirmPickUp(reservationId: String): void&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;+ dismissPickUp(): void&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;+ reopenPickUp(): void&lt;/span&gt;&lt;div&gt;+ showPickUpResult(result: PickUpResult): void&lt;/div&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_active_trip_view" vertex="1">
+                    <mxGeometry y="128" width="360" height="84" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pickup_controller" value="«control»&lt;br&gt;&lt;b&gt;PickUpController&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="480" y="581" width="440" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pickup_controller_a" value="- pickUpService: PickUpService" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_pickup_controller" vertex="1">
+                    <mxGeometry y="44" width="440" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pickup_controller_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" parent="p1_pickup_controller" vertex="1">
+                    <mxGeometry y="74" width="440" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pickup_controller_m" value="&lt;div&gt;+ preparePickUp(reservationId: String): PickUpPreview&lt;/div&gt;&lt;div&gt;+ confirmPickUp(requestId: String, reservationId: String): PickUpResult&lt;/div&gt;&lt;div&gt;+ getPickUpResult(requestId: String): PickUpResult&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_pickup_controller" vertex="1">
+                    <mxGeometry y="82" width="440" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pickup_service" value="«control»&lt;br&gt;&lt;b&gt;PickUpService&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1050" y="480" width="520" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pickup_service_a" value="- pickUpRepository: PickUpRepository&lt;br&gt;- vehicleSimulator: VehicleSimulator&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- notificationService: NotificationService&lt;/span&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_pickup_service" vertex="1">
+                    <mxGeometry y="44" width="520" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pickup_service_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d79b00;" parent="p1_pickup_service" vertex="1">
+                    <mxGeometry y="92" width="520" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pickup_service_m" value="&lt;div&gt;+ preparePickUp(studentId: String, reservationId: String): PickUpPreview&lt;/div&gt;&lt;div&gt;+ confirmPickUp(requestId: String, studentId: String, reservationId: String): PickUpResult&lt;/div&gt;&lt;div&gt;+ getPickUpResult(requestId: String, studentId: String): PickUpResult&lt;/div&gt;&lt;div&gt;&lt;div&gt;- checkVehicleAtPickupHub(vehicle: SharedVehicle, hub: Hub): boolean&lt;/div&gt;&lt;div&gt;- checkVehicleServiceability(vehicle: SharedVehicle): boolean&lt;/div&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_pickup_service" vertex="1">
+                    <mxGeometry y="100" width="520" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pickup_repo" value="«repository»&lt;br&gt;&lt;b&gt;PickUpRepository&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1680" y="408" width="650" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pickup_repo_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#9673a6;" parent="p1_pickup_repo" vertex="1">
+                    <mxGeometry y="44" width="650" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pickup_repo_m" value="&lt;div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;+ loadPickUpContext(reservationId: String, now: DateTime): PickUpContext&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;+ findProcessedRequest(requestId: String): ProcessedRequest [0..1]&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;+ expireReservation(reservationId: String, now: DateTime): VehicleReservation&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;+ markReservationAffected(reservationId: String): VehicleReservation&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;+ atomicBeginHandover(requestId: String, studentId: String, reservationId: String, now: DateTime): VehicleReservation&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;+ endHandoverAndResolveHold(reservationId: String, now: DateTime): VehicleReservation&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;+ markPendingVerification(reservationId: String, vehicleId: String, now: DateTime): VehicleReservation&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;+ atomicStartTrip(requestId: String, reservationId: String, vehicleId: String, startTime: DateTime): Trip&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;+ markReconciliationRequired(reservationId: String, vehicleId: String, unlockEvidence: DeviceCommandResult): VehicleReservation&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_pickup_repo" vertex="1">
+                    <mxGeometry y="52" width="650" height="148" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_simulator" value="«boundary» – thiết bị xe (giả lập)&lt;br&gt;&lt;b&gt;VehicleSimulator&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1700" y="770" width="390" height="82" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_simulator_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#6c8ebf;" parent="p1_simulator" vertex="1">
+                    <mxGeometry y="44" width="390" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_simulator_m" value="+ requestUnlock(vehicleId: String): DeviceCommandResult" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_simulator" vertex="1">
+                    <mxGeometry y="52" width="390" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_expiry_scheduler" value="«control» – tác vụ định kỳ (2.3.2)&lt;br&gt;&lt;b&gt;ReservationExpiryScheduler&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1050" y="880" width="520" height="82" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_expiry_scheduler_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" parent="p1_expiry_scheduler" vertex="1">
+                    <mxGeometry y="44" width="520" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_expiry_scheduler_m" value="+ expireDueReservations(now: DateTime): int" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_expiry_scheduler" vertex="1">
+                    <mxGeometry y="52" width="520" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_user" value="«entity»&lt;br&gt;&lt;b&gt;User&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="1084" width="290" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_user_a" value="- id: String&lt;br&gt;- email: String&lt;br&gt;- passwordHash: String&lt;br&gt;- fullName: String&lt;br&gt;- role: Role&lt;br&gt;- themePreference: ThemePreference" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_user" vertex="1">
+                    <mxGeometry y="44" width="290" height="108" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_user_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p1_user" vertex="1">
+                    <mxGeometry y="152" width="290" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_student" value="«entity»&lt;br&gt;&lt;b&gt;Student&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="1130" width="290" height="68" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_student_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p1_student" vertex="1">
+                    <mxGeometry y="44" width="290" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vehicle_res" value="«entity»&lt;br&gt;&lt;b&gt;VehicleReservation&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="750" y="1130" width="320" height="152" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vehicle_res_a" value="- id: String&lt;br&gt;- studentId: String&lt;br&gt;- vehicleId: String&lt;br&gt;- hubId: String&lt;br&gt;- status: VehicleReservationStatus&lt;br&gt;- pickupDeadline: DateTime" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_vehicle_res" vertex="1">
+                    <mxGeometry y="44" width="320" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vehicle_res_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p1_vehicle_res" vertex="1">
+                    <mxGeometry y="144" width="320" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_trip" value="«entity»&lt;br&gt;&lt;b&gt;Trip&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1160" y="1130" width="320" height="188" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_trip_a" value="- id: String&lt;br&gt;- reservationId: String&lt;br&gt;- studentId: String&lt;br&gt;- vehicleId: String&lt;br&gt;- startedAt: DateTime&lt;br&gt;- endedAt: DateTime [0..1]&lt;br&gt;- returnHubId: String [0..1]&lt;br&gt;- returnSlotId: String [0..1]&lt;br&gt;- status: TripStatus" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_trip" vertex="1">
+                    <mxGeometry y="44" width="320" height="136" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_trip_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p1_trip" vertex="1">
+                    <mxGeometry y="180" width="320" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vehicle" value="«entity»&lt;br&gt;&lt;b&gt;SharedVehicle&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1570" y="1130" width="320" height="178" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vehicle_a" value="- id: String&lt;br&gt;- code: String&lt;br&gt;- type: VehicleType&lt;br&gt;- batteryLevel: int&lt;br&gt;- status: VehicleStatus&lt;br&gt;- hubId: String [0..1]&lt;br&gt;- slotId: String [0..1]&lt;br&gt;- lastUpdatedAt: DateTime" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_vehicle" vertex="1">
+                    <mxGeometry y="44" width="320" height="126" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vehicle_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p1_vehicle" vertex="1">
+                    <mxGeometry y="170" width="320" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_hub" value="«entity»&lt;br&gt;&lt;b&gt;Hub&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1980" y="1130" width="290" height="136" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_hub_a" value="- id: String&lt;br&gt;- name: String&lt;br&gt;- location: String&lt;br&gt;- lastUpdatedAt: DateTime" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_hub" vertex="1">
+                    <mxGeometry y="44" width="290" height="84" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_hub_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p1_hub" vertex="1">
+                    <mxGeometry y="128" width="290" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_slot" value="«entity»&lt;br&gt;&lt;b&gt;ParkingSlot&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="2350" y="1139" width="300" height="154" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_slot_a" value="- id: String&lt;br&gt;- hubId: String&lt;br&gt;- code: String&lt;br&gt;- hasCharger: boolean&lt;br&gt;- status: SlotStatus" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_slot" vertex="1">
+                    <mxGeometry y="44" width="300" height="102" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_slot_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p1_slot" vertex="1">
+                    <mxGeometry y="146" width="300" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_role" value="«enumeration»&lt;br&gt;&lt;b&gt;Role&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="1600" width="250" height="108" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_role_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p1_role" vertex="1">
+                    <mxGeometry y="44" width="250" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_role_m" value="STUDENT&lt;br&gt;OPERATOR" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_role" vertex="1">
+                    <mxGeometry y="52" width="250" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_theme" value="«enumeration»&lt;br&gt;&lt;b&gt;ThemePreference&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="1600" width="290" height="126" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_theme_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p1_theme" vertex="1">
+                    <mxGeometry y="44" width="290" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_theme_m" value="LIGHT&lt;br&gt;DARK&lt;br&gt;SYSTEM" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_theme" vertex="1">
+                    <mxGeometry y="52" width="290" height="66" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vehicle_type" value="«enumeration»&lt;br&gt;&lt;b&gt;VehicleType&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1430" y="1600" width="290" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vehicle_type_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p1_vehicle_type" vertex="1">
+                    <mxGeometry y="44" width="290" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vehicle_type_m" value="E_BIKE&lt;br&gt;E_MOTORBIKE" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_vehicle_type" vertex="1">
+                    <mxGeometry y="52" width="290" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vr_status" value="«enumeration»&lt;br&gt;&lt;b&gt;VehicleReservationStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="720" y="1600" width="330" height="172" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vr_status_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p1_vr_status" vertex="1">
+                    <mxGeometry y="44" width="330" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vr_status_m" value="RESERVED&lt;br&gt;HANDING_OVER&lt;br&gt;PENDING_VERIFICATION&lt;br&gt;USED&lt;br&gt;CANCELLED&lt;br&gt;EXPIRED" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_vr_status" vertex="1">
+                    <mxGeometry y="52" width="330" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_trip_status" value="«enumeration»&lt;br&gt;&lt;b&gt;TripStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1100" y="1600" width="300" height="136" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_trip_status_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p1_trip_status" vertex="1">
+                    <mxGeometry y="44" width="300" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_trip_status_m" value="ACTIVE&lt;br&gt;RETURN_IN_PROGRESS&lt;br&gt;PENDING_RECONCILIATION&lt;br&gt;ENDED" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_trip_status" vertex="1">
+                    <mxGeometry y="52" width="300" height="84" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vehicle_status" value="«enumeration»&lt;br&gt;&lt;b&gt;VehicleStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1770" y="1600" width="350" height="216" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vehicle_status_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p1_vehicle_status" vertex="1">
+                    <mxGeometry y="44" width="350" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_vehicle_status_m" value="AVAILABLE&lt;br&gt;RESERVED&lt;br&gt;HANDING_OVER&lt;br&gt;IN_USE&lt;br&gt;PENDING_VERIFICATION&lt;br&gt;UNDER_MAINTENANCE&lt;br&gt;CHARGING&lt;br&gt;IN_TRANSIT" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_vehicle_status" vertex="1">
+                    <mxGeometry y="52" width="350" height="156" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_slot_status" value="«enumeration»&lt;br&gt;&lt;b&gt;SlotStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="2170" y="1600" width="250" height="108" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_slot_status_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p1_slot_status" vertex="1">
+                    <mxGeometry y="44" width="250" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_slot_status_m" value="IN_SERVICE&lt;br&gt;OUT_OF_SERVICE" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_slot_status" vertex="1">
+                    <mxGeometry y="52" width="250" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_device_result" value="«enumeration»&lt;br&gt;&lt;b&gt;DeviceCommandResult&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="2460" y="1600" width="300" height="126" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_device_result_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p1_device_result" vertex="1">
+                    <mxGeometry y="44" width="300" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_device_result_m" value="SUCCESS&lt;br&gt;FAILED&lt;br&gt;UNKNOWN" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_device_result" vertex="1">
+                    <mxGeometry y="52" width="300" height="66" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_res_preview" value="«datatype»&lt;br&gt;&lt;b&gt;ReservationPreview&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="1910" width="340" height="118" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_res_preview_a" value="- hubId: String&lt;br&gt;- vehicle: SharedVehicle&lt;br&gt;- pickupDeadline: DateTime" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_res_preview" vertex="1">
+                    <mxGeometry y="44" width="340" height="66" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_res_preview_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p1_res_preview" vertex="1">
+                    <mxGeometry y="110" width="340" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pick_preview" value="«datatype»&lt;br&gt;&lt;b&gt;PickUpPreview&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="440" y="1910" width="370" height="136" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pick_preview_a" value="- reservation: VehicleReservation&lt;br&gt;- vehicleCode: String&lt;br&gt;- batteryLevel: int&lt;br&gt;- pickupDeadline: DateTime" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_pick_preview" vertex="1">
+                    <mxGeometry y="44" width="370" height="84" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pick_preview_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p1_pick_preview" vertex="1">
+                    <mxGeometry y="128" width="370" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pick_result" value="«datatype»&lt;br&gt;&lt;b&gt;PickUpResult&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="870" y="1910" width="370" height="118" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pick_result_a" value="- outcome: DeviceCommandResult&lt;br&gt;- trip: Trip [0..1]&lt;br&gt;- reservation: VehicleReservation" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p1_pick_result" vertex="1">
+                    <mxGeometry y="44" width="370" height="66" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1_pick_result_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p1_pick_result" vertex="1">
+                    <mxGeometry y="110" width="370" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=0;strokeColor=#333333;fontSize=10;" parent="1" source="p1_student" target="p1_user" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_reserve_view" target="p1_reserve_controller" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="420" y="175"/>
+                            <mxPoint x="420" y="175"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_reserve_controller" target="p1_reserve_service" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="970" y="205"/>
+                            <mxPoint x="970" y="205"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_reserve_service" target="p1_reserve_repo" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1600" y="150"/>
+                            <mxPoint x="1600" y="150"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_active_trip_view" target="p1_reserve_controller" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="220" y="500"/>
+                            <mxPoint x="720" y="500"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="p1_active_trip_view" target="p1_pickup_controller" edge="1">
+                    <mxGeometry x="-0.3333" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="420" y="645"/>
+                            <mxPoint x="420" y="645"/>
+                        </Array>
+                        <mxPoint x="470" y="620" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_pickup_controller" target="p1_pickup_service" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_pickup_service" target="p1_pickup_repo" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1600" y="508"/>
+                            <mxPoint x="1600" y="508"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_pickup_service" target="p1_simulator" edge="1">
+                    <mxGeometry x="0.7246" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1310" y="700"/>
+                            <mxPoint x="1890" y="700"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e9" value="đặt&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p1_student" target="p1_vehicle_res" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" value="được đặt trong&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p1_vehicle" target="p1_vehicle_res" edge="1">
+                    <mxGeometry x="0.1171" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1710" y="1100"/>
+                            <mxPoint x="950" y="1100"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e11" value="được đặt tại&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="p1_hub" target="p1_vehicle_res" edge="1">
+                    <mxGeometry x="0.0595" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2125" y="1040"/>
+                            <mxPoint x="910" y="1040"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e12" value="phát sinh&lt;br&gt;1 → 0..1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;entryX=0;entryY=0.75;entryDx=0;entryDy=0;exitX=0.83;exitY=0.929;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="p1_vehicle_res_sep" target="p1_trip" edge="1">
+                    <mxGeometry x="0.2261" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1015.6" y="1303.9"/>
+                            <mxPoint x="1110" y="1303.9"/>
+                            <mxPoint x="1110" y="1299.5"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e13" value="được sử dụng trong&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p1_vehicle" target="p1_trip" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e14" value="quản lý / chứa&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p1_hub" target="p1_vehicle" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e15" value="bao gồm&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p1_hub" target="p1_slot" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_user" target="p1_role" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="165" y="1370"/>
+                            <mxPoint x="165" y="1370"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_user" target="p1_theme" edge="1">
+                    <mxGeometry x="-0.3321" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="270" y="1440"/>
+                            <mxPoint x="505" y="1440"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_vehicle" target="p1_vehicle_type" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1630" y="1470"/>
+                            <mxPoint x="1630" y="1470"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_vehicle" target="p1_vehicle_status" edge="1">
+                    <mxGeometry x="-0.1207" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1710" y="1473"/>
+                            <mxPoint x="1945" y="1473"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_vehicle_res" target="p1_vr_status" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="885" y="1360"/>
+                            <mxPoint x="885" y="1360"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_trip" target="p1_trip_status" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1250" y="1390"/>
+                            <mxPoint x="1250" y="1390"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e22" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_simulator" target="p1_device_result" edge="1">
+                    <mxGeometry x="-0.2207" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2730" y="810"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p1_slot" target="p1_slot_status" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="oYscFj-QVfHK5pvsqPVF-1" value="«entity» -&amp;nbsp;dùng chung&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;&lt;b&gt;ProcessedRequest&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="2500" y="270" width="300" height="108" as="geometry"/>
+                </mxCell>
+                <mxCell id="oYscFj-QVfHK5pvsqPVF-2" value="&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- requestId: String&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- actorId: String&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- operation: RequestOperation&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- resultId: String&lt;/span&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="oYscFj-QVfHK5pvsqPVF-1" vertex="1">
+                    <mxGeometry y="44" width="300" height="56" as="geometry"/>
+                </mxCell>
+                <mxCell id="oYscFj-QVfHK5pvsqPVF-3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="oYscFj-QVfHK5pvsqPVF-1" vertex="1">
+                    <mxGeometry y="100" width="300" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="oYscFj-QVfHK5pvsqPVF-4" value="«control»&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;&lt;b&gt;NotificationService&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1050" y="752" width="520" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="oYscFj-QVfHK5pvsqPVF-5" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" parent="oYscFj-QVfHK5pvsqPVF-4" vertex="1">
+                    <mxGeometry y="44" width="520" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="oYscFj-QVfHK5pvsqPVF-6" value="&lt;div&gt;&lt;pre dir=&quot;ltr&quot;&gt;&lt;code&gt;+ notifyOperator(alert: OperatorAlert): NotificationResult&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;/p&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="oYscFj-QVfHK5pvsqPVF-4" vertex="1">
+                    <mxGeometry y="52" width="520" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="oYscFj-QVfHK5pvsqPVF-7" value="«datatype»&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;&lt;b&gt;OperatorAlert&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1340" y="1914" width="370" height="152" as="geometry"/>
+                </mxCell>
+                <mxCell id="oYscFj-QVfHK5pvsqPVF-8" value="&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- alertType: String&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- message: String&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- vehicleId: String [0..1]&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- reservationId: String [0..1]&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- tripId: String [0..1]&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- hubId: String [0..1]&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- slotId: String [0..1]&lt;/span&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="oYscFj-QVfHK5pvsqPVF-7" vertex="1">
+                    <mxGeometry y="44" width="370" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="oYscFj-QVfHK5pvsqPVF-9" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="oYscFj-QVfHK5pvsqPVF-7" vertex="1">
+                    <mxGeometry y="144" width="370" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="ql_notif_result" value="«datatype»&lt;div&gt;&lt;b&gt;NotificationResult&lt;/b&gt;&lt;/div&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1780" y="1914" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="ql_notif_result_attr" value="&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- sent: boolean&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- failedRecipientIds: String[]&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- reason: String [0..1]&lt;/span&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="ql_notif_result" vertex="1">
+                    <mxGeometry y="44" width="300" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="ql_notif_result_line" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="ql_notif_result" vertex="1">
+                    <mxGeometry y="92" width="300" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="oYscFj-QVfHK5pvsqPVF-10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;exitX=0.463;exitY=0.977;exitDx=0;exitDy=0;entryX=0.461;entryY=0.02;entryDx=0;entryDy=0;entryPerimeter=0;exitPerimeter=0;" parent="1" source="p1_pickup_service_m" target="oYscFj-QVfHK5pvsqPVF-4" edge="1">
+                    <mxGeometry x="-0.3761" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1290.8" y="660"/>
+                            <mxPoint x="1289.7" y="660"/>
+                        </Array>
+                        <mxPoint x="660" y="845" as="sourcePoint"/>
+                        <mxPoint x="760" y="820" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="O14hRsDq9UyCTHSi7Bg0-1" value="«datatype»&lt;br&gt;&lt;b&gt;CancellationPreview&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="440" y="2120" width="370" height="128" as="geometry"/>
+                </mxCell>
+                <mxCell id="O14hRsDq9UyCTHSi7Bg0-2" value="&lt;pre dir=&quot;ltr&quot;&gt;&lt;code&gt;- reservation: VehicleReservation&lt;br/&gt;- cancellationAllowed: boolean&lt;br/&gt;- message: String&lt;/code&gt;&lt;/pre&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="O14hRsDq9UyCTHSi7Bg0-1" vertex="1">
+                    <mxGeometry y="44" width="370" height="76" as="geometry"/>
+                </mxCell>
+                <mxCell id="O14hRsDq9UyCTHSi7Bg0-3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="O14hRsDq9UyCTHSi7Bg0-1" vertex="1">
+                    <mxGeometry y="120" width="370" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="O14hRsDq9UyCTHSi7Bg0-5" value="«datatype»&lt;br&gt;&lt;b&gt;ReservationContext&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="2120" width="340" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="O14hRsDq9UyCTHSi7Bg0-6" value="&lt;pre dir=&quot;ltr&quot;&gt;&lt;code&gt;- student: Student&lt;br&gt;- vehicle: SharedVehicle&lt;br&gt;- hub: Hub&lt;/code&gt;&lt;/pre&gt;&lt;div&gt;&lt;br/&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="O14hRsDq9UyCTHSi7Bg0-5" vertex="1">
+                    <mxGeometry y="44" width="340" height="68" as="geometry"/>
+                </mxCell>
+                <mxCell id="O14hRsDq9UyCTHSi7Bg0-7" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="O14hRsDq9UyCTHSi7Bg0-5" vertex="1">
+                    <mxGeometry y="112" width="340" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="O14hRsDq9UyCTHSi7Bg0-8" value="«datatype»&lt;br&gt;&lt;b&gt;PickUpContext&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="880" y="2120" width="370" height="118" as="geometry"/>
+                </mxCell>
+                <mxCell id="O14hRsDq9UyCTHSi7Bg0-9" value="&lt;pre dir=&quot;ltr&quot;&gt;&lt;code&gt;- reservation: VehicleReservation&lt;br&gt;- vehicle: SharedVehicle&lt;br&gt;- hub: Hub&lt;/code&gt;&lt;/pre&gt;&lt;div&gt;&lt;br/&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="O14hRsDq9UyCTHSi7Bg0-8" vertex="1">
+                    <mxGeometry y="44" width="370" height="66" as="geometry"/>
+                </mxCell>
+                <mxCell id="O14hRsDq9UyCTHSi7Bg0-10" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="O14hRsDq9UyCTHSi7Bg0-8" vertex="1">
+                    <mxGeometry y="110" width="370" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="KizGofxwqrre-Z3fg7lA-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;exitX=0.492;exitY=1.011;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0;entryDx=0;entryDy=0;" parent="1" source="p1_reserve_repo_m" target="oYscFj-QVfHK5pvsqPVF-2" edge="1">
+                    <mxGeometry x="0.7388" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1999.8" y="314"/>
+                        </Array>
+                        <mxPoint x="1990" y="240" as="sourcePoint"/>
+                        <mxPoint x="2610" y="400" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="KizGofxwqrre-Z3fg7lA-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;exitX=0.49;exitY=0.016;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" parent="1" source="p1_pickup_repo" target="oYscFj-QVfHK5pvsqPVF-2" edge="1">
+                    <mxGeometry x="0.728" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1998.5" y="356"/>
+                        </Array>
+                        <mxPoint x="2070.2" y="360" as="sourcePoint"/>
+                        <mxPoint x="2570.2" y="433" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="linh-p2" name="Dieu chuyen va giam sat">
+        <mxGraphModel dx="3433" dy="1893" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3500" pageHeight="3150" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="p2_home_view" value="«boundary»&lt;br&gt;&lt;b&gt;HomeView&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="60" width="360" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_home_view_a" value="- hubs: HubStatus[]&lt;br&gt;- loading: boolean&lt;br&gt;- error: String [0..1]&lt;br&gt;- lastRefreshAt: DateTime [0..1]" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_home_view" vertex="1">
+                    <mxGeometry y="44" width="360" height="84" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_home_view_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#6c8ebf;" parent="p2_home_view" vertex="1">
+                    <mxGeometry y="128" width="360" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_home_view_m" value="+ loadHubStatuses(): void&lt;br&gt;+ refreshHubStatuses(): void&lt;br&gt;+ showHubStatuses(hubs: HubStatus[]): void&lt;br&gt;+ showError(message: String): void" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_home_view" vertex="1">
+                    <mxGeometry y="136" width="360" height="84" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_controller" value="«control»&lt;br&gt;&lt;b&gt;HubController&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="70" width="440" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_controller_a" value="- hubService: HubService" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_hub_controller" vertex="1">
+                    <mxGeometry y="44" width="440" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_controller_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" parent="p2_hub_controller" vertex="1">
+                    <mxGeometry y="74" width="440" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_controller_m" value="+ list(): HubStatus[]&lt;br&gt;+ detail(id: String): HubDetail" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_hub_controller" vertex="1">
+                    <mxGeometry y="82" width="440" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_service" value="«control»&lt;br&gt;&lt;b&gt;HubService&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1050" y="70" width="520" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_service_a" value="- hubRepository: HubRepository" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_hub_service" vertex="1">
+                    <mxGeometry y="44" width="520" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_service_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d79b00;" parent="p2_hub_service" vertex="1">
+                    <mxGeometry y="74" width="520" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_service_m" value="+ getAllHubStatuses(now: DateTime [0..1]): HubStatus[]&lt;br&gt;+ getHubDetail(hubId: String, now: DateTime [0..1]): HubDetail" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_hub_service" vertex="1">
+                    <mxGeometry y="82" width="520" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_repo" value="«repository»&lt;br&gt;&lt;b&gt;HubRepository&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1680" y="60" width="650" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_repo_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#9673a6;" parent="p2_hub_repo" vertex="1">
+                    <mxGeometry y="44" width="650" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_repo_m" value="+ findAll(): Hub[]&lt;br&gt;+ findById(id: String): Hub [0..1]&lt;br&gt;+ listSlots(): ParkingSlot[]&lt;br&gt;+ listVehicles(hubId: String [0..1]): SharedVehicle[]&lt;br&gt;+ listPortsWithHub(): PortWithHub[]&lt;br&gt;+ listActiveAllocationsAt(at: DateTime): ParkingAllocation[]" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_hub_repo" vertex="1">
+                    <mxGeometry y="52" width="650" height="98" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_redistribution_view" value="«boundary»&lt;br&gt;&lt;b&gt;RedistributionView&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="330" width="360" height="460" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_redistribution_view_a" value="- sourceHubId: String [0..1]&lt;br&gt;- targetHubId: String [0..1]&lt;br&gt;- selectedVehicleIds: String[]&lt;br&gt;- eta: DateTime [0..1]&lt;br&gt;- currentOrder: RedistributionOrder [0..1]&lt;br&gt;- items: RedistributionItem[]" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_redistribution_view" vertex="1">
+                    <mxGeometry y="44" width="360" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_redistribution_view_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#6c8ebf;" parent="p2_redistribution_view" vertex="1">
+                    <mxGeometry y="164" width="360" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_redistribution_view_m" value="&lt;div&gt;+ loadHubsAndVehicles(): void&lt;/div&gt;&lt;div&gt;+ selectSourceHub(hubId: String): void&lt;/div&gt;&lt;div&gt;+ selectTargetHub(hubId: String): void&lt;/div&gt;&lt;div&gt;+ selectVehicles(vehicleIds: String[]): void&lt;/div&gt;&lt;div&gt;+ setExpectedArrivalTime(eta: DateTime): void&lt;/div&gt;&lt;div&gt;+ createOrder(): void&lt;/div&gt;&lt;div&gt;+ displayRedistributionOptions(hubs: Hub[], vehicles: SharedVehicle[]): void&lt;/div&gt;&lt;div&gt;+ displayRedistributionPreview(preview: RedistributionPreview): void&lt;/div&gt;&lt;div&gt;+ confirmRedistribution(): void&lt;/div&gt;&lt;div&gt;+ cancelRedistributionDraft(): void&lt;/div&gt;&lt;div&gt;+ confirmDeparture(orderId: String, vehicleId: String): void&lt;/div&gt;&lt;div&gt;+ confirmArrival(orderId: String, vehicleId: String): void&lt;/div&gt;&lt;div&gt;+ cancelPendingItems(orderId: String): void&lt;/div&gt;&lt;div&gt;+ displayVehicleProgress(items: RedistributionItem[]): void&lt;/div&gt;&lt;div&gt;+ displayRedistributionError(message: String): void&lt;/div&gt;&lt;div&gt;+ displayOrder(order: RedistributionOrder, items: RedistributionItem[]): void&lt;/div&gt;&lt;div&gt;+ displayOrderClosed(order: RedistributionOrder): void&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_redistribution_view" vertex="1">
+                    <mxGeometry y="172" width="360" height="288" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_controller" value="«control»&lt;br&gt;&lt;b&gt;RedistributionController&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="470" width="440" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_controller_a" value="- redistributionService: RedistributionService" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_red_controller" vertex="1">
+                    <mxGeometry y="44" width="440" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_controller_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" parent="p2_red_controller" vertex="1">
+                    <mxGeometry y="74" width="440" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_controller_m" value="&lt;div&gt;+ getRedistributionOptions(sourceHubId: String, targetHubId: String, eta: DateTime): RedistributionPreview&lt;/div&gt;&lt;div&gt;+ createOrder(requestId: String, sourceHubId: String, targetHubId: String, vehicleIds: String[], eta: DateTime): RedistributionOrder&lt;/div&gt;&lt;div&gt;+ confirmDeparture(requestId: String, orderId: String, vehicleId: String): RedistributionItem&lt;/div&gt;&lt;div&gt;+ confirmArrival(requestId: String, orderId: String, vehicleId: String): RedistributionItem&lt;/div&gt;&lt;div&gt;+ cancelPendingItems(requestId: String, orderId: String): RedistributionOrder&lt;/div&gt;&lt;div&gt;+ closeOrder(requestId: String, orderId: String): RedistributionOrder&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_red_controller" vertex="1">
+                    <mxGeometry y="82" width="440" height="148" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_service" value="«control»&lt;br&gt;&lt;b&gt;RedistributionService&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1050" y="470" width="520" height="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_service_a" value="- redistributionRepository: RedistributionRepository" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_red_service" vertex="1">
+                    <mxGeometry y="44" width="520" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_service_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d79b00;" parent="p2_red_service" vertex="1">
+                    <mxGeometry y="74" width="520" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_service_m" value="&lt;div&gt;+ getRedistributionOptions(sourceHubId: String, targetHubId: String, vehicleIds: String[], eta: DateTime): RedistributionPreview&lt;/div&gt;&lt;div&gt;+ createOrder(requestId: String, sourceHubId: String, targetHubId: String, vehicleIds: String[], eta: DateTime, operatorId: String): RedistributionOrder&lt;/div&gt;&lt;div&gt;+ confirmDeparture(requestId: String, orderId: String, vehicleId: String, operatorId: String): RedistributionItem&lt;/div&gt;&lt;div&gt;+ confirmArrival(requestId: String, orderId: String, vehicleId: String, operatorId: String): RedistributionItem&lt;/div&gt;&lt;div&gt;+ cancelPendingItems(requestId: String, orderId: String, operatorId: String): RedistributionOrder&lt;/div&gt;&lt;div&gt;+ closeOrder(&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;requestId: String,&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt; &lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;orderId: String, operatorId: String): RedistributionOrder&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;- checkSourceAndTargetHubs(sourceHubId: String, targetHubId: String): boolean&lt;/div&gt;&lt;div&gt;- checkVehicleEligibility(vehicleIds: String[], sourceHubId: String): boolean&lt;/div&gt;&lt;div&gt;- checkTargetHubCapacity(targetHubId: String, vehicleIds: String[], eta: DateTime): boolean&lt;/div&gt;&lt;div&gt;- checkOrderCompletion(orderId: String): boolean&lt;/div&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_red_service" vertex="1">
+                    <mxGeometry y="82" width="520" height="218" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_repo" value="«repository»&lt;br&gt;&lt;b&gt;RedistributionRepository&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1680" y="470" width="650" height="224" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_repo_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#9673a6;" parent="p2_red_repo" vertex="1">
+                    <mxGeometry y="44" width="650" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_repo_m" value="&lt;div&gt;+ findOrderWithItems(orderId: String): RedistributionOrder&lt;/div&gt;&lt;div&gt;+ findRedistributionOptions(sourceHubId: String, targetHubId: String, vehicleIds: String[], eta: DateTime): RedistributionPreview&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent;&quot;&gt;+ findProcessedRequest(requestId: String): ProcessedRequest [0..1]&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;+ atomicCreateOrder(requestId: String, sourceHubId: String, targetHubId: String, vehicleIds: String[], eta: DateTime, createdBy: String, now: DateTime): RedistributionOrder&lt;/span&gt;&lt;/div&gt;&lt;div&gt;+ atomicMarkDeparted(requestId: String, orderId: String, vehicleId: String, now: DateTime): RedistributionItem&lt;/div&gt;&lt;div&gt;+ atomicMarkArrived(requestId: String, orderId: String, vehicleId: String, now: DateTime): RedistributionItem&lt;/div&gt;&lt;div&gt;+ atomicCancelPendingItems(requestId: String, orderId: String, now: DateTime): RedistributionOrder&lt;/div&gt;&lt;div&gt;+ atomicCloseOrder(&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;requestId: String,&lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt; &lt;/span&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;orderId: String, now: DateTime): RedistributionOrder&lt;/span&gt;&lt;/div&gt;&lt;div&gt;+ markReconciliationRequired(orderId: String, vehicleId: String, now: DateTime): RedistributionItem&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_red_repo" vertex="1">
+                    <mxGeometry y="52" width="650" height="172" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_view" value="«boundary»&lt;br&gt;&lt;b&gt;MyReservationsView&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="864" width="360" height="184" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_view_a" value="- result: MyReservationsResult [0..1]&lt;br&gt;- loading: boolean&lt;br&gt;- error: String [0..1]" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_myres_view" vertex="1">
+                    <mxGeometry y="44" width="360" height="66" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_view_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#6c8ebf;" parent="p2_myres_view" vertex="1">
+                    <mxGeometry y="110" width="360" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_view_m" value="+ loadMyReservations(): void&lt;br&gt;+ showReservations(result: MyReservationsResult): void&lt;br&gt;+ showError(message: String): void" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_myres_view" vertex="1">
+                    <mxGeometry y="118" width="360" height="66" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_controller" value="«control»&lt;br&gt;&lt;b&gt;MyReservationsController&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="900" width="440" height="112" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_controller_a" value="- myReservationsService: MyReservationsService" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_myres_controller" vertex="1">
+                    <mxGeometry y="44" width="440" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_controller_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d6b656;" parent="p2_myres_controller" vertex="1">
+                    <mxGeometry y="74" width="440" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_controller_m" value="+ list(): MyReservationsResult" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_myres_controller" vertex="1">
+                    <mxGeometry y="82" width="440" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_service" value="«control»&lt;br&gt;&lt;b&gt;MyReservationsService&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1050" y="900" width="520" height="112" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_service_a" value="- myReservationsRepository: MyReservationsRepository" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_myres_service" vertex="1">
+                    <mxGeometry y="44" width="520" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_service_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#d79b00;" parent="p2_myres_service" vertex="1">
+                    <mxGeometry y="74" width="520" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_service_m" value="+ getMyReservations(studentId: String): MyReservationsResult" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_myres_service" vertex="1">
+                    <mxGeometry y="82" width="520" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_repo" value="«repository»&lt;br&gt;&lt;b&gt;MyReservationsRepository&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1680" y="897" width="650" height="118" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_repo_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#9673a6;" parent="p2_myres_repo" vertex="1">
+                    <mxGeometry y="44" width="650" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_repo_m" value="+ findActiveVehicleReservations(studentId: String): VehicleReservation[]&lt;br&gt;+ findActiveParkingAllocations(studentId: String): ParkingAllocation[]&lt;br&gt;+ findActiveChargingReservations(studentId: String): ChargingReservation[]" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_myres_repo" vertex="1">
+                    <mxGeometry y="52" width="650" height="66" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_user" value="«entity»&lt;br&gt;&lt;b&gt;User&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="1370" width="280" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_user_a" value="- id: String&lt;br&gt;- email: String&lt;br&gt;- passwordHash: String&lt;br&gt;- fullName: String&lt;br&gt;- role: Role&lt;br&gt;- themePreference: ThemePreference" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_user" vertex="1">
+                    <mxGeometry y="44" width="280" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_user_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p2_user" vertex="1">
+                    <mxGeometry y="164" width="280" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_student" value="«entity»&lt;br&gt;&lt;b&gt;Student&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="420" y="1240" width="280" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_student_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p2_student" vertex="1">
+                    <mxGeometry y="44" width="280" height="6" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_operator" value="«entity»&lt;br&gt;&lt;b&gt;Operator&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="1857" width="280" height="52" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_operator_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p2_operator" vertex="1">
+                    <mxGeometry y="44" width="280" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub" value="«entity»&lt;br&gt;&lt;b&gt;Hub&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1360" y="1370" width="280" height="144" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_a" value="- id: String&lt;br&gt;- name: String&lt;br&gt;- location: String&lt;br&gt;- lastUpdatedAt: DateTime" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_hub" vertex="1">
+                    <mxGeometry y="44" width="280" height="84" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p2_hub" vertex="1">
+                    <mxGeometry y="128" width="280" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_vehicle" value="«entity»&lt;br&gt;&lt;b&gt;SharedVehicle&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1720" y="1370" width="300" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_vehicle_a" value="- id: String&lt;br&gt;- code: String&lt;br&gt;- type: VehicleType&lt;br&gt;- batteryLevel: int&lt;br&gt;- status: VehicleStatus&lt;br&gt;- hubId: String [0..1]&lt;br&gt;- slotId: String [0..1]" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_vehicle" vertex="1">
+                    <mxGeometry y="44" width="300" height="138" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_vehicle_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p2_vehicle" vertex="1">
+                    <mxGeometry y="182" width="300" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_slot" value="«entity»&lt;br&gt;&lt;b&gt;ParkingSlot&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="2040" y="1370" width="280" height="162" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_slot_a" value="- id: String&lt;br&gt;- hubId: String&lt;br&gt;- code: String&lt;br&gt;- hasCharger: boolean&lt;br&gt;- status: SlotStatus" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_slot" vertex="1">
+                    <mxGeometry y="44" width="280" height="102" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_slot_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p2_slot" vertex="1">
+                    <mxGeometry y="146" width="280" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_port" value="«entity»&lt;br&gt;&lt;b&gt;ChargingPort&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="2440" y="1370" width="300" height="154" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_port_a" value="- id: String&lt;br&gt;- slotId: String&lt;br&gt;- connectorType: ConnectorType&lt;br&gt;- maxPowerKw: double&lt;br&gt;- status: ChargingPortStatus" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_port" vertex="1">
+                    <mxGeometry y="44" width="300" height="102" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_port_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p2_port" vertex="1">
+                    <mxGeometry y="146" width="300" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_vres" value="«entity»&lt;br&gt;&lt;b&gt;VehicleReservation&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="2790" y="1370" width="320" height="172" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_vres_a" value="- id: String&lt;br&gt;- studentId: String&lt;br&gt;- vehicleId: String&lt;br&gt;- hubId: String&lt;br&gt;- status: VehicleReservationStatus&lt;br&gt;- pickupDeadline: DateTime" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_vres" vertex="1">
+                    <mxGeometry y="44" width="320" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_vres_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p2_vres" vertex="1">
+                    <mxGeometry y="164" width="320" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_order" value="«entity»&lt;br&gt;&lt;b&gt;RedistributionOrder&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="970" y="1770" width="310" height="172" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_order_a" value="- id: String&lt;br&gt;- sourceHubId: String&lt;br&gt;- targetHubId: String&lt;br&gt;- createdBy: String&lt;br&gt;- eta: DateTime [0..1]&lt;br&gt;- status: RedistributionStatus" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_red_order" vertex="1">
+                    <mxGeometry y="44" width="310" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_order_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p2_red_order" vertex="1">
+                    <mxGeometry y="164" width="310" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_item" value="«entity»&lt;br&gt;&lt;b&gt;RedistributionItem&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1345" y="1770" width="310" height="172" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_item_a" value="- id: String&lt;br&gt;- orderId: String&lt;br&gt;- vehicleId: String&lt;br&gt;- status: RedistributionItemStatus&lt;br&gt;- departedAt: DateTime [0..1]&lt;br&gt;- arrivedAt: DateTime [0..1]" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_red_item" vertex="1">
+                    <mxGeometry y="44" width="310" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_item_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p2_red_item" vertex="1">
+                    <mxGeometry y="164" width="310" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_parking_alloc" value="«entity»&lt;br&gt;&lt;b&gt;ParkingAllocation&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1750" y="1770" width="310" height="216" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_parking_alloc_a" value="- id: String&lt;br&gt;- studentId: String&lt;br&gt;- slotId: String&lt;br&gt;- vehicleRef: String&lt;br&gt;- startTime: DateTime&lt;br&gt;- endTime: DateTime&lt;br&gt;- status: ParkingAllocationStatus&lt;br&gt;- holdExpiresAt: DateTime [0..1]" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_parking_alloc" vertex="1">
+                    <mxGeometry y="44" width="310" height="156" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_parking_alloc_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p2_parking_alloc" vertex="1">
+                    <mxGeometry y="200" width="310" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_charge_res" value="«entity»&lt;br&gt;&lt;b&gt;ChargingReservation&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="2110" y="1770" width="330" height="252" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_charge_res_a" value="- id: String&lt;br&gt;- studentId: String&lt;br&gt;- privateVehicleId: String&lt;br&gt;- portId: String&lt;br&gt;- startTime: DateTime&lt;br&gt;- endTime: DateTime&lt;br&gt;- currentBattery: int [0..1]&lt;br&gt;- targetBattery: int [0..1]&lt;br&gt;- status: ChargingReservationStatus&lt;br&gt;- version: int" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_charge_res" vertex="1">
+                    <mxGeometry y="44" width="330" height="192" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_charge_res_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p2_charge_res" vertex="1">
+                    <mxGeometry y="236" width="330" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_trip" value="«entity»&lt;br&gt;&lt;b&gt;Trip&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="2590" y="1770" width="320" height="226" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_trip_a" value="- id: String&lt;br&gt;- reservationId: String&lt;br&gt;- studentId: String&lt;br&gt;- vehicleId: String&lt;br&gt;- startedAt: DateTime&lt;br&gt;- endedAt: DateTime [0..1]&lt;br&gt;- returnHubId: String [0..1]&lt;br&gt;- returnSlotId: String [0..1]&lt;br&gt;- status: TripStatus" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_trip" vertex="1">
+                    <mxGeometry y="44" width="320" height="174" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_trip_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p2_trip" vertex="1">
+                    <mxGeometry y="218" width="320" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_private_vehicle" value="«entity»&lt;br&gt;&lt;b&gt;PrivateVehicle&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="2960" y="1770" width="320" height="154" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_private_vehicle_a" value="- id: String&lt;br&gt;- ownerId: String&lt;br&gt;- plate: String&lt;br&gt;- type: VehicleType&lt;br&gt;- connectorType: ConnectorType" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_private_vehicle" vertex="1">
+                    <mxGeometry y="44" width="320" height="102" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_private_vehicle_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="p2_private_vehicle" vertex="1">
+                    <mxGeometry y="146" width="320" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_port_status" value="«enumeration»&lt;br&gt;&lt;b&gt;ChargingPortStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="2470" y="2240" width="280" height="118" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_port_status_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p2_port_status" vertex="1">
+                    <mxGeometry y="44" width="280" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_port_status_m" value="AVAILABLE&lt;br&gt;IN_USE&lt;br&gt;OUT_OF_SERVICE" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_port_status" vertex="1">
+                    <mxGeometry y="52" width="280" height="66" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_connector" value="«enumeration»&lt;br&gt;&lt;b&gt;ConnectorType&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="2880" y="2240" width="270" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_connector_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p2_connector" vertex="1">
+                    <mxGeometry y="44" width="270" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_connector_m" value="TYPE_2&lt;br&gt;STANDARD_PLUG" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_connector" vertex="1">
+                    <mxGeometry y="52" width="270" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_status" value="«enumeration»&lt;br&gt;&lt;b&gt;RedistributionStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="960" y="2240" width="330" height="162" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_status_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p2_red_status" vertex="1">
+                    <mxGeometry y="44" width="330" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_status_m" value="CREATED&lt;br&gt;IN_PROGRESS&lt;br&gt;COMPLETED&lt;br&gt;CANCELLED&lt;br&gt;PARTIALLY_COMPLETED" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_red_status" vertex="1">
+                    <mxGeometry y="52" width="330" height="102" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_item_status" value="«enumeration»&lt;br&gt;&lt;b&gt;RedistributionItemStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1330" y="2240" width="340" height="144" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_item_status_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p2_red_item_status" vertex="1">
+                    <mxGeometry y="44" width="340" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_red_item_status_m" value="PENDING&lt;br&gt;IN_TRANSIT&lt;br&gt;ARRIVED&lt;br&gt;CANCELLED" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_red_item_status" vertex="1">
+                    <mxGeometry y="52" width="340" height="84" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_park_status" value="«enumeration»&lt;br&gt;&lt;b&gt;ParkingAllocationStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1710" y="2240" width="330" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_park_status_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p2_park_status" vertex="1">
+                    <mxGeometry y="44" width="330" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_park_status_m" value="HELD&lt;br&gt;CONFIRMED&lt;br&gt;IN_USE&lt;br&gt;USED&lt;br&gt;CANCELLED&lt;br&gt;EXPIRED" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_park_status" vertex="1">
+                    <mxGeometry y="52" width="330" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_charge_status" value="«enumeration»&lt;br&gt;&lt;b&gt;ChargingReservationStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="2080" y="2240" width="340" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_charge_status_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p2_charge_status" vertex="1">
+                    <mxGeometry y="44" width="340" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_charge_status_m" value="CONFIRMED&lt;br&gt;CHARGING&lt;br&gt;AWAITING_DISCONNECT&lt;br&gt;COMPLETED&lt;br&gt;CANCELLED&lt;br&gt;EXPIRED" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_charge_status" vertex="1">
+                    <mxGeometry y="52" width="340" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_status_dto" value="«datatype»&lt;br&gt;&lt;b&gt;HubStatus&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="2500" width="360" height="262" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_status_dto_a" value="- id: String&lt;br&gt;- name: String&lt;br&gt;- location: String&lt;br&gt;- availableVehicles: int&lt;br&gt;- totalVehicles: int&lt;br&gt;- freeSlots: int&lt;br&gt;- totalSlots: int&lt;br&gt;- freeChargingPorts: int&lt;br&gt;- totalChargingPorts: int&lt;br&gt;- averageBattery: int&lt;br&gt;- lastUpdatedAt: String" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_hub_status_dto" vertex="1">
+                    <mxGeometry y="44" width="360" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_status_dto_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p2_hub_status_dto" vertex="1">
+                    <mxGeometry y="254" width="360" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_detail_dto" value="«datatype»&lt;br&gt;&lt;b&gt;HubDetail&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="470" y="2500" width="360" height="88" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_detail_dto_a" value="- vehicles: VehicleSummary[]&lt;div&gt;- hub: HubStatus&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_hub_detail_dto" vertex="1">
+                    <mxGeometry y="44" width="360" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_hub_detail_dto_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p2_hub_detail_dto" vertex="1">
+                    <mxGeometry y="80" width="360" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_vehicle_summary_dto" value="«datatype»&lt;br&gt;&lt;b&gt;VehicleSummary&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="890" y="2500" width="360" height="208" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_vehicle_summary_dto_a" value="- id: String&lt;br&gt;- code: String&lt;br&gt;- type: VehicleType&lt;br&gt;- batteryLevel: int&lt;br&gt;- status: VehicleStatus&lt;br&gt;- hubId: String [0..1]&lt;br&gt;- slotId: String [0..1]&lt;br&gt;- lastUpdatedAt: String" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_vehicle_summary_dto" vertex="1">
+                    <mxGeometry y="44" width="360" height="156" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_vehicle_summary_dto_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p2_vehicle_summary_dto" vertex="1">
+                    <mxGeometry y="200" width="360" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_result_dto" value="«datatype»&lt;br&gt;&lt;b&gt;MyReservationsResult&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="1310" y="2500" width="420" height="118" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_result_dto_a" value="- vehicleReservations: VehicleReservation[]&lt;br&gt;- parkingAllocations: ParkingAllocation[]&lt;br&gt;- chargingReservations: ChargingReservation[]" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="p2_myres_result_dto" vertex="1">
+                    <mxGeometry y="44" width="420" height="66" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2_myres_result_dto_sep" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="p2_myres_result_dto" vertex="1">
+                    <mxGeometry y="110" width="420" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="f0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=0;strokeColor=#333333;fontSize=10;" parent="1" source="p2_student" target="p2_user" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f00" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=0;strokeColor=#333333;fontSize=10;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="p2_operator" target="p2_user" edge="1">
+                    <mxGeometry x="-0.1217" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="180" y="1760"/>
+                            <mxPoint x="180" y="1760"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p2_home_view" target="p2_hub_controller" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="420" y="150"/>
+                            <mxPoint x="420" y="150"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p2_hub_controller" target="p2_hub_service" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p2_hub_service" target="p2_hub_repo" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p2_redistribution_view" target="p2_red_controller" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="480" y="560"/>
+                            <mxPoint x="480" y="560"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p2_red_controller" target="p2_red_service" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1020" y="585"/>
+                            <mxPoint x="1020" y="585"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p2_red_service" target="p2_red_repo" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1600" y="582"/>
+                            <mxPoint x="1600" y="582"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p2_myres_view" target="p2_myres_controller" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p2_myres_controller" target="p2_myres_service" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p2_myres_service" target="p2_myres_repo" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f10" value="tạo / quản lý&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="p2_operator" target="p2_red_order_a" edge="1">
+                    <mxGeometry x="0.1162" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="610" y="1874"/>
+                            <mxPoint x="610" y="1874"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f11" value="Hub nguồn / Hub đích&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_hub" target="p2_red_order" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f12" value="bao gồm&lt;br&gt;1 → 1..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_red_order" target="p2_red_item" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f13" value="được điều chuyển trong&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_vehicle" target="p2_red_item" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1840" y="1670"/>
+                            <mxPoint x="1500" y="1670"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f14" value="quản lý / chứa&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_hub" target="p2_vehicle" edge="1">
+                    <mxGeometry x="0.0571" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1680" y="1420"/>
+                            <mxPoint x="1680" y="1480"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f15" value="bao gồm&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_hub" target="p2_slot" edge="1">
+                    <mxGeometry x="0.4419" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1550" y="1290"/>
+                            <mxPoint x="2180" y="1290"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f16" value="có thể tích hợp&lt;br&gt;1 → 0..1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_slot" target="p2_port" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f17" value="đặt&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_student" target="p2_vres" edge="1">
+                    <mxGeometry x="-0.0154" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="560" y="1160"/>
+                            <mxPoint x="2880" y="1160"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f18" value="đặt chỗ&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_student" target="p2_parking_alloc" edge="1">
+                    <mxGeometry x="0.0365" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="520" y="1720"/>
+                            <mxPoint x="1840" y="1720"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f19" value="đặt lịch sạc&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;exitX=0.526;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="p2_student_sep" target="p2_charge_res" edge="1">
+                    <mxGeometry x="-0.0645" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="567.3" y="2080"/>
+                            <mxPoint x="2290" y="2080"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f20" value="phát sinh&lt;br&gt;1 → 0..1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_vres" target="p2_trip" edge="1">
+                    <mxGeometry x="0.1528" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2950" y="1656"/>
+                            <mxPoint x="2720" y="1656"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f21" value="được đặt trong&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_vehicle" target="p2_vres" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1840" y="1250"/>
+                            <mxPoint x="2810" y="1250"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f37" value="được đặt tại&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_hub" target="p2_vres" edge="1">
+                    <mxGeometry x="0.3586" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1500" y="1200"/>
+                            <mxPoint x="2850" y="1200"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f38" value="được sử dụng trong&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_vehicle" target="p2_trip" edge="1">
+                    <mxGeometry x="-0.0395" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="1890" y="1600"/>
+                            <mxPoint x="2650" y="1600"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f39" value="sở hữu&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_student" target="p2_private_vehicle" edge="1">
+                    <mxGeometry x="-0.0366" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="520" y="1110"/>
+                            <mxPoint x="3140" y="1110"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f40" value="được chọn cho&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_private_vehicle" target="p2_charge_res" edge="1">
+                    <mxGeometry x="-0.4079" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="3020" y="2080"/>
+                            <mxPoint x="2360" y="2080"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f22" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p2_red_order" target="p2_red_status" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p2_red_item" target="p2_red_item_status" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p2_parking_alloc" target="p2_park_status" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="f25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p2_charge_res" target="p2_charge_status" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2190" y="2131"/>
+                            <mxPoint x="2250" y="2131"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f27" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;" parent="1" source="p2_port" target="p2_port_status" edge="1">
+                    <mxGeometry x="-0.1285" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2530" y="1720"/>
+                            <mxPoint x="2530" y="1720"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.433;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="p2_port_sep" target="p2_connector" edge="1">
+                    <mxGeometry x="-0.1887" relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2569.9" y="2170"/>
+                            <mxPoint x="3015" y="2170"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f29" value="được phân bổ cho&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_slot" target="p2_parking_alloc" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2180" y="1710"/>
+                            <mxPoint x="1905" y="1710"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="f30" value="được đặt lịch trên&lt;br&gt;1 → 0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;startArrow=none;strokeColor=#333333;fontSize=10;" parent="1" source="p2_port" target="p2_charge_res" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2470" y="1720"/>
+                            <mxPoint x="2275" y="1720"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="a-tp3LIzFblWMZeh58sw-1" value="«datatype»&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;&lt;b&gt;RedistributionPreview&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="2860" width="360" height="128" as="geometry"/>
+                </mxCell>
+                <mxCell id="a-tp3LIzFblWMZeh58sw-2" value="&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- sourceHub: Hub&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- targetHub: Hub&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- vehicles: SharedVehicle[]&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- eta: DateTime&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- availableCapacity: int&lt;/span&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="a-tp3LIzFblWMZeh58sw-1" vertex="1">
+                    <mxGeometry y="44" width="360" height="76" as="geometry"/>
+                </mxCell>
+                <mxCell id="a-tp3LIzFblWMZeh58sw-3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="a-tp3LIzFblWMZeh58sw-1" vertex="1">
+                    <mxGeometry y="120" width="360" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="a-tp3LIzFblWMZeh58sw-4" value="«datatype»&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;&lt;b&gt;RedistributionResult&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="470" y="2860" width="360" height="88" as="geometry"/>
+                </mxCell>
+                <mxCell id="a-tp3LIzFblWMZeh58sw-5" value="&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- order: RedistributionOrder&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- items: RedistributionItem[]&lt;/span&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="a-tp3LIzFblWMZeh58sw-4" vertex="1">
+                    <mxGeometry y="44" width="360" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="a-tp3LIzFblWMZeh58sw-6" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="a-tp3LIzFblWMZeh58sw-4" vertex="1">
+                    <mxGeometry y="80" width="360" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="cPdAjrYV1olDHT62ZcAc-1" value="«entity» -&amp;nbsp;dùng chung&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;&lt;b&gt;ProcessedRequest&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="2460" y="520" width="300" height="108" as="geometry"/>
+                </mxCell>
+                <mxCell id="cPdAjrYV1olDHT62ZcAc-2" value="&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- requestId: String&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- actorId: String&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- operation: RequestOperation&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(26, 26, 26), rgb(215, 215, 215));&quot;&gt;- resultId: String&lt;/span&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="cPdAjrYV1olDHT62ZcAc-1" vertex="1">
+                    <mxGeometry y="44" width="300" height="56" as="geometry"/>
+                </mxCell>
+                <mxCell id="cPdAjrYV1olDHT62ZcAc-3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#82b366;" parent="cPdAjrYV1olDHT62ZcAc-1" vertex="1">
+                    <mxGeometry y="100" width="300" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="cPdAjrYV1olDHT62ZcAc-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#555555;fontSize=10;entryX=-0.008;entryY=0.129;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" target="cPdAjrYV1olDHT62ZcAc-2" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="2330" y="571" as="sourcePoint"/>
+                        <mxPoint x="2480" y="685" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="2330" y="571"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="bnKAh7VsO-ktu9_No-_2-1" value="«datatype»&lt;br&gt;&lt;b&gt;PortWithHub&lt;/b&gt;" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#666666;fontSize=12;fontColor=#1a1a1a;" parent="1" vertex="1">
+                    <mxGeometry x="890" y="2860" width="420" height="118" as="geometry"/>
+                </mxCell>
+                <mxCell id="bnKAh7VsO-ktu9_No-_2-2" value="- port: ChargingPort&lt;div&gt;- hubId: String&lt;/div&gt;" style="text;strokeColor=none;fillColor=#ffffff;align=left;verticalAlign=top;spacingLeft=6;spacingRight=4;overflow=hidden;rotatable=0;html=1;whiteSpace=wrap;fontFamily=Courier New;fontSize=10;fontColor=#1a1a1a;" parent="bnKAh7VsO-ktu9_No-_2-1" vertex="1">
+                    <mxGeometry y="44" width="420" height="66" as="geometry"/>
+                </mxCell>
+                <mxCell id="bnKAh7VsO-ktu9_No-_2-3" value="" style="line;strokeWidth=1;fillColor=none;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=#666666;" parent="bnKAh7VsO-ktu9_No-_2-1" vertex="1">
+                    <mxGeometry y="110" width="420" height="8" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
