@@ -60,6 +60,11 @@ export const authController = {
     sendOk(res, authService.getMe(currentUser(req).id));
   },
 
+  /** GET /api/auth/me/vehicles – thêm ngoài sơ đồ: xe cá nhân để chọn khi đặt chỗ đỗ / lịch sạc */
+  myVehicles(req: Request, res: Response): void {
+    sendOk(res, authService.getMyVehicles(currentUser(req).id));
+  },
+
   /** PATCH /api/auth/me/theme */
   updateTheme(req: Request, res: Response): void {
     sendOk(res, authService.updateTheme(currentUser(req).id, req.body.themePreference));

@@ -14,6 +14,7 @@ tripRoutes.post("/pickup/confirm", validateBody(confirmPickUpBody), pickUpContro
 tripRoutes.get("/pickup/results/:requestId", pickUpController.getPickUpResult);
 
 // ReturnController
+tripRoutes.get("/current", returnController.getCurrentTrip); // thêm ngoài sơ đồ
 tripRoutes.post("/:tripId/return/prepare", validateBody(prepareReturnBody), returnController.prepareReturn);
 tripRoutes.post("/:tripId/return/confirm", validateBody(confirmReturnBody), returnController.confirmReturn);
 tripRoutes.post("/:tripId/return/abandon", validateBody(abandonReturnBody), returnController.abandonReturn);

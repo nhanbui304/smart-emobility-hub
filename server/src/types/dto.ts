@@ -587,3 +587,15 @@ export interface VerificationContext {
   resourceStatus: string;
   remainingImpacts: string[];
 }
+
+// ---------- Thêm ngoài sơ đồ (xem docs/submission-3/ANH_XA_CLASS_DIAGRAM_CODE.md) ----------
+
+/** Chuyến đi chưa kết thúc của sinh viên, cho trang Chuyến đi (GET /api/trips/current). */
+export interface CurrentTripInfo {
+  trip: Trip;
+  vehicleCode: string;
+  vehicleType: VehicleType;
+  batteryLevel: number;
+  returnHubName?: string;
+  returnSlotCode?: string;
+}
