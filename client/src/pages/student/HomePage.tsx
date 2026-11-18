@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { hubApi } from "../../api/hubs";
-import { vehicleApi } from "../../api/vehicle";
+import { searchApi } from "../../api/search";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { ErrorMessage } from "../../components/ErrorMessage";
@@ -30,8 +30,9 @@ export function HomePage() {
     setSearchError(null);
     setSearching(true);
     try {
-      // TODO (Triết – UC01): hiển thị danh sách phương án trả về và cho chọn
-      await vehicleApi.findOptions({ purpose });
+      // TODO (Triết – UC01): lấy Hub xuất phát, loại xe, mức pin tối thiểu từ form (đang tạm điền);
+      // hiển thị danh sách phương án trả về và cho chọn (searchApi.confirmOptionSelection).
+      await searchApi.searchMobilityOptions({ purpose, originHubId: hubs?.[0]?.id ?? "", vehicleType: "E_BIKE", minBattery: 0 });
     } catch (err) {
       setSearchError(err);
     } finally {

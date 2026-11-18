@@ -1,6 +1,6 @@
 // Owner: Nguyễn Hoàng Nhân – UC10 Monitor Mobility Hub Network
 // Bảng trạng thái Hub đã chạy: gọi /api/hubs, tự tải lại mỗi 3 giây (NFR cập nhật trong 3 giây).
-// TODO (Hoàng Nhân): thêm cảnh báo (operationsApi.overview), chi tiết Hub, nút điều chuyển.
+// TODO (Hoàng Nhân): thêm cảnh báo (monitoringApi.overview), chi tiết Hub, nút điều chuyển.
 import { hubApi } from "../../api/hubs";
 import { Card } from "../../components/Card";
 import { ErrorMessage } from "../../components/ErrorMessage";
@@ -89,8 +89,8 @@ export function MonitoringPage() {
         owner="Nguyễn Hoàng Nhân"
         useCases="UC10"
         todo={[
-          "Hiển thị cảnh báo đang mở (LOW_VEHICLE, NEAR_FULL, DATA_STALE) từ operationsApi.overview",
-          "Bấm vào Hub → xem chi tiết xe, cổng sạc (operationsApi.hubDetail)",
+          "Hiển thị cảnh báo đang mở (LOW_VEHICLE, NEAR_FULL, DATA_STALE) từ monitoringApi.overview",
+          "Bấm vào Hub → xem chi tiết xe, cổng sạc (monitoringApi.hubDetail)",
         ]}
       />
     </div>

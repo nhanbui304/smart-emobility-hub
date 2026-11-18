@@ -47,7 +47,7 @@ async function main() {
       s.processedRequests,
       s.simulationRuns,
       s.simulationSnapshots,
-      s.chargingPlans,
+      s.chargingScheduleVersions,
       s.redistributionItems,
       s.redistributionOrders,
       s.alerts,

@@ -1,19 +1,29 @@
-// Owner: Nguyễn Hoàng Nhân – UC13 (dùng chung cho UC11 và các scheduler cần báo sinh viên)
-// Sequence Sub #2, Hình 2.56: :NotificationService. Hệ thống không có WebSocket; client đọc thông báo bằng polling.
+// Owner: Nguyễn Hoàng Nhân (UC13) – dùng chung cho UC05, UC11 và các scheduler
+// Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
+import type { AffectedContext, ChangeSummary, NotificationResult, OperatorAlert } from "../types/dto";
 import { notImplemented } from "../lib/errors";
-
-export interface NotificationResult {
-  sent: boolean;
-  /** Người nhận chưa gửi được, để gửi lại sau. */
-  failedRecipientIds: string[];
-}
 
 export const notificationService = {
   /**
    * UC13 bước 9: báo sinh viên / Operator bị ảnh hưởng bởi phiên bản kế hoạch sạc mới.
-   * planId là scheduleVersionId trong sequence.
    */
-  async notifyAffectedParties(planId: string, changeSummary: string[]): Promise<NotificationResult> {
-    throw notImplemented("NotificationService.notifyAffectedParties (UC13)");
+  async notifyAffectedParties(scheduleVersionId: string, changeSummary: ChangeSummary): Promise<NotificationResult> {
+    throw notImplemented("NotificationService.notifyAffectedParties");
+  },
+
+  async notifyAffectedUsers(incidentId: string, affectedContext: AffectedContext): Promise<NotificationResult> {
+    throw notImplemented("NotificationService.notifyAffectedUsers");
+  },
+
+  async requestUserConsent(incidentId: string, pendingChanges: string[], deadline: Date): Promise<NotificationResult> {
+    throw notImplemented("NotificationService.requestUserConsent");
+  },
+
+  async markNotificationPending(incidentId: string): Promise<void> {
+    throw notImplemented("NotificationService.markNotificationPending");
+  },
+
+  async notifyOperator(alert: OperatorAlert): Promise<NotificationResult> {
+    throw notImplemented("NotificationService.notifyOperator");
   },
 };

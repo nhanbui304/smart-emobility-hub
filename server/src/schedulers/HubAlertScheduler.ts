@@ -4,8 +4,8 @@ import { notImplemented } from "../lib/errors";
 export const hubAlertScheduler = {
   /**
    * So sánh trạng thái từng Hub với ngưỡng trong systemConfig (lowVehicleThreshold, nearFullThreshold,
-   * dataStaleSeconds). Vượt ngưỡng → alertRepository.upsertActive + emitToOperators(ALERT_RAISED);
-   * hết vượt ngưỡng → clear + ALERT_CLEARED. Trả về số cảnh báo thay đổi.
+   * dataStaleSeconds). Vượt ngưỡng → alertRepository.upsertActive; hết vượt ngưỡng → alertRepository.clear.
+   * Dashboard đọc cảnh báo qua API (gọi lại mỗi 3 giây). Trả về số cảnh báo tạo mới hoặc cập nhật.
    */
   evaluateHubAlerts(now: Date): number {
     throw notImplemented("HubAlertScheduler.evaluateHubAlerts (2.3.3)");

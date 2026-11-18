@@ -5,5 +5,4 @@ import { api } from "./client";
 export const hubApi = {
   list: () => api.get<HubStatus[]>("/hubs"),
   detail: (id: string) => api.get<HubDetail>(`/hubs/${id}`),
-  myReservations: () => api.get<unknown>("/me/reservations"),
 };

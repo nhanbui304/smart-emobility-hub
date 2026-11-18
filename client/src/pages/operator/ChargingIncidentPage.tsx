@@ -25,7 +25,7 @@ export function ChargingIncidentPage() {
         owner="Ngô Minh Triết (UC11) · Nguyễn Hoàng Nhân (UC13)"
         useCases="UC11, UC13"
         todo={[
-          "UC13: operationsApi.chargingContext → proposeSchedule → validate → apply (gửi baseVersion)",
+          "UC13: chargingScheduleApi.loadChargingContext → generateProposedSchedule → validatePlan → applyChargingSchedule (gửi baseVersion)",
           "UC11: form báo sự cố (tài nguyên, mô tả, mức ảnh hưởng) → danh sách đặt chỗ bị ảnh hưởng → phương án xử lý",
           "Xử lý lỗi VERSION_CONFLICT: tải lại dữ liệu và báo Operator",
         ]}

@@ -67,19 +67,19 @@ smart-emobility-hub/
 │       ├── constants.ts    # MỌI trạng thái (VEHICLE_STATUSES...)
 │       ├── config/         # env.ts (biến môi trường), systemConfig.ts (tham số nghiệp vụ)
 │       ├── db/             # schema.ts (các bảng), seed.ts (dữ liệu mẫu)
-│       ├── types/dto.ts    # dữ liệu API trả về
+│       ├── types/dto.ts    # datatype trong class diagram Sub #3 (dữ liệu API trả về)
 │       ├── lib/            # db, errors, response, schemas
 │       ├── middleware/     # requireAuth, requireRole, validateBody, errorHandler
 │       ├── routes/         # URL + quyền + kiểm tra dữ liệu → gọi controller
 │       ├── controllers/    # đọc request → gọi service → trả response
 │       ├── services/       # nghiệp vụ
-│       ├── repositories/   # truy vấn database
+│       ├── repositories/   # truy vấn database; operational/ = các phần của OperationalRepository
 │       ├── schedulers/     # tác vụ định kỳ mục 2.3: hết hạn giữ chỗ, hết hạn đặt xe, cảnh báo Hub
 │       └── simulator/      # VehicleSimulator (thiết bị giả lập), SimulationEngine (UC14)
 └── client/src/
-    ├── types.ts            # kiểu dữ liệu API (bản sao từ server)
+    ├── types.ts            # kiểu dữ liệu API (bản sao enum, entity, datatype từ server)
     ├── statusLabels.ts     # nhãn tiếng Việt cho trạng thái
-    ├── api/                # hàm gọi API theo nhóm
+    ├── api/                # hàm gọi API, mỗi file ứng với một Controller (tên hàm = tên method)
     ├── context/            # AuthContext (đăng nhập), ThemeContext (sáng/tối)
     ├── hooks/useAsync.ts   # gọi API + tự tải lại định kỳ
     ├── layouts/            # StudentLayout (tab dưới), OperatorLayout (sidebar)
@@ -98,6 +98,7 @@ smart-emobility-hub/
 
 **Khung sẵn, chờ hiện thực**
 
-Mọi route của UC01–UC14 đã có, đã gắn quyền và kiểm tra dữ liệu. Gọi vào sẽ nhận
+Khung code (route, controller, service, repository, kiểu dữ liệu, hàm gọi API phía client) khớp class diagram
+Submission #3 cho UC01–UC14 và mục 2.3. Mọi route đã gắn quyền và kiểm tra dữ liệu. Gọi vào sẽ nhận
 `{ ok: false, error: { code: "NOT_IMPLEMENTED" } }` (HTTP 501) cho tới khi người phụ trách viết logic.
 Tìm việc của mình: tìm `Owner: <tên bạn>` trong project.

@@ -1,53 +1,58 @@
 // Owner: Ngô Minh Triết – UC11 Handle Operational Incident
-import type { ImpactLevel, ResourceType } from "../constants";
-import type { Incident } from "../db/schema";
+// Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
+import type { IncidentImpact } from "../constants";
+import type { HandlingPlan, IncidentContext, IncidentDetails, IncidentResult, ResolutionResult, VerificationContext } from "../types/dto";
 import { notImplemented } from "../lib/errors";
 
-// operatorId (tham số cuối) lấy từ phiên đăng nhập, dùng để ghi vết người thao tác.
-
-export interface AffectedScope {
-  resourceType: ResourceType;
-  /** Các đặt chỗ/lịch sạc/đặt xe bị ảnh hưởng (do Operator xác nhận). */
-  affectedReservationIds: string[];
-}
-
-export interface HandlingPlan {
-  expectedVersion: number;
-  actions: Array<{
-    reservationId: string;
-    action: "REALLOCATE" | "CANCEL" | "KEEP";
-    targetResourceId?: string;
-  }>;
-}
-
-export interface ResolutionResult {
-  resolved: boolean;
-  note?: string;
-}
-
 export const incidentService = {
-  /** UC11 bước 1–3: ghi nhận sự cố cho một tài nguyên. */
-  async reportIncident(
-    resourceId: string,
-    description: string,
-    impactLevel: ImpactLevel,
-    affectedScope: AffectedScope,
-    operatorId: string,
-  ): Promise<Incident> {
-    throw notImplemented("IncidentService.reportIncident (UC11)");
+  async getIncidentContext(resourceId: string): Promise<IncidentContext> {
+    throw notImplemented("IncidentService.getIncidentContext");
   },
 
-  /** UC11 bước 4–6: xử lý các đặt chỗ bị ảnh hưởng, thông báo sinh viên (emitToUser). */
-  async processHandlingPlan(incidentId: string, handlingPlan: HandlingPlan, operatorId: string): Promise<Incident> {
-    throw notImplemented("IncidentService.processHandlingPlan (UC11)");
+  async getIncidentDetails(incidentId: string): Promise<IncidentDetails> {
+    throw notImplemented("IncidentService.getIncidentDetails");
+  },
+
+  /** UC11 bước 1–3: ghi nhận sự cố cho một tài nguyên. */
+  async reportIncident(
+    requestId: string,
+    resourceId: string,
+    description: string,
+    impactLevel: IncidentImpact,
+    affectedScope: string,
+  ): Promise<IncidentResult> {
+    throw notImplemented("IncidentService.reportIncident");
+  },
+
+  /** UC11 bước 4–6: xử lý các đặt chỗ bị ảnh hưởng, thông báo sinh viên (notificationService.notifyAffectedUsers). */
+  async processHandlingPlan(requestId: string, incidentId: string, plan: HandlingPlan): Promise<IncidentResult> {
+    throw notImplemented("IncidentService.processHandlingPlan");
   },
 
   /** UC11 bước 7: xác nhận đã khắc phục. */
-  async verifyResolution(
-    incidentId: string,
-    resolutionResult: ResolutionResult,
-    operatorId: string,
-  ): Promise<Incident> {
-    throw notImplemented("IncidentService.verifyResolution (UC11)");
+  async verifyResolution(requestId: string, incidentId: string, result: ResolutionResult): Promise<IncidentResult> {
+    throw notImplemented("IncidentService.verifyResolution");
   },
 };
+
+// ---------- Bước nội bộ (method private "–" trong class diagram) ----------
+
+/** private (–) trong class diagram. */
+function validateIncidentData(
+  resourceId: string,
+  description: string,
+  impactLevel: IncidentImpact,
+  affectedScope: string,
+): boolean {
+  throw notImplemented("IncidentService.validateIncidentData");
+}
+
+/** private (–) trong class diagram. */
+function identifyChangesToConfirmedCommitments(plan: HandlingPlan): string[] {
+  throw notImplemented("IncidentService.identifyChangesToConfirmedCommitments");
+}
+
+/** private (–) trong class diagram. */
+function evaluateResolutionEvidence(result: ResolutionResult, context: VerificationContext): boolean {
+  throw notImplemented("IncidentService.evaluateResolutionEvidence");
+}

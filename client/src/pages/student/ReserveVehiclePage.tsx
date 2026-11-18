@@ -11,7 +11,7 @@ import { useAsync } from "../../hooks/useAsync";
 
 export function ReserveVehiclePage() {
   const { hubId = "" } = useParams();
-  // Tạm dùng chi tiết Hub (đã chạy) để hiển thị xe; khi làm UC02 thay bằng vehicleApi.reservableVehicles(hubId)
+  // Tạm dùng chi tiết Hub (đã chạy) để hiển thị xe; khi làm UC02 thay bằng reservationApi.getReservableVehicles(hubId)
   const { data: hub, loading, error, reload } = useAsync(() => hubApi.detail(hubId), [hubId]);
 
   return (
@@ -24,9 +24,9 @@ export function ReserveVehiclePage() {
         owner="Lê Quốc Linh"
         useCases="UC02"
         todo={[
-          "Lấy danh sách xe có thể đặt: vehicleApi.reservableVehicles(hubId)",
+          "Lấy danh sách xe có thể đặt: reservationApi.getReservableVehicles(hubId)",
           "Chọn xe → prepareReservation → màn hình xác nhận (hạn nhận xe)",
-          "Xác nhận → vehicleApi.confirmReservation(hubId, vehicleId); xe vừa bị người khác đặt thì báo lỗi rõ ràng",
+          "Xác nhận → reservationApi.confirmReservation(requestId, hubId, vehicleId); xe vừa bị người khác đặt thì báo lỗi rõ ràng",
         ]}
       />
       {loading && <Spinner />}

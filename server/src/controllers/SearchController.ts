@@ -1,37 +1,32 @@
 // Owner: Ngô Minh Triết – UC01 Find Suitable Hub and Mobility Option
+// Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
+// Controller chỉ đọc request → gọi service → trả response. studentId/operatorId lấy từ phiên đăng nhập.
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { VEHICLE_TYPES } from "../constants";
 import { sendOk } from "../lib/response";
-import { parseOrThrow } from "../middleware/validate";
 import { searchService } from "../services/SearchService";
 
-export const searchCriteriaSchema = z.object({
-  purpose: z.enum(["RENT_VEHICLE", "PARK", "CHARGE"]),
-  originHubId: z.string().optional(),
-  vehicleType: z.enum(VEHICLE_TYPES).optional(),
-  minBattery: z.number().int().min(0).max(100).optional(),
-  startTime: z.coerce.date().optional(),
-  endTime: z.coerce.date().optional(),
+export const searchMobilityOptionsBody = z.object({
+  criteria: z.object({ purpose: z.string().min(1), originHubId: z.string().min(1), vehicleType: z.enum(VEHICLE_TYPES), minBattery: z.number().int() }),
 });
-export const filterSchema = searchCriteriaSchema.extend({ sessionId: z.string().min(1) });
-export const selectSchema = z.object({ optionId: z.string().min(1) });
+export const confirmOptionSelectionBody = z.object({ sessionId: z.string().min(1), optionId: z.string().min(1) });
 
 export const searchController = {
+  /** GET /api/search/form */
+  async loadSearchForm(req: Request, res: Response): Promise<void> {
+    sendOk(res, await searchService.loadSearchForm());
+  },
+
   /** POST /api/search/options */
-  async findOptions(req: Request, res: Response): Promise<void> {
-    sendOk(res, await searchService.findSuitableOptions(req.body));
+  async searchMobilityOptions(req: Request, res: Response): Promise<void> {
+    const { criteria } = req.body as z.infer<typeof searchMobilityOptionsBody>;
+    sendOk(res, await searchService.findSuitableOptions(criteria));
   },
 
-  /** POST /api/search/filter */
-  async filterOptions(req: Request, res: Response): Promise<void> {
-    const { sessionId, ...criteria } = req.body;
-    sendOk(res, await searchService.filterSuitableOptions(criteria, { sessionId }));
-  },
-
-  /** POST /api/search/sessions/:sessionId/select */
-  async selectOption(req: Request, res: Response): Promise<void> {
-    const { sessionId } = parseOrThrow(z.object({ sessionId: z.string().min(1) }), req.params);
-    sendOk(res, await searchService.confirmOptionSelection(sessionId, req.body.optionId));
+  /** POST /api/search/selections */
+  async confirmOptionSelection(req: Request, res: Response): Promise<void> {
+    const { sessionId, optionId } = req.body as z.infer<typeof confirmOptionSelectionBody>;
+    sendOk(res, await searchService.confirmOptionSelection(sessionId, optionId));
   },
 };

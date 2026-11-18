@@ -15,7 +15,7 @@ import {
   CHARGING_RESERVATION_STATUSES,
   CHARGING_SESSION_STATUSES,
   CONNECTOR_TYPES,
-  IMPACT_LEVELS,
+  INCIDENT_IMPACTS,
   INCIDENT_STATUSES,
   PARKING_ALLOCATION_STATUSES,
   REDISTRIBUTION_ITEM_STATUSES,
@@ -31,6 +31,15 @@ import {
   VEHICLE_STATUSES,
   VEHICLE_TYPES,
 } from "../constants";
+import type { TimeRange } from "../lib/schemas";
+import type {
+  ConsentPlan,
+  HandlingPlan,
+  OperationalState,
+  PlanAllocation,
+  Scenario,
+  SimulationResult,
+} from "../types/dto";
 
 // ---------- Cột dùng chung ----------
 const id = () =>
@@ -206,14 +215,18 @@ export const chargingRequests = sqliteTable("charging_requests", {
   studentId: text("student_id")
     .notNull()
     .references(() => users.id),
-  vehicleRef: text("vehicle_ref").notNull(),
+  /** Xe điện cá nhân hoặc xe dùng chung cần sạc. */
+  vehicleId: text("vehicle_id").notNull(),
   hubId: text("hub_id")
     .notNull()
     .references(() => hubs.id),
-  portId: text("port_id").references(() => chargingPorts.id),
-  status: text("status", { enum: CHARGING_REQUEST_STATUSES }).notNull(),
+  /** Cổng được phân bổ; null khi đang chờ (WAITING). */
+  assignedPortId: text("assigned_port_id").references(() => chargingPorts.id),
+  currentBattery: integer("current_battery").notNull(),
   targetBattery: integer("target_battery").notNull(),
-  queuedAt: timestamp("queued_at"),
+  status: text("status", { enum: CHARGING_REQUEST_STATUSES }).notNull(),
+  /** Hạn sinh viên phải cắm sạc sau khi được phân bổ (UC07). */
+  allocationDeadline: timestamp("allocation_deadline"),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -265,10 +278,21 @@ export const incidents = sqliteTable("incidents", {
   resourceType: text("resource_type", { enum: RESOURCE_TYPES }).notNull(),
   resourceId: text("resource_id").notNull(),
   description: text("description").notNull(),
-  impactLevel: text("impact_level", { enum: IMPACT_LEVELS }).notNull(),
+  impactLevel: text("impact_level", { enum: INCIDENT_IMPACTS }).notNull(),
+  affectedScope: text("affected_scope").notNull(),
   status: text("status", { enum: INCIDENT_STATUSES }).notNull(),
-  /** Phương án xử lý, lưu dạng JSON. */
-  handlingPlan: text("handling_plan", { mode: "json" }),
+  reportedBy: text("reported_by")
+    .notNull()
+    .references(() => users.id),
+  priorityHandling: integer("priority_handling", { mode: "boolean" }).notNull().default(false),
+  /** Phương án xử lý (HandlingPlan), lưu dạng JSON. */
+  handlingPlan: text("handling_plan", { mode: "json" }).$type<HandlingPlan>(),
+  /** Kế hoạch xin đồng ý của sinh viên (ConsentPlan), lưu dạng JSON. */
+  consentPlan: text("consent_plan", { mode: "json" }).$type<ConsentPlan>(),
+  /** Gửi thông báo thất bại → đánh dấu để gửi lại sau. */
+  notificationPending: integer("notification_pending", { mode: "boolean" }).notNull().default(false),
+  resolutionNote: text("resolution_note"),
+  resolvedAt: timestamp("resolved_at"),
   version: integer("version").notNull().default(1),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
@@ -285,6 +309,8 @@ export const alerts = sqliteTable(
     value: real("value").notNull(),
     threshold: real("threshold").notNull(),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
+    /** Khoảng thời gian đã dùng để đánh giá NEAR_FULL (mục 2.3.3), hiển thị trên dashboard. */
+    evaluationWindow: text("evaluation_window", { mode: "json" }).$type<TimeRange>(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -323,16 +349,17 @@ export const redistributionItems = sqliteTable("redistribution_items", {
   updatedAt: updatedAt(),
 });
 
-export const chargingPlans = sqliteTable("charging_plans", {
+/** Phiên bản kế hoạch sạc đã áp dụng (entity ChargingScheduleVersion, UC13). */
+export const chargingScheduleVersions = sqliteTable("charging_schedule_versions", {
   id: id(),
   hubId: text("hub_id")
     .notNull()
     .references(() => hubs.id),
   /** Dùng cho baseVersion khi áp dụng lịch sạc (UC13). */
   version: integer("version").notNull().default(1),
-  payload: text("payload", { mode: "json" }).notNull(),
+  /** Danh sách PlanAllocation của phiên bản này. */
+  allocations: text("allocations", { mode: "json" }).$type<PlanAllocation[]>().notNull(),
   appliedAt: timestamp("applied_at"),
-  appliedBy: text("applied_by").references(() => users.id),
   /** UC13 Ext 9a: áp dụng xong nhưng gửi thông báo thất bại → đánh dấu để gửi lại sau. */
   notificationPending: integer("notification_pending", { mode: "boolean" }).notNull().default(false),
   createdAt: createdAt(),
@@ -345,21 +372,17 @@ export const chargingPlans = sqliteTable("charging_plans", {
  */
 export const simulationSnapshots = sqliteTable("simulation_snapshots", {
   id: id(),
-  createdBy: text("created_by")
-    .notNull()
-    .references(() => users.id),
-  hubIds: text("hub_ids", { mode: "json" }).notNull(),
-  startTime: timestamp("start_time").notNull(),
-  endTime: timestamp("end_time").notNull(),
+  hubIds: text("hub_ids", { mode: "json" }).$type<string[]>().notNull(),
+  timeRange: text("time_range", { mode: "json" }).$type<TimeRange>().notNull(),
   capturedAt: timestamp("captured_at").notNull(),
-  /** Dữ liệu vận hành đã chụp (danh sách HubStatus). */
-  payload: text("payload", { mode: "json" }).notNull(),
   /** Nguồn dữ liệu đã đọc, ví dụ ["hubs", "charging_reservations"]. */
-  sources: text("sources", { mode: "json" }).notNull(),
+  sources: text("sources", { mode: "json" }).$type<string[]>().notNull(),
   /** Mức độ đầy đủ của dữ liệu, 0–1. */
   completeness: real("completeness").notNull(),
   isStale: integer("is_stale", { mode: "boolean" }).notNull().default(false),
   staleAccepted: integer("stale_accepted", { mode: "boolean" }).notNull().default(false),
+  /** Dữ liệu vận hành đã chụp (OperationalState). */
+  operationalState: text("operational_state", { mode: "json" }).$type<OperationalState>().notNull(),
   dataLimitation: text("data_limitation"),
   createdAt: createdAt(),
 });
@@ -370,19 +393,15 @@ export const simulationRuns = sqliteTable("simulation_runs", {
   snapshotId: text("snapshot_id")
     .notNull()
     .references(() => simulationSnapshots.id),
-  operatorId: text("operator_id")
-    .notNull()
-    .references(() => users.id),
-  scenario: text("scenario", { mode: "json" }).notNull(),
-  result: text("result", { mode: "json" }),
+  scenario: text("scenario", { mode: "json" }).$type<Scenario>().notNull(),
   status: text("status", { enum: SIMULATION_RUN_STATUSES }).notNull(),
-  dataLimitation: text("data_limitation"),
+  result: text("result", { mode: "json" }).$type<SimulationResult>(),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
 
 /**
- * Yêu cầu ghi đã xử lý – chống gửi lặp (UC08, UC09, UC13, UC14).
+ * Yêu cầu ghi đã xử lý – chống gửi lặp cho MỌI thao tác ghi nhận requestId (quy ước Sub #3 mục 4.1).
  * Ghi trong CÙNG transaction với thao tác chính; gặp lại requestId của cùng người thì trả resultId cũ.
  */
 export const processedRequests = sqliteTable("processed_requests", {
@@ -391,7 +410,7 @@ export const processedRequests = sqliteTable("processed_requests", {
     .notNull()
     .references(() => users.id),
   operation: text("operation", { enum: REQUEST_OPERATIONS }).notNull(),
-  /** Id bản ghi kết quả (lịch sạc, kế hoạch sạc, lần chạy mô phỏng). */
+  /** Id bản ghi kết quả của thao tác (lượt đặt, lượt giữ, lịch sạc, lần chạy mô phỏng...). */
   resultId: text("result_id").notNull(),
   createdAt: createdAt(),
 });
@@ -413,7 +432,7 @@ export type Incident = typeof incidents.$inferSelect;
 export type Alert = typeof alerts.$inferSelect;
 export type RedistributionOrder = typeof redistributionOrders.$inferSelect;
 export type RedistributionItem = typeof redistributionItems.$inferSelect;
-export type ChargingPlan = typeof chargingPlans.$inferSelect;
+export type ChargingScheduleVersion = typeof chargingScheduleVersions.$inferSelect;
 export type SimulationSnapshot = typeof simulationSnapshots.$inferSelect;
 export type SimulationRun = typeof simulationRuns.$inferSelect;
 export type ProcessedRequest = typeof processedRequests.$inferSelect;

@@ -1,4 +1,5 @@
 // Owner: Lê Quốc Linh – View My Reservations
+// Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
 import type { ChargingReservation, ParkingAllocation, VehicleReservation } from "../db/schema";
 import { db } from "../lib/db";
 import { notImplemented } from "../lib/errors";
