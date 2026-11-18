@@ -20,6 +20,12 @@ npm run dev        # chạy server (cổng 3000) và client (cổng 5173)
 
 Mở <http://localhost:5173>.
 
+Giao diện Student tự đổi theo màn hình: điện thoại hiển thị như app (thanh tab dưới đáy), máy tính hiển thị như web
+(menu ngang trên cùng). Giao diện Operator dành cho máy tính.
+
+**Mở trên điện thoại:** điện thoại và máy tính dùng chung Wi-Fi, chạy `npm run dev`, xem dòng `Network:` mà Vite in ra
+(ví dụ `http://192.168.1.5:5173`) rồi mở địa chỉ đó trên điện thoại. Windows hỏi tường lửa thì chọn cho phép.
+
 ### Tài khoản demo
 
 | Vai trò | Email | Mật khẩu |
