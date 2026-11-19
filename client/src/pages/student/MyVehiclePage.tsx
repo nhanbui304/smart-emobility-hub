@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Card } from "../../components/Card";
 import { PageHeader } from "../../components/PageHeader";
 import { StubNotice } from "../../components/StubNotice";
+import { ManageChargingSchedulePanel } from "./ManageChargingSchedulePanel";
 
 export function MyVehiclePage() {
   return (
@@ -28,6 +29,7 @@ export function MyVehiclePage() {
           <p className="mt-1 font-semibold">Đặt lịch sạc</p>
         </Card>
       </div>
+      <ManageChargingSchedulePanel />
       <Link
         to="/student/charging-request"
         className="block rounded-xl2 border border-neutral-200 bg-white p-4 text-sm font-semibold dark:border-white/10 dark:bg-panel-dark"
