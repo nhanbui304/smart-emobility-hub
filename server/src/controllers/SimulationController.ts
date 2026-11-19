@@ -4,10 +4,11 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { SCENARIO_TYPES } from "../constants";
-import { notImplemented } from "../lib/errors";
+import { AppError } from "../lib/errors";
 import { sendOk } from "../lib/response";
 import { requestIdField, timeRangeSchema } from "../lib/schemas";
 import { parseOrThrow } from "../middleware/validate";
+import { getRecommendationById } from "../repositories/SimulationRunRepository";
 import { simulationService } from "../services/SimulationService";
 
 export const prepareSimulationBody = z.object({ hubIds: z.array(z.string().min(1)), timeRange: timeRangeSchema });
@@ -62,10 +63,17 @@ export const simulationController = {
     sendOk(res, await simulationService.retrySaveRun(runId));
   },
 
-  /** POST /api/simulations/handoffs */
+  /** POST /api/simulations/handoffs (UC14 Ext 9b: Chuyển sang nghiệp vụ điều phối UC12 / UC13) */
   async prepareOperationalHandoff(req: Request, res: Response): Promise<void> {
     const { recommendationId } = req.body as z.infer<typeof prepareOperationalHandoffBody>;
-    throw notImplemented("SimulationController.prepareOperationalHandoff");
+    const rec = getRecommendationById(recommendationId);
+    if (!rec) {
+      throw new AppError("NOT_FOUND", "Không tìm thấy khuyến nghị điều phối.");
+    }
+    sendOk(res, {
+      targetUseCase: rec.targetUseCase,
+      recommendationContext: rec,
+    });
   },
 
   /**
@@ -73,6 +81,6 @@ export const simulationController = {
    * Hệ thống không dùng WebSocket nên client nhận kết quả bằng cách gọi lại getRunResult mỗi 3 giây.
    */
   publishRunFinished(runId: string): void {
-    throw notImplemented("SimulationController.publishRunFinished");
+    console.log(`[simulation] Lần chạy mô phỏng ${runId} đã hoàn tất.`);
   },
 };
