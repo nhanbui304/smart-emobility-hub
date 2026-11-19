@@ -1,7 +1,7 @@
 // Owner: Lê Quốc Linh – View Hub and Resource Status (luồng mẫu cho cả nhóm); Nguyễn Hoàng Nhân – UC10, mục 2.3.3 (getReceivableSlotCount, getHubReservations)
 // Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
 import type { Hub } from "../db/schema";
-import { AppError, notImplemented } from "../lib/errors";
+import { AppError } from "../lib/errors";
 import type { TimeRange } from "../lib/schemas";
 import { hubRepository } from "../repositories/HubRepository";
 import type { HubDetail, HubReservations, HubStatus } from "../types/dto";
@@ -35,15 +35,38 @@ export const hubService = {
 
   /**
    * Mục 2.3.3 ý 3: số vị trí có thể tiếp nhận trong khoảng đánh giá (vị trí IN_SERVICE, không có xe đỗ,
-   * không bị phân bổ chồng lấn). HubAlertScheduler dùng để phát cảnh báo NEAR_FULL.
+   * không bị phân bổ chồng lấn). Một vị trí không được tính trùng khi chuyển từ đặt trước sang sử dụng.
+   * HubAlertScheduler dùng hàm này để phát cảnh báo NEAR_FULL.
    */
   getReceivableSlotCount(hubId: string, timeRange: TimeRange, now: Date): number {
-    throw notImplemented("HubService.getReceivableSlotCount");
+    // 1. Lấy các vị trí đang hoạt động (IN_SERVICE) tại Hub
+    const activeSlots = hubRepository
+      .listSlots()
+      .filter((s) => s.hubId === hubId && s.status === "IN_SERVICE");
+
+    // 2. Lấy các xe đang đỗ tại Hub và các phân bổ chỗ đỗ chồng lấn khoảng đánh giá
+    const hubVehicles = hubRepository.listVehicles(hubId);
+    const overlappingAllocations = hubRepository
+      .listAllocationsOverlapping(hubId, timeRange)
+      .filter((a) => a.status !== "HELD" || !a.holdExpiresAt || a.holdExpiresAt > now);
+
+    // 3. Gom vào một Set<string> theo slotId để một vị trí không bao giờ bị tính trùng 2 lần
+    const unavailableSlotIds = new Set<string>();
+    for (const v of hubVehicles) {
+      if (v.slotId) unavailableSlotIds.add(v.slotId);
+    }
+    for (const a of overlappingAllocations) {
+      unavailableSlotIds.add(a.slotId);
+    }
+
+    return activeSlots.filter((s) => !unavailableSlotIds.has(s.id)).length;
   },
 
-  /** UC10 bước 3: lượt đặt còn hiệu lực tại Hub (hubRepository.queryHubReservations). */
+  /** UC10 bước 6: lượt đặt còn hiệu lực tại Hub (hubRepository.queryHubReservations). */
   getHubReservations(hubId: string, now: Date): HubReservations {
-    throw notImplemented("HubService.getHubReservations");
+    const hub = hubRepository.findById(hubId);
+    if (!hub) throw new AppError("NOT_FOUND", "Không tìm thấy Hub.");
+    return hubRepository.queryHubReservations(hubId, now);
   },
 };
 
