@@ -162,4 +162,4 @@ git push -u origin feature/linh-uc02
 | Trang báo "Không kết nối được máy chủ" | Server chưa chạy hoặc lỗi: xem cửa sổ terminal `[server]` |
 | Lỗi thiếu bảng / thiếu cột sau khi pull | `npm run db:reset` |
 | Bị đá ra trang đăng nhập | Server vừa khởi động lại (phiên đăng nhập lưu trong bộ nhớ) hoặc đã 8 giờ: đăng nhập lại |
-| `npm install` lỗi trên Windows | Kiểm tra Node đúng bản 20.19+ / 22 LTS (`node -v`), xóa `node_modules` trong `server/` và `client/` rồi cài lại |
+| `npm install` lỗi trên Windows | Kiểm tra Node bản 22 trở lên, khuyên dùng 24 LTS (`node -v`), xóa `node_modules` trong `server/` và `client/` rồi cài lại |

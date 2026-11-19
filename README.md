@@ -10,7 +10,8 @@ Bài tập lớn môn Công nghệ phần mềm (CO3001) – HK261 – Nhóm 17.
 
 ## Chạy dự án
 
-Yêu cầu: **Node.js 20.19+** (khuyên dùng Node 22 LTS). Không cần cài database: dữ liệu lưu trong một file SQLite.
+Yêu cầu: **Node.js 22 trở lên** (khuyên dùng Node 24 LTS). Không cần cài database: dữ liệu lưu trong một file SQLite.
+`better-sqlite3` 13 có sẵn bản biên dịch (Node-API) cho Windows, macOS, Linux nên không cần cài công cụ build C++.
 
 ```bash
 npm install        # cài cho cả server/ và client/; tự tạo server/.env
