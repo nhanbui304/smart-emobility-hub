@@ -19,6 +19,8 @@ const statusTone: Record<string, keyof typeof tone> = {
   ALLOCATED: "good",
   COMPLETED: "good",
   CLOSED: "good",
+  ARRIVED: "good",
+  PENDING: "warn",
   ACTIVE: "info",
   IN_USE: "info",
   RESERVED: "info",
