@@ -1,7 +1,8 @@
 // Owner: Lê Quốc Linh – UC12 Coordinate Vehicle Redistribution
 // Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
-import { and, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import {
+  parkingAllocations,
   processedRequests,
   redistributionItems,
   redistributionOrders,
@@ -58,32 +59,75 @@ function lockedVehicleIds(): Set<string> {
   return new Set(rows.map((r) => r.vehicleId));
 }
 
-/** Số xe đã được giữ chỗ để đến Hub đích (mục PENDING / IN_TRANSIT của các lệnh khác). */
-function inboundCount(targetHubId: string): number {
+/** Mỗi xe đang chờ đến chiếm một chỗ từ ETA; xe quá ETA vẫn giữ cam kết. */
+function inboundArrivalTimes(targetHubId: string, now: Date, excludeItemId?: string): number[] {
   return db
-    .select({ id: redistributionItems.id })
+    .select({ eta: redistributionOrders.eta })
     .from(redistributionItems)
     .innerJoin(redistributionOrders, eq(redistributionItems.orderId, redistributionOrders.id))
     .where(
       and(
         eq(redistributionOrders.targetHubId, targetHubId),
         inArray(redistributionItems.status, ["PENDING", "IN_TRANSIT"]),
+        excludeItemId ? ne(redistributionItems.id, excludeItemId) : undefined,
       ),
     )
-    .all().length;
+    .all()
+    .map(({ eta }) => Math.max(now.getTime(), eta?.getTime() ?? now.getTime()))
+    .sort((a, b) => a - b);
 }
 
-/** Vị trí trống của Hub tại thời điểm `at`: IN_SERVICE, không có xe đỗ, không có giữ tạm / đặt chỗ đang chiếm. */
-function freeSlotsAt(hubId: string, at: Date): ParkingSlot[] {
-  const occupied = new Set<string>();
-  for (const v of hubRepository.listVehicles(hubId)) if (v.slotId) occupied.add(v.slotId);
-  for (const a of hubRepository.listActiveAllocationsAt(at)) occupied.add(a.slotId);
-  return hubRepository
+/** Xe đến sẽ đỗ cho đến khi có nghiệp vụ khác cho xe rời đi; bảo vệ cả đặt chỗ tương lai. */
+function readSlotAvailability(hubId: string, now: Date): { slot: ParkingSlot; blockedUntil: number }[] {
+  const slots = hubRepository
     .listSlots()
-    .filter((s) => s.hubId === hubId && s.status === "IN_SERVICE" && !occupied.has(s.id));
+    .filter((s) => s.hubId === hubId && s.status === "IN_SERVICE" && !s.hasCharger);
+  if (slots.length === 0) return [];
+
+  const blockedUntil = new Map<string, number>();
+  for (const v of hubRepository.listVehicles(hubId)) {
+    if (v.slotId) blockedUntil.set(v.slotId, Infinity);
+  }
+  const allocations = db.select().from(parkingAllocations).where(and(
+    inArray(parkingAllocations.slotId, slots.map((s) => s.id)),
+    inArray(parkingAllocations.status, ["HELD", "CONFIRMED", "IN_USE"]),
+  )).all();
+  for (const allocation of allocations) {
+    if (allocation.status === "HELD" && (!allocation.holdExpiresAt || allocation.holdExpiresAt <= now)) continue;
+    const end = allocation.status === "IN_USE" ? Infinity : allocation.endTime.getTime();
+    blockedUntil.set(allocation.slotId, Math.max(blockedUntil.get(allocation.slotId) ?? 0, end));
+  }
+  return slots.map((slot) => ({ slot, blockedUntil: blockedUntil.get(slot.id) ?? 0 }));
+}
+
+function getReceiptOptions(hubId: string, eta: Date, now: Date, excludeItemId?: string) {
+  const at = Math.max(now.getTime(), eta.getTime());
+  const incoming = inboundArrivalTimes(hubId, now, excludeItemId);
+  const availability = readSlotAvailability(hubId, now);
+  const slots = availability.filter((entry) => entry.blockedUntil <= at).map((entry) => entry.slot);
+  let reserved = incoming.filter((time) => time <= at).length;
+  let capacity = slots.length - reserved;
+  // Mỗi xe nhận thêm cũng chiếm chỗ tại những ETA sau nó. Chừa đủ chỗ cho các cam kết này.
+  for (const time of incoming.slice(reserved)) {
+    reserved++;
+    const futureSlots = availability.filter((entry) => entry.blockedUntil <= time).length;
+    capacity = Math.min(capacity, futureSlots - reserved);
+  }
+  return { slots, capacity: Math.max(0, capacity) };
 }
 
 export const redistributionRepository = {
+  listOrders(): (RedistributionOrderWithItems & { vehicleCodes: Record<string, string> })[] {
+    const vehicleCodes = new Map(hubRepository.listVehicles().map((vehicle) => [vehicle.id, vehicle.code]));
+    return db.select().from(redistributionOrders).orderBy(desc(redistributionOrders.createdAt)).all().map((order) => {
+      const view = withItems(order);
+      return {
+        ...view,
+        vehicleCodes: Object.fromEntries(view.items.map(({ vehicleId }) => [vehicleId, vehicleCodes.get(vehicleId) ?? vehicleId])),
+      };
+    });
+  },
+
   findOrderWithItems(orderId: string): RedistributionOrderWithItems {
     return withItems(readOrder(orderId));
   },
@@ -105,7 +149,7 @@ export const redistributionRepository = {
       .filter((v) => v.status === "AVAILABLE" && !locked.has(v.id));
     if (vehicleIds.length > 0) vehicles = vehicles.filter((v) => vehicleIds.includes(v.id));
 
-    const availableCapacity = Math.max(0, freeSlotsAt(targetHubId, eta).length - inboundCount(targetHubId));
+    const { capacity: availableCapacity } = getReceiptOptions(targetHubId, eta, new Date());
     return { sourceHub, targetHub, vehicles, eta, availableCapacity };
   },
 
@@ -130,7 +174,7 @@ export const redistributionRepository = {
         throw new AppError("CONFLICT", "Có xe không còn khả dụng để điều chuyển. Vui lòng xem lại phương án.");
       }
     }
-    const capacity = freeSlotsAt(targetHubId, eta).length - inboundCount(targetHubId);
+    const { capacity } = getReceiptOptions(targetHubId, eta, now);
     if (capacity < vehicleIds.length) {
       throw new AppError("CONFLICT", "Sức chứa của Hub đích không còn đủ. Vui lòng xem lại phương án.");
     }
@@ -150,7 +194,7 @@ export const redistributionRepository = {
   },
 
   /** UC12 – xe rời Hub nguồn: item IN_TRANSIT, xe IN_TRANSIT, giải phóng vị trí đỗ. */
-  atomicMarkDeparted(requestId: string, orderId: string, vehicleId: string, now: Date): RedistributionItem {
+  atomicMarkDeparted(requestId: string, orderId: string, vehicleId: string, now: Date, operatorId?: string): RedistributionItem {
     const order = readOrder(orderId);
     const item = readItem(orderId, vehicleId);
     if (order.status !== "CREATED" && order.status !== "IN_PROGRESS") {
@@ -178,24 +222,22 @@ export const redistributionRepository = {
       db.update(redistributionOrders).set({ status: "IN_PROGRESS" }).where(eq(redistributionOrders.id, orderId)).run();
     }
     db.insert(processedRequests)
-      .values({ requestId, actorId: order.createdBy, operation: "CONFIRM_REDISTRIBUTION_DEPARTURE", resultId: departed.id })
+      .values({ requestId, actorId: operatorId ?? order.createdBy, operation: "CONFIRM_REDISTRIBUTION_DEPARTURE", resultId: departed.id })
       .run();
     return departed;
   },
 
   /** UC12 – xe tới Hub đích: item ARRIVED, xe AVAILABLE tại vị trí mới; cập nhật trạng thái lệnh. */
-  atomicMarkArrived(requestId: string, orderId: string, vehicleId: string, now: Date): RedistributionItem {
+  atomicMarkArrived(requestId: string, orderId: string, vehicleId: string, now: Date, operatorId?: string): RedistributionItem {
     const order = readOrder(orderId);
     const item = readItem(orderId, vehicleId);
     if (item.status !== "IN_TRANSIT") {
       throw new AppError("CONFLICT", "Xe này chưa xuất phát hoặc đã được tiếp nhận.");
     }
 
-    // Ưu tiên vị trí không có cổng sạc để chừa chỗ sạc cho xe cần sạc.
-    const slot = freeSlotsAt(order.targetHubId, now).sort(
-      (a, b) => Number(a.hasCharger) - Number(b.hasCharger) || a.code.localeCompare(b.code),
-    )[0];
-    if (!slot) throw new AppError("CONFLICT", "Hub đích hiện không còn vị trí trống để tiếp nhận xe.");
+    const { slots, capacity } = getReceiptOptions(order.targetHubId, now, now, item.id);
+    const slot = slots.sort((a, b) => a.code.localeCompare(b.code))[0];
+    if (capacity === 0 || !slot) throw new AppError("CONFLICT", "Hub đích hiện không còn vị trí trống để tiếp nhận xe.");
 
     const arrived = db
       .update(redistributionItems)
@@ -209,13 +251,13 @@ export const redistributionRepository = {
       .run();
     // Lệnh vẫn IN_PROGRESS cho tới khi Operator đóng lệnh (atomicCloseOrder) và ghi kết quả cuối.
     db.insert(processedRequests)
-      .values({ requestId, actorId: order.createdBy, operation: "CONFIRM_REDISTRIBUTION_ARRIVAL", resultId: arrived.id })
+      .values({ requestId, actorId: operatorId ?? order.createdBy, operation: "CONFIRM_REDISTRIBUTION_ARRIVAL", resultId: arrived.id })
       .run();
     return arrived;
   },
 
   /** UC12 – hủy các item còn PENDING; lệnh → CANCELLED hoặc PARTIALLY_COMPLETED. */
-  atomicCancelPendingItems(requestId: string, orderId: string, now: Date): RedistributionOrder {
+  atomicCancelPendingItems(requestId: string, orderId: string, now: Date, operatorId?: string): RedistributionOrder {
     const order = readOrder(orderId);
     const pending = readItems(orderId).filter((i) => i.status === "PENDING");
     if (pending.length === 0) throw new AppError("CONFLICT", "Không còn xe nào chưa xuất phát để hủy.");
@@ -232,13 +274,13 @@ export const redistributionRepository = {
         : "PARTIALLY_COMPLETED";
     db.update(redistributionOrders).set({ status: nextStatus }).where(eq(redistributionOrders.id, order.id)).run();
     db.insert(processedRequests)
-      .values({ requestId, actorId: order.createdBy, operation: "CANCEL_REDISTRIBUTION_ITEMS", resultId: order.id })
+      .values({ requestId, actorId: operatorId ?? order.createdBy, operation: "CANCEL_REDISTRIBUTION_ITEMS", resultId: order.id })
       .run();
     return withItems(readOrder(orderId));
   },
 
   /** UC12 bước 10: đóng lệnh, ghi rõ kết quả: hoàn tất, hủy toàn bộ hoặc hoàn tất một phần. */
-  atomicCloseOrder(requestId: string, orderId: string, now: Date): RedistributionOrder {
+  atomicCloseOrder(requestId: string, orderId: string, now: Date, operatorId?: string): RedistributionOrder {
     const order = readOrder(orderId);
     const items = readItems(orderId);
     if (items.some((i) => i.status === "PENDING" || i.status === "IN_TRANSIT")) {
@@ -251,7 +293,7 @@ export const redistributionRepository = {
         : "PARTIALLY_COMPLETED";
     db.update(redistributionOrders).set({ status: finalStatus }).where(eq(redistributionOrders.id, order.id)).run();
     db.insert(processedRequests)
-      .values({ requestId, actorId: order.createdBy, operation: "CLOSE_REDISTRIBUTION_ORDER", resultId: order.id })
+      .values({ requestId, actorId: operatorId ?? order.createdBy, operation: "CLOSE_REDISTRIBUTION_ORDER", resultId: order.id })
       .run();
     return withItems(readOrder(orderId));
   },

@@ -9,6 +9,10 @@ import { redistributionRepository } from "../repositories/RedistributionReposito
 import type { RedistributionPreview } from "../types/dto";
 
 export const redistributionService = {
+  async listOrders() {
+    return redistributionRepository.listOrders();
+  },
+
   /** UC12 bước 2–4: hiển thị xe có thể điều chuyển và sức chứa tiếp nhận của Hub đích tại thời điểm dự kiến. */
   async getRedistributionOptions(
     sourceHubId: string,
@@ -31,7 +35,7 @@ export const redistributionService = {
   ): Promise<RedistributionOrder> {
     const done = redistributionRepository.findProcessedRequest(requestId);
     if (done) {
-      assertSameOperation(done, "CREATE_REDISTRIBUTION_ORDER");
+      assertSameOperation(done, "CREATE_REDISTRIBUTION_ORDER", operatorId);
       return redistributionRepository.findOrderWithItems(done.resultId);
     }
 
@@ -71,10 +75,10 @@ export const redistributionService = {
   ): Promise<RedistributionItem> {
     const done = redistributionRepository.findProcessedRequest(requestId);
     if (done) {
-      assertSameOperation(done, "CONFIRM_REDISTRIBUTION_DEPARTURE");
-      return findRecordedItem(orderId, done.resultId);
+      assertSameOperation(done, "CONFIRM_REDISTRIBUTION_DEPARTURE", operatorId);
+      return findRecordedItem(orderId, vehicleId, done.resultId);
     }
-    return db.transaction(() => redistributionRepository.atomicMarkDeparted(requestId, orderId, vehicleId, new Date()));
+    return db.transaction(() => redistributionRepository.atomicMarkDeparted(requestId, orderId, vehicleId, new Date(), operatorId));
   },
 
   /** UC12 bước 6: xác nhận một xe đã tới Hub đích. */
@@ -86,11 +90,11 @@ export const redistributionService = {
   ): Promise<RedistributionItem> {
     const done = redistributionRepository.findProcessedRequest(requestId);
     if (done) {
-      assertSameOperation(done, "CONFIRM_REDISTRIBUTION_ARRIVAL");
-      return findRecordedItem(orderId, done.resultId);
+      assertSameOperation(done, "CONFIRM_REDISTRIBUTION_ARRIVAL", operatorId);
+      return findRecordedItem(orderId, vehicleId, done.resultId);
     }
     try {
-      return db.transaction(() => redistributionRepository.atomicMarkArrived(requestId, orderId, vehicleId, new Date()));
+      return db.transaction(() => redistributionRepository.atomicMarkArrived(requestId, orderId, vehicleId, new Date(), operatorId));
     } catch (err) {
       if (err instanceof AppError) throw err;
       // 9a: đã tiếp nhận xe nhưng cập nhật dữ liệu lỗi → đánh dấu chờ đối soát.
@@ -104,23 +108,23 @@ export const redistributionService = {
   async cancelPendingItems(requestId: string, orderId: string, operatorId: string): Promise<RedistributionOrder> {
     const done = redistributionRepository.findProcessedRequest(requestId);
     if (done) {
-      assertSameOperation(done, "CANCEL_REDISTRIBUTION_ITEMS");
-      return redistributionRepository.findOrderWithItems(done.resultId);
+      assertSameOperation(done, "CANCEL_REDISTRIBUTION_ITEMS", operatorId, orderId);
+      return redistributionRepository.findOrderWithItems(orderId);
     }
-    return db.transaction(() => redistributionRepository.atomicCancelPendingItems(requestId, orderId, new Date()));
+    return db.transaction(() => redistributionRepository.atomicCancelPendingItems(requestId, orderId, new Date(), operatorId));
   },
 
   /** UC12 bước 10: đóng lệnh khi mọi xe đã được tiếp nhận hoặc phần chưa xuất phát đã hủy. */
   async closeOrder(requestId: string, orderId: string, operatorId: string): Promise<RedistributionOrder> {
     const done = redistributionRepository.findProcessedRequest(requestId);
     if (done) {
-      assertSameOperation(done, "CLOSE_REDISTRIBUTION_ORDER");
-      return redistributionRepository.findOrderWithItems(done.resultId);
+      assertSameOperation(done, "CLOSE_REDISTRIBUTION_ORDER", operatorId, orderId);
+      return redistributionRepository.findOrderWithItems(orderId);
     }
     if (!checkOrderCompletion(orderId)) {
       throw new AppError("CONFLICT", "Còn xe chưa xuất phát hoặc đang trên đường; chưa thể đóng lệnh.");
     }
-    return db.transaction(() => redistributionRepository.atomicCloseOrder(requestId, orderId, new Date()));
+    return db.transaction(() => redistributionRepository.atomicCloseOrder(requestId, orderId, new Date(), operatorId));
   },
 };
 
@@ -170,16 +174,14 @@ function assertValidRequest(sourceHubId: string, targetHubId: string, eta: Date)
   }
 }
 
-/**
- * Chống gửi lặp: requestId đã xử lý thì trả kết quả cũ. Bản ghi processed_requests của UC12 lưu actor là người tạo lệnh
- * (các method Repository theo sơ đồ không nhận operatorId), nên chỉ kiểm tra đúng loại thao tác.
- */
-function assertSameOperation(done: ProcessedRequest, operation: RequestOperation): void {
-  if (done.operation !== operation) throw new AppError("CONFLICT", "Mã yêu cầu đã được dùng cho một thao tác khác.");
+function assertSameOperation(done: ProcessedRequest, operation: RequestOperation, operatorId: string, resultId?: string): void {
+  if (done.operation !== operation || done.actorId !== operatorId || (resultId && done.resultId !== resultId)) {
+    throw new AppError("CONFLICT", "Mã yêu cầu đã được dùng cho một thao tác khác.");
+  }
 }
 
-function findRecordedItem(orderId: string, itemId: string): RedistributionItem {
-  const item = redistributionRepository.findOrderWithItems(orderId).items.find((i) => i.id === itemId);
+function findRecordedItem(orderId: string, vehicleId: string, itemId: string): RedistributionItem {
+  const item = redistributionRepository.findOrderWithItems(orderId).items.find((i) => i.id === itemId && i.vehicleId === vehicleId);
   if (!item) throw new AppError("NOT_FOUND", "Không tìm thấy kết quả đã ghi nhận của yêu cầu.");
   return item;
 }

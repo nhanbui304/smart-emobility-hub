@@ -21,6 +21,7 @@ export function RedistributionPage() {
  */
 // Owner: Lê Quốc Linh – UC12 Coordinate Vehicle Redistribution
 import { useState } from "react";
+import { ApiError } from "../../api/client";
 import { hubApi } from "../../api/hubs";
 import { redistributionApi } from "../../api/redistribution";
 import { Button } from "../../components/Button";
@@ -28,20 +29,39 @@ import { Card } from "../../components/Card";
 import { ErrorMessage } from "../../components/ErrorMessage";
 import { PageHeader } from "../../components/PageHeader";
 import { StatusBadge } from "../../components/StatusBadge";
+import { useAuth } from "../../context/AuthContext";
 import { useAsync } from "../../hooks/useAsync";
-import type { RedistributionItem, RedistributionOrder, RedistributionPreview } from "../../types";
+import type { RedistributionPreview } from "../../types";
 import { newRequestId } from "../../utils/requestId";
 
-/** Lệnh điều chuyển kèm tiến độ từng xe (server trả thêm `items`) và mã xe để hiển thị. */
-type OrderView = RedistributionOrder & { items: RedistributionItem[]; vehicleCodes: Record<string, string> };
+type Command = { requestId: string } & (
+  | { kind: "create"; sourceHubId: string; targetHubId: string; vehicleIds: string[]; eta: string }
+  | { kind: "depart" | "arrive"; orderId: string; vehicleId: string }
+  | { kind: "cancel" | "close"; orderId: string }
+);
 
-const STORAGE_KEY = "smart-emobility:redistribution-orders";
-
-function loadOrders(): OrderView[] {
+function loadCommand(key: string): Command | null {
   try {
-    return JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? "[]") as OrderView[];
+    return JSON.parse(sessionStorage.getItem(key) ?? "null") as Command | null;
   } catch {
-    return [];
+    return null;
+  }
+}
+
+function sendCommand(command: Command) {
+  switch (command.kind) {
+    case "create":
+      return redistributionApi.createOrder(
+        command.requestId, command.sourceHubId, command.targetHubId, command.vehicleIds, command.eta,
+      );
+    case "depart":
+      return redistributionApi.confirmDeparture(command.requestId, command.orderId, command.vehicleId);
+    case "arrive":
+      return redistributionApi.confirmArrival(command.requestId, command.orderId, command.vehicleId);
+    case "cancel":
+      return redistributionApi.cancelPendingItems(command.requestId, command.orderId);
+    case "close":
+      return redistributionApi.closeOrder(command.requestId, command.orderId);
   }
 }
 
@@ -53,24 +73,28 @@ function defaultEta(): string {
 }
 
 export function RedistributionPage() {
+  const { user } = useAuth();
+  const storageKey = `smart-emobility:redistribution-command:${user?.id ?? ""}`;
   const hubs = useAsync(() => hubApi.list(), []);
+  const orders = useAsync(() => redistributionApi.listOrders(), [user?.id]);
   const [sourceHubId, setSourceHubId] = useState("");
   const [targetHubId, setTargetHubId] = useState("");
   const [eta, setEta] = useState(defaultEta);
   const [preview, setPreview] = useState<RedistributionPreview | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
-  const [orders, setOrders] = useState<OrderView[]>(loadOrders);
+  const [pending, setPending] = useState<Command | null>(() => loadCommand(storageKey));
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
 
   const hubName = (id: string) => hubs.data?.find((h) => h.id === id)?.name ?? "Hub";
 
-  function saveOrders(next: OrderView[]) {
-    setOrders(next);
+  function savePending(command: Command | null) {
+    setPending(command);
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      if (command) sessionStorage.setItem(storageKey, JSON.stringify(command));
+      else sessionStorage.removeItem(storageKey);
     } catch {
-      /* chỉ là tiện ích hiển thị */
+      // Yêu cầu vẫn có thể thử lại khi trang còn mở.
     }
   }
 
@@ -95,54 +119,39 @@ export function RedistributionPage() {
     }
   }
 
-  async function onCreate() {
-    if (!preview) return;
-    // requestId mới cho mỗi lần bấm; lệnh chỉ tạo một lần vì sau khi tạo xong màn hình xác nhận được đóng.
-    const created = await run(() =>
-      redistributionApi.createOrder(newRequestId(), sourceHubId, targetHubId, selected, new Date(eta).toISOString()),
-    );
-    if (created) {
-      const withItems = created as OrderView;
-      const codes: Record<string, string> = {};
-      for (const v of preview.vehicles) codes[v.id] = v.code;
-      saveOrders([{ ...withItems, items: withItems.items ?? [], vehicleCodes: codes }, ...orders]);
-      setPreview(null);
-      setSelected([]);
-    }
+  async function submit(command: Command) {
+    if (!user || busy) return;
+    savePending(command);
+    await run(async () => {
+      try {
+        await sendCommand(command);
+        savePending(null);
+        if (command.kind === "create") {
+          setPreview(null);
+          setSelected([]);
+        }
+      } catch (err) {
+        if (!(err instanceof ApiError && err.code === "NETWORK_ERROR")) savePending(null);
+        throw err;
+      } finally {
+        await orders.reload();
+      }
+    });
   }
 
-  function patchOrder(orderId: string, change: (o: OrderView) => OrderView) {
-    saveOrders(orders.map((o) => (o.id === orderId ? change(o) : o)));
+  function onCreate() {
+    if (!preview || pending) return;
+    void submit({
+      kind: "create",
+      requestId: newRequestId(),
+      sourceHubId: preview.sourceHub.id,
+      targetHubId: preview.targetHub.id,
+      vehicleIds: selected,
+      eta: preview.eta,
+    });
   }
 
-  function replaceItem(orderId: string, item: RedistributionItem) {
-    patchOrder(orderId, (o) => ({
-      ...o,
-      status: o.status === "CREATED" ? "IN_PROGRESS" : o.status,
-      items: o.items.map((i) => (i.id === item.id ? item : i)),
-    }));
-  }
-
-  async function onDepart(o: OrderView, vehicleId: string) {
-    const item = await run(() => redistributionApi.confirmDeparture(newRequestId(), o.id, vehicleId));
-    if (item) replaceItem(o.id, item);
-  }
-
-  async function onArrive(o: OrderView, vehicleId: string) {
-    const item = await run(() => redistributionApi.confirmArrival(newRequestId(), o.id, vehicleId));
-    if (item) replaceItem(o.id, item);
-  }
-
-  async function onCancelPending(o: OrderView) {
-    const res = await run(() => redistributionApi.cancelPendingItems(newRequestId(), o.id));
-    if (res) patchOrder(o.id, (cur) => ({ ...cur, ...(res as OrderView), vehicleCodes: cur.vehicleCodes }));
-  }
-
-  async function onClose(o: OrderView) {
-    const res = await run(() => redistributionApi.closeOrder(newRequestId(), o.id));
-    if (res) patchOrder(o.id, (cur) => ({ ...cur, ...(res as OrderView), vehicleCodes: cur.vehicleCodes }));
-  }
-
+  const writesDisabled = busy || !!pending;
   const toggle = (id: string) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
   const canPreview = sourceHubId && targetHubId && eta;
 
@@ -150,6 +159,13 @@ export function RedistributionPage() {
     <div className="space-y-6">
       <PageHeader title="Điều chuyển xe" subtitle="Chuyển xe từ Hub thừa sang Hub thiếu" />
       <ErrorMessage error={error} />
+
+      {pending && (
+        <Card className="space-y-3">
+          <p className="text-sm">Chưa nhận được kết quả thao tác điều chuyển. Gửi lại để kiểm tra.</p>
+          <Button loading={busy} onClick={() => void submit(pending)}>Gửi lại thao tác</Button>
+        </Card>
+      )}
 
       <Card className="space-y-4">
         <h2 className="text-lg font-bold">1. Chọn Hub và thời điểm</h2>
@@ -195,8 +211,8 @@ export function RedistributionPage() {
           )}
           <Button
             loading={busy}
-            disabled={selected.length === 0 || selected.length > preview.availableCapacity}
-            onClick={() => void onCreate()}
+            disabled={writesDisabled || selected.length === 0 || selected.length > preview.availableCapacity}
+            onClick={onCreate}
           >
             Xác nhận điều chuyển {selected.length} xe
           </Button>
@@ -204,9 +220,10 @@ export function RedistributionPage() {
       )}
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold">Lệnh điều chuyển (phiên làm việc này)</h2>
-        {orders.length === 0 && <p className="text-sm text-neutral-500">Chưa có lệnh nào.</p>}
-        {orders.map((o) => {
+        <h2 className="text-lg font-bold">Lệnh điều chuyển</h2>
+        <ErrorMessage error={orders.error} onRetry={() => void orders.reload()} />
+        {orders.data?.length === 0 && <p className="text-sm text-neutral-500">Chưa có lệnh nào.</p>}
+        {orders.data?.map((o) => {
           const open = o.status === "CREATED" || o.status === "IN_PROGRESS";
           const hasPending = o.items.some((i) => i.status === "PENDING");
           const done = o.items.every((i) => i.status === "ARRIVED" || i.status === "CANCELLED");
@@ -230,12 +247,12 @@ export function RedistributionPage() {
                     <div className="flex items-center gap-2">
                       <StatusBadge status={i.status} />
                       {i.status === "PENDING" && open && (
-                        <Button variant="outline" disabled={busy} onClick={() => void onDepart(o, i.vehicleId)}>
+                        <Button variant="outline" disabled={writesDisabled} onClick={() => void submit({ kind: "depart", requestId: newRequestId(), orderId: o.id, vehicleId: i.vehicleId })}>
                           Đã rời Hub nguồn
                         </Button>
                       )}
                       {i.status === "IN_TRANSIT" && (
-                        <Button variant="outline" disabled={busy} onClick={() => void onArrive(o, i.vehicleId)}>
+                        <Button variant="outline" disabled={writesDisabled} onClick={() => void submit({ kind: "arrive", requestId: newRequestId(), orderId: o.id, vehicleId: i.vehicleId })}>
                           Đã tới Hub đích
                         </Button>
                       )}
@@ -246,11 +263,11 @@ export function RedistributionPage() {
               {open && (
                 <div className="flex flex-wrap gap-2">
                   {hasPending && (
-                    <Button variant="danger" disabled={busy} onClick={() => void onCancelPending(o)}>
+                    <Button variant="danger" disabled={writesDisabled} onClick={() => void submit({ kind: "cancel", requestId: newRequestId(), orderId: o.id })}>
                       Hủy các xe chưa xuất phát
                     </Button>
                   )}
-                  <Button disabled={busy || !done} onClick={() => void onClose(o)}>
+                  <Button disabled={writesDisabled || !done} onClick={() => void submit({ kind: "close", requestId: newRequestId(), orderId: o.id })}>
                     Đóng lệnh
                   </Button>
                 </div>

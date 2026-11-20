@@ -251,7 +251,7 @@ export interface MobilityOption {
 
 export interface MyReservationsResult {
   vehicleReservations: VehicleReservation[];
-  parkingAllocations: ParkingAllocation[];
+  parkingAllocations: (ParkingAllocation & { slotCode: string; hubName: string })[];
   chargingReservations: ChargingReservation[];
 }
 

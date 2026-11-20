@@ -18,8 +18,9 @@
 5. Sau khi nhận xe: `shared_vehicles.hubId = null`, `slotId = null` (xe rời Hub, giải phóng chỗ). Khi điều chuyển: xe IN_TRANSIT cũng `hubId = slotId = null`, tới nơi gán Hub đích + vị trí trống. **Quang Nhân (UC05) cần gán lại hubId/slotId khi trả xe.**
 6. `ReservationExpiryScheduler` truy vấn trực tiếp danh sách đặt xe quá hạn (sơ đồ không có repo cho việc này). Thông báo sinh viên hiện chỉ ghi log vì `NotificationService` (Hoàng Nhân) chưa có method gửi cho sinh viên.
 7. Cảnh báo Operator (UC04 4b/7b/8a) gọi `notificationService.notifyOperator` kiểu best-effort: Hoàng Nhân chưa làm thì bỏ qua, không làm lỗi UC04.
-8. Bản ghi `processed_requests` của UC12 (depart/arrive/cancel/close) lưu `actorId` = người tạo lệnh.
-9. Giao diện UC12 lưu danh sách lệnh trong `sessionStorage` (chưa có API liệt kê lệnh); đóng tab thì mất danh sách.
+8. Các method Repository UC12 xác nhận xuất phát/tiếp nhận, hủy và đóng lệnh nhận thêm `operatorId` tùy chọn để ghi đúng người thao tác khi chống gửi lặp.
+9. Giao diện UC12 tải lệnh từ `GET /api/redistribution-orders`. Tab chỉ lưu thao tác đang chờ phản hồi theo tài khoản Operator để có thể gửi lại cùng `requestId`.
+10. `GET /api/me/reservations` trả thêm `slotCode` và `hubName` cho mỗi phân bổ chỗ đỗ để màn hình UC06 khôi phục chi tiết đặt chỗ.
 
 ## 3. File dùng chung đã sửa (chỉ thêm dòng)
 `server/src/constants.ts` (mục 1) · `client/src/statusLabels.ts` (`PENDING`, `ARRIVED`) · `client/src/components/StatusBadge.tsx` (màu `PENDING`, `ARRIVED`) · `client/src/pages/student/ActiveTripPage.tsx` (Linh làm phần đặt xe/nhận xe, Quang Nhân thêm UC05 vào chỗ có StubNotice). File mới: `client/src/utils/requestId.ts`, `client/src/utils/activeTrip.ts`, `client/src/pages/student/VehicleReservationPanel.tsx`.

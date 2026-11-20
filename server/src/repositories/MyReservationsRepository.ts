@@ -4,13 +4,15 @@ import { and, eq, inArray } from "drizzle-orm";
 import type { ChargingReservationStatus, ParkingAllocationStatus, VehicleReservationStatus } from "../constants";
 import {
   chargingReservations,
+  hubs,
   parkingAllocations,
+  parkingSlots,
   vehicleReservations,
   type ChargingReservation,
-  type ParkingAllocation,
   type VehicleReservation,
 } from "../db/schema";
 import { db } from "../lib/db";
+import type { MyReservationsResult } from "../types/dto";
 
 const ACTIVE_VEHICLE: VehicleReservationStatus[] = ["RESERVED", "HANDING_OVER", "PENDING_VERIFICATION"];
 const ACTIVE_PARKING: ParkingAllocationStatus[] = ["HELD", "CONFIRMED", "IN_USE"];
@@ -27,14 +29,19 @@ export const myReservationsRepository = {
   },
 
   /** Giữ chỗ / đặt chỗ đỗ còn hiệu lực (HELD / CONFIRMED / IN_USE). Lượt giữ tạm đã quá hạn thì không tính. */
-  findActiveParkingAllocations(studentId: string): ParkingAllocation[] {
+  findActiveParkingAllocations(studentId: string): MyReservationsResult["parkingAllocations"] {
     const now = Date.now();
     return db
-      .select()
+      .select({ allocation: parkingAllocations, slotCode: parkingSlots.code, hubName: hubs.name })
       .from(parkingAllocations)
+      .innerJoin(parkingSlots, eq(parkingSlots.id, parkingAllocations.slotId))
+      .innerJoin(hubs, eq(hubs.id, parkingSlots.hubId))
       .where(and(eq(parkingAllocations.studentId, studentId), inArray(parkingAllocations.status, ACTIVE_PARKING)))
       .all()
-      .filter((a) => a.status !== "HELD" || !a.holdExpiresAt || a.holdExpiresAt.getTime() > now);
+      .map(({ allocation, slotCode, hubName }) => ({ ...allocation, slotCode, hubName }))
+      .filter((a) => a.status === "IN_USE"
+        || (a.status === "HELD" && a.holdExpiresAt && a.holdExpiresAt.getTime() > now)
+        || (a.status === "CONFIRMED" && a.endTime.getTime() > now));
   },
 
   /** Lịch sạc còn hiệu lực (CONFIRMED / CHARGING / AWAITING_DISCONNECT). */
