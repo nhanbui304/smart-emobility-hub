@@ -42,6 +42,16 @@ export const returnService = {
       if (!allocation || allocation.vehicleRef !== trip.vehicleId) {
         throw new AppError("CONFLICT", "Mã yêu cầu đã được dùng cho thao tác khác, vui lòng thử lại.");
       }
+      if (
+        allocation.status === "CANCELLED" ||
+        allocation.status === "EXPIRED" ||
+        trip.returnSlotId !== allocation.slotId
+      ) {
+        throw new AppError(
+          "CONFLICT",
+          "Yêu cầu chuẩn bị trả xe này đã cũ do chuyến đi đã đổi Hub hoặc dừng trả xe. Vui lòng tạo yêu cầu mới.",
+        );
+      }
       const slotCode = hubRepository.listSlots().find((s) => s.id === allocation.slotId)?.code ?? "";
       return { trip, allocation, slotCode };
     }

@@ -24,7 +24,7 @@ import type {
   ReturnSlotPlan,
 } from "../../types/dto";
 import { previousResultId, recordProcessedRequest } from "./common";
-import { findUsableBooking, isSlotFree, listFreeSlots, listServingSlots } from "./parkingOps";
+import { findUsableBooking, hasCapacityForNewAllocation, isSlotFree, listFreeSlots, listServingSlots } from "./parkingOps";
 
 export const returnOps = {
   findTripForReturn(tripId: string): Trip | undefined {
@@ -86,9 +86,13 @@ export const returnOps = {
       }
       allocation = setStatus(booking.id, "IN_USE");
     } else {
+      const window = returnWindow(now);
       // Ext 4a: chỗ vừa được phân bổ cho yêu cầu khác → báo để service chọn chỗ khác
-      if (!isSlotFree(slot, returnWindow(now), now)) {
+      if (!isSlotFree(slot, window, now)) {
         throw new AppError("CONFLICT", "Vị trí vừa được phân bổ cho yêu cầu khác.", { code: "SLOT_TAKEN" });
+      }
+      if (!hasCapacityForNewAllocation(hubId, window, now)) {
+        throw new AppError("CONFLICT", "Hub không còn đủ sức chứa tiếp nhận (đang giữ chỗ cho xe điều chuyển).");
       }
       allocation = db
         .insert(parkingAllocations)
@@ -97,7 +101,7 @@ export const returnOps = {
           slotId: slot.id,
           vehicleRef: trip.vehicleId,
           startTime: now,
-          endTime: returnWindow(now).endTime,
+          endTime: window.endTime,
           status: "IN_USE",
         })
         .returning()

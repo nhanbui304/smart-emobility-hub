@@ -7,6 +7,8 @@ import {
   parkingAllocations,
   parkingSlots,
   privateVehicles,
+  redistributionItems,
+  redistributionOrders,
   sharedVehicles,
   type ParkingAllocation,
   type ParkingSlot,
@@ -78,6 +80,13 @@ export const parkingOps = {
       throw new AppError("CONFLICT", "Vị trí vừa được người khác giữ hoặc đặt. Danh sách vị trí đã được cập nhật.", {
         slots: listFreeSlots(slot.hubId, timeRange, now),
       });
+    }
+    if (!hasCapacityForNewAllocation(slot.hubId, timeRange, now)) {
+      throw new AppError(
+        "CONFLICT",
+        "Hub không còn đủ sức chứa tiếp nhận (vị trí trống đã được giữ cho xe điều chuyển).",
+        { slots: [] },
+      );
     }
 
     // Lưu đúng xe sinh viên đã chọn (tham số vehicleId tùy chọn giữ tương thích chữ ký sơ đồ Sub #3).
@@ -257,8 +266,27 @@ function blockedSlotIds(slotIds: string[], range: TimeRange, now: Date, excludeA
   return blocked;
 }
 
-/** Vị trí thường còn trống của Hub trong khoảng thời gian. */
-export function listFreeSlots(hubId: string, range: TimeRange, now: Date): ParkingSlot[] {
+/**
+ * Số xe đang được điều chuyển tới Hub (UC12: IN_TRANSIT luôn giữ chỗ; PENDING giữ chỗ khi không có ETA hoặc ETA <= range.endTime).
+ * Dùng chung giữa UC06 (đặt chỗ), UC05 (trả xe) và UC12 (điều chuyển) để không cấp trùng sức chứa ở Hub đích.
+ */
+export function inboundRedistributionCount(hubId: string, range: TimeRange): number {
+  return db
+    .select({ status: redistributionItems.status, eta: redistributionOrders.eta })
+    .from(redistributionItems)
+    .innerJoin(redistributionOrders, eq(redistributionItems.orderId, redistributionOrders.id))
+    .where(
+      and(
+        eq(redistributionOrders.targetHubId, hubId),
+        inArray(redistributionItems.status, ["PENDING", "IN_TRANSIT"]),
+      ),
+    )
+    .all()
+    .filter((row) => row.status === "IN_TRANSIT" || !row.eta || row.eta <= range.endTime).length;
+}
+
+/** Vị trí thường chưa bị xe đỗ hay phân bổ chặn (chưa trừ phần sức chứa giữ cho điều chuyển). */
+function rawFreeSlots(hubId: string, range: TimeRange, now: Date): ParkingSlot[] {
   const slots = listServingSlots(hubId);
   const blocked = blockedSlotIds(
     slots.map((s) => s.id),
@@ -266,6 +294,18 @@ export function listFreeSlots(hubId: string, range: TimeRange, now: Date): Parki
     now,
   );
   return slots.filter((s) => !blocked.has(s.id));
+}
+
+/** Hub còn dư ít nhất 1 chỗ sau khi trừ sức chứa giữ cho các xe điều chuyển tới Hub đích. */
+export function hasCapacityForNewAllocation(hubId: string, range: TimeRange, now: Date): boolean {
+  return rawFreeSlots(hubId, range, now).length > inboundRedistributionCount(hubId, range);
+}
+
+/** Vị trí thường còn trống của Hub trong khoảng thời gian (trả rỗng nếu toàn bộ chỗ trống đã giữ cho xe điều chuyển). */
+export function listFreeSlots(hubId: string, range: TimeRange, now: Date): ParkingSlot[] {
+  const free = rawFreeSlots(hubId, range, now);
+  if (free.length <= inboundRedistributionCount(hubId, range)) return [];
+  return free;
 }
 
 /** Vị trí có trống trong khoảng thời gian không (bỏ qua một phân bổ, ví dụ đặt chỗ của chính lượt trả xe). */

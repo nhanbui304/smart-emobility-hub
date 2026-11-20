@@ -1,6 +1,6 @@
 // Owner: Bùi Quang Nhân – UC05 Return Shared Vehicle
 // Chuyến đi hiện tại → chọn Hub trả → nhận vị trí đỗ → đỗ xe, xác nhận (khóa xe) → kết quả; hoặc dừng trả xe.
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApiError } from "../../../api/client";
 import { hubApi } from "../../../api/hubs";
 import { newRequestId } from "../../../api/requestId";
@@ -20,6 +20,36 @@ interface AlternativeHub {
   freeSlots: number;
 }
 
+interface PendingConfirm {
+  tripId: string;
+  requestId: string;
+}
+
+const PENDING_CONFIRM_KEY = "smart-emobility:pending-return-confirm";
+
+function loadPendingConfirm(): PendingConfirm | null {
+  try {
+    const raw = sessionStorage.getItem(PENDING_CONFIRM_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<PendingConfirm>;
+    if (typeof parsed.tripId === "string" && typeof parsed.requestId === "string") {
+      return { tripId: parsed.tripId, requestId: parsed.requestId };
+    }
+  } catch {
+    // sessionStorage không khả dụng
+  }
+  return null;
+}
+
+function savePendingConfirm(value: PendingConfirm | null): void {
+  try {
+    if (value) sessionStorage.setItem(PENDING_CONFIRM_KEY, JSON.stringify(value));
+    else sessionStorage.removeItem(PENDING_CONFIRM_KEY);
+  } catch {
+    // bỏ qua lỗi storage
+  }
+}
+
 export function ReturnVehicleSection() {
   const current = useAsync(() => returnApi.getCurrentTrip(), [], { refreshEveryMs: 5000 });
   const hubs = useAsync(() => hubApi.list(), []);
@@ -28,6 +58,17 @@ export function ReturnVehicleSection() {
   const [error, setError] = useState<unknown>(null);
   const [alternatives, setAlternatives] = useState<AlternativeHub[]>([]);
   const [result, setResult] = useState<ReturnResult | null>(null);
+  const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(loadPendingConfirm);
+
+  const pendingReq = useRef<Record<string, string>>(
+    pendingConfirm ? { [`confirm:${pendingConfirm.tripId}`]: pendingConfirm.requestId } : {},
+  );
+  const autoRecoveredReqId = useRef<string | null>(null);
+
+  function updatePendingConfirm(next: PendingConfirm | null) {
+    setPendingConfirm(next);
+    savePendingConfirm(next);
+  }
 
   async function run(action: string, fn: () => Promise<void>) {
     setBusy(action);
@@ -41,8 +82,6 @@ export function ReturnVehicleSection() {
       await current.reload();
     }
   }
-
-  const pendingReq = useRef<Record<string, string>>({});
 
   /** Giữ nguyên requestId khi gặp NETWORK_ERROR để bấm thử lại không gửi trùng thao tác. */
   async function withRequestId<T>(key: string, fn: (requestId: string) => Promise<T>): Promise<T> {
@@ -77,17 +116,58 @@ export function ReturnVehicleSection() {
 
   const confirm = (info: CurrentTripInfo) =>
     run("confirm", async () => {
-      const res = await withRequestId(`confirm:${info.trip.id}`, (reqId) =>
-        returnApi.confirmReturn(reqId, info.trip.id),
-      );
-      setResult(res);
+      try {
+        const res = await withRequestId(`confirm:${info.trip.id}`, (reqId) => {
+          // Lưu requestId trước khi gửi để khôi phục kết quả trả xe nếu mất phản hồi sau khi server đã kết thúc chuyến (Ext 9b)
+          updatePendingConfirm({ tripId: info.trip.id, requestId: reqId });
+          return returnApi.confirmReturn(reqId, info.trip.id);
+        });
+        updatePendingConfirm(null);
+        setResult(res);
+      } catch (err) {
+        if (!(err instanceof ApiError && err.code === "NETWORK_ERROR")) {
+          updatePendingConfirm(null);
+        }
+        throw err;
+      }
+    });
+
+  const recoverConfirm = (pending: PendingConfirm) =>
+    run("confirm", async () => {
+      try {
+        const res = await returnApi.confirmReturn(pending.requestId, pending.tripId);
+        delete pendingReq.current[`confirm:${pending.tripId}`];
+        updatePendingConfirm(null);
+        setResult(res);
+      } catch (err) {
+        if (!(err instanceof ApiError && err.code === "NETWORK_ERROR")) {
+          delete pendingReq.current[`confirm:${pending.tripId}`];
+          updatePendingConfirm(null);
+        }
+        throw err;
+      }
     });
 
   const abandon = (info: CurrentTripInfo) =>
     run("abandon", async () => {
       await withRequestId(`abandon:${info.trip.id}`, (reqId) => returnApi.abandonReturn(reqId, info.trip.id));
+      updatePendingConfirm(null);
       setResult(null);
     });
+
+  // Ext 9b: sau khi mất kết nối, nếu server đã kết thúc chuyến (/trips/current trả null) thì gửi lại đúng requestId cũ để lấy lại kết quả trả xe
+  useEffect(() => {
+    if (!pendingConfirm) return;
+    if (current.data && current.data.trip.id !== pendingConfirm.tripId) {
+      updatePendingConfirm(null);
+      return;
+    }
+    if (current.loading || current.error || current.data || result || busy === "confirm") return;
+    if (autoRecoveredReqId.current === pendingConfirm.requestId) return;
+    autoRecoveredReqId.current = pendingConfirm.requestId;
+    void recoverConfirm(pendingConfirm);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current.loading, current.error, current.data, pendingConfirm, result, busy]);
 
   const info = current.data ?? null;
   const selectedHubId = hubId || hubs.data?.[0]?.id || "";
@@ -97,12 +177,24 @@ export function ReturnVehicleSection() {
       {result?.outcome === "SUCCESS" && !info && <ReturnSuccess result={result} />}
 
       {!info ? (
-        !result && (
+        !result &&
+        (pendingConfirm ? (
+          <Card className="space-y-3 p-5">
+            <p className="font-semibold">Đang khôi phục kết quả trả xe</p>
+            <p className="text-sm text-neutral-600 dark:text-neutral-300">
+              Kết nối vừa bị gián đoạn trong lúc xác nhận trả xe. Bấm bên dưới để kiểm tra lại kết quả đã ghi nhận trên
+              hệ thống.
+            </p>
+            <Button fullWidth loading={busy === "confirm"} onClick={() => void recoverConfirm(pendingConfirm)}>
+              Kiểm tra lại kết quả trả xe
+            </Button>
+          </Card>
+        ) : (
           <Card tone="highlight">
             <p className="text-sm text-white/70">Chuyến đi hiện tại</p>
             <p className="mt-1 text-lg font-semibold">{current.loading ? "Đang tải…" : "Chưa có chuyến đi"}</p>
           </Card>
-        )
+        ))
       ) : (
         <Card tone="highlight" className="space-y-1 p-5">
           <div className="flex items-start justify-between gap-3">

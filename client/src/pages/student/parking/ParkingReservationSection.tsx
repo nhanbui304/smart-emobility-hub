@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { authApi } from "../../../api/auth";
 import { ApiError } from "../../../api/client";
 import { hubApi } from "../../../api/hubs";
+import { myReservationsApi } from "../../../api/myReservations";
 import { parkingApi } from "../../../api/parking";
 import { newRequestId } from "../../../api/requestId";
 import { Button } from "../../../components/Button";
@@ -30,11 +31,43 @@ function formatRange(start: string, end: string): string {
   return `${timeFormat.format(new Date(start))} – ${timeFormat.format(new Date(end))}`;
 }
 
+const SLOT_CODES_KEY = "smart-emobility:parking-slot-codes";
+const BOOKING_CACHE_KEY = "smart-emobility:parking-bookings";
+
+function readStorage<T>(key: string, fallback: T): T {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeStorage(key: string, value: unknown): void {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // bỏ qua lỗi storage
+  }
+}
+
 export function ParkingReservationSection() {
   const vehicles = useAsync(() => authApi.myVehicles(), []);
   const hubs = useAsync(() => hubApi.list(), []);
   // Lượt giữ còn hạn được lấy từ server nên tải lại trang vẫn thấy, và không được gia hạn (Ext 7b)
   const activeHold = useAsync(() => parkingApi.getActiveHold(), [], { refreshEveryMs: 10_000 });
+  // Đặt chỗ đã xác nhận lấy từ server (GET /api/me/reservations) để F5 vẫn xem và hủy được (Ext 9a); fallback sessionStorage khi API chưa triển khai
+  const confirmedBookings = useAsync(async (): Promise<ParkingAllocation[]> => {
+    try {
+      const res = await myReservationsApi.list();
+      return res.parkingAllocations.filter((a) => a.status === "CONFIRMED");
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "NOT_IMPLEMENTED") {
+        return readStorage<ParkingBooking[]>(BOOKING_CACHE_KEY, []).map((b) => b.allocation);
+      }
+      throw err;
+    }
+  }, []);
 
   const [hubId, setHubId] = useState("");
   const [vehicleId, setVehicleId] = useState("");
@@ -42,9 +75,11 @@ export function ParkingReservationSection() {
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("10:00");
   const [slots, setSlots] = useState<ParkingSlot[] | null>(null);
-  const [slotCodes, setSlotCodes] = useState<Record<string, string>>({});
+  const [slotCodes, setSlotCodes] = useState<Record<string, string>>(() => readStorage(SLOT_CODES_KEY, {}));
+  const [bookingDetails, setBookingDetails] = useState<Record<string, ParkingBooking>>(() =>
+    Object.fromEntries(readStorage<ParkingBooking[]>(BOOKING_CACHE_KEY, []).map((b) => [b.allocation.id, b])),
+  );
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
-  const [booking, setBooking] = useState<ParkingBooking | null>(null);
   const [cancelledBooking, setCancelledBooking] = useState<ParkingAllocation | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
@@ -87,7 +122,33 @@ export function ParkingReservationSection() {
   };
 
   function rememberCodes(list: ParkingSlot[]) {
-    setSlotCodes((prev) => ({ ...prev, ...Object.fromEntries(list.map((s) => [s.id, s.code])) }));
+    setSlotCodes((prev) => {
+      const next = { ...prev, ...Object.fromEntries(list.map((s) => [s.id, s.code])) };
+      writeStorage(SLOT_CODES_KEY, next);
+      return next;
+    });
+  }
+
+  function rememberBooking(confirmed: ParkingBooking) {
+    setSlotCodes((prev) => {
+      const next = { ...prev, [confirmed.allocation.slotId]: confirmed.slotCode };
+      writeStorage(SLOT_CODES_KEY, next);
+      return next;
+    });
+    setBookingDetails((prev) => {
+      const next = { ...prev, [confirmed.allocation.id]: confirmed };
+      writeStorage(BOOKING_CACHE_KEY, Object.values(next));
+      return next;
+    });
+  }
+
+  function forgetBooking(bookingId: string) {
+    setBookingDetails((prev) => {
+      const next = { ...prev };
+      delete next[bookingId];
+      writeStorage(BOOKING_CACHE_KEY, Object.values(next));
+      return next;
+    });
   }
 
   async function run(action: string, fn: () => Promise<void>) {
@@ -106,7 +167,6 @@ export function ParkingReservationSection() {
   const search = () =>
     run("search", async () => {
       setSelectedSlotId(null);
-      setBooking(null);
       setCancelledBooking(null);
       const found = await parkingApi.searchAvailableSlots(hubId, vehicleId, timeRange());
       setSlots(found);
@@ -143,9 +203,9 @@ export function ParkingReservationSection() {
         const confirmed = await withRequestId(`confirm:${current.hold.id}`, (reqId) =>
           parkingApi.confirmReservation(reqId, current.hold.id),
         );
-        setBooking(confirmed);
+        rememberBooking(confirmed);
       } finally {
-        await activeHold.reload();
+        await Promise.all([activeHold.reload(), confirmedBookings.reload()]);
       }
     });
 
@@ -156,21 +216,36 @@ export function ParkingReservationSection() {
       await activeHold.reload();
     });
 
-  const cancelBooking = (current: ParkingBooking) =>
-    run("cancelBooking", async () => {
-      setCancelledBooking(await parkingApi.cancelBooking(current.allocation.id));
-      setBooking(null);
+  const cancelBooking = (allocation: ParkingAllocation) =>
+    run(`cancelBooking:${allocation.id}`, async () => {
+      const cancelled = await parkingApi.cancelBooking(allocation.id);
+      forgetBooking(allocation.id);
+      setCancelledBooking(cancelled);
+      await confirmedBookings.reload();
     });
 
   if (vehicles.loading || hubs.loading) return <Spinner />;
   const currentHold = activeHold.data ?? null;
+  const activeBookings = confirmedBookings.data ?? [];
 
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-bold">Đặt chỗ đỗ</h2>
-      <ErrorMessage error={vehicles.error ?? hubs.error ?? activeHold.error} />
+      <ErrorMessage error={vehicles.error ?? hubs.error ?? activeHold.error ?? confirmedBookings.error} />
 
-      {booking && <BookingCard booking={booking} busy={busy} onCancel={() => void cancelBooking(booking)} />}
+      {activeBookings.map((allocation) => {
+        const detail = bookingDetails[allocation.id];
+        return (
+          <BookingCard
+            key={allocation.id}
+            allocation={allocation}
+            slotCode={detail?.slotCode ?? slotCodes[allocation.slotId]}
+            arrivalConditions={detail?.arrivalConditions}
+            busy={busy === `cancelBooking:${allocation.id}`}
+            onCancel={() => void cancelBooking(allocation)}
+          />
+        );
+      })}
       {cancelledBooking && (
         <Card className="p-4 text-sm">
           <StatusBadge status={cancelledBooking.status} /> Đặt chỗ {slotCodes[cancelledBooking.slotId] ?? ""} đã được hủy.
@@ -187,8 +262,7 @@ export function ParkingReservationSection() {
           onExpired={() => void activeHold.reload()}
         />
       ) : (
-        !booking && (
-          <Card className="space-y-4 p-4">
+        <Card className="space-y-4 p-4">
             {vehicles.data?.length === 0 && (
               <p className="text-sm text-neutral-500">Bạn chưa có phương tiện cá nhân nên chưa đặt chỗ đỗ được.</p>
             )}
@@ -297,7 +371,6 @@ export function ParkingReservationSection() {
               </div>
             )}
           </Card>
-        )
       )}
 
       {notice && <p className="rounded-xl bg-surface px-4 py-3 text-sm dark:bg-white/5">{notice}</p>}
@@ -373,30 +446,36 @@ function HoldCard({
 
 /** UC06 bước 9: mã đặt chỗ, Hub, vị trí, khung giờ, điều kiện đến sử dụng; Cancel Parking Reservation. */
 function BookingCard({
-  booking,
+  allocation,
+  slotCode,
+  arrivalConditions,
   busy,
   onCancel,
 }: {
-  booking: ParkingBooking;
-  busy: string | null;
+  allocation: ParkingAllocation;
+  slotCode?: string;
+  arrivalConditions?: string;
+  busy: boolean;
   onCancel: () => void;
 }) {
   return (
     <Card className="space-y-3 p-5">
       <div className="flex items-center justify-between gap-3">
-        <p className="font-semibold">Đặt chỗ thành công</p>
-        <StatusBadge status={booking.allocation.status} />
+        <p className="font-semibold">Đặt chỗ đã xác nhận</p>
+        <StatusBadge status={allocation.status} />
       </div>
       <dl className="grid grid-cols-2 gap-y-2 text-sm">
         <dt className="text-neutral-500">Mã đặt chỗ</dt>
-        <dd className="font-mono font-semibold">{booking.allocation.id.slice(0, 8).toUpperCase()}</dd>
+        <dd className="font-mono font-semibold">{allocation.id.slice(0, 8).toUpperCase()}</dd>
         <dt className="text-neutral-500">Vị trí</dt>
-        <dd className="font-semibold">{booking.slotCode}</dd>
+        <dd className="font-semibold">{slotCode ?? allocation.slotId}</dd>
         <dt className="text-neutral-500">Khung giờ</dt>
-        <dd>{formatRange(booking.allocation.startTime, booking.allocation.endTime)}</dd>
+        <dd>{formatRange(allocation.startTime, allocation.endTime)}</dd>
       </dl>
-      <p className="rounded-lg bg-surface px-3 py-2 text-sm dark:bg-white/5">{booking.arrivalConditions}</p>
-      <Button variant="outline" fullWidth loading={busy === "cancelBooking"} onClick={onCancel}>
+      <p className="rounded-lg bg-surface px-3 py-2 text-sm dark:bg-white/5">
+        {arrivalConditions ?? "Đến Hub đúng khung giờ đã đặt; đặt chỗ chưa sử dụng sẽ hết hạn khi kết thúc khung giờ."}
+      </p>
+      <Button variant="outline" fullWidth loading={busy} onClick={onCancel}>
         Hủy đặt chỗ
       </Button>
     </Card>
