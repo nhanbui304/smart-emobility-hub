@@ -4,17 +4,48 @@
 
 @layer base {
   html {
+    color-scheme: light;
     @apply bg-surface text-neutral-900 antialiased;
   }
   html.dark {
+    color-scheme: dark;
     @apply bg-surface-dark text-neutral-100;
   }
   body {
     @apply min-h-screen font-sans;
   }
+  select option {
+    @apply bg-white text-neutral-900;
+  }
+  html.dark select,
+  html.dark select option {
+    background-color: #17221d;
+    color: #f3f4f6;
+  }
   :focus-visible {
     @apply outline-none ring-2 ring-lime ring-offset-2 ring-offset-surface dark:ring-offset-surface-dark;
   }
+}
+
+/* Custom Leaflet pin overrides — crisp pill markers */
+.hub-map-pin {
+  background: transparent !important;
+  border: none !important;
+}
+.leaflet-container {
+  font-family: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
+  z-index: 1;
+}
+/* Đổi bản đồ OpenStreetMap sang tông tối dịu mắt khi bật Dark Mode (không cần API key) */
+html.dark .leaflet-tile-pane {
+  filter: invert(100%) hue-rotate(180deg) brightness(90%) contrast(92%) saturate(75%);
+}
+html.dark .leaflet-control-attribution {
+  background: rgba(14, 21, 18, 0.85) !important;
+  color: #9ca3af !important;
+}
+html.dark .leaflet-control-attribution a {
+  color: #c8f169 !important;
 }
 
 @layer components {

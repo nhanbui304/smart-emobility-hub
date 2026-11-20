@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { monitoringApi } from "../../api/monitoring";
 import { Button } from "../../components/Button";
+import { CampusHubMap } from "../../components/CampusHubMap";
 import { Card } from "../../components/Card";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorMessage } from "../../components/ErrorMessage";
@@ -172,6 +173,29 @@ export function MonitoringPage() {
               sub={`trên ${hubs.length} Mobility Hub`}
             />
           </div>
+
+          {/* Bản đồ giám sát trực quan toàn mạng lưới Hub ĐHQG-HCM */}
+          <Card className="space-y-3 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-base font-semibold">Bản đồ mạng lưới Hub (ĐHQG-HCM)</h2>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                  Bấm trực tiếp vào từng Hub trên bản đồ để mở bảng chi tiết xe, chỗ đỗ và cảnh báo.
+                </p>
+              </div>
+              <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                Hub có cảnh báo được đánh dấu màu vàng
+              </span>
+            </div>
+            <CampusHubMap
+              hubs={hubs}
+              selectedHubId={selectedHubId}
+              onSelectHub={(id) => setSelectedHubId(id)}
+              mode="operator"
+              alertCountByHubId={new Map([...alertsByHubId.entries()].map(([k, list]) => [k, list.length]))}
+              className="h-[340px] w-full"
+            />
+          </Card>
 
           {/* UC10 bước 4 & Mục 2.3.3: Khu vực Cảnh báo Vận hành */}
           <Card className="space-y-4">

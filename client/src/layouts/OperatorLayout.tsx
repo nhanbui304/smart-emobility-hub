@@ -43,13 +43,13 @@ export function OperatorLayout() {
           <NavLink
             to="/operator/redistribution"
             className={({ isActive }) =>
-              `mt-4 flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium transition ${
-                isActive ? "bg-white/15 text-white" : "text-white/55 hover:bg-white/10 hover:text-white"
+              `mt-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                isActive ? "bg-lime text-brand-dark" : "text-white/75 hover:bg-white/10 hover:text-white"
               }`
             }
           >
-            <TruckIcon className="h-4 w-4" />
-            Điều chuyển xe (UC12)
+            <TruckIcon className="h-5 w-5" />
+            Điều chuyển xe
           </NavLink>
         </nav>
 

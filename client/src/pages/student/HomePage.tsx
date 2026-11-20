@@ -1,122 +1,415 @@
-// Owner: Ngô Minh Triết – UC01 Find Suitable Hub and Mobility Option
-// Danh sách Hub (View Hub and Resource Status) do Lê Quốc Linh làm – đã chạy thật, tự tải lại mỗi 3 giây.
-import { useState } from "react";
+// Owner: Ngô Minh Triết (UC01), Lê Quốc Linh (View Hub & Resource Status)
+// Giao diện Trang chủ Map-First ĐHQG-HCM: bản đồ thật CartoDB + pin live 5 Hub + thẻ xem nhanh Hub & xe đang đặt.
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { hubApi } from "../../api/hubs";
-import { searchApi } from "../../api/search";
-import { Button } from "../../components/Button";
+import { reservationApi } from "../../api/reservation";
+import { returnApi } from "../../api/return";
+import { CampusHubMap, type MapMetric } from "../../components/CampusHubMap";
 import { Card } from "../../components/Card";
 import { ErrorMessage } from "../../components/ErrorMessage";
 import { Spinner } from "../../components/Spinner";
 import { useAuth } from "../../context/AuthContext";
 import { useAsync } from "../../hooks/useAsync";
 import type { HubStatus } from "../../types";
+import {
+  estimateRangeKm,
+  googleMapsDirectionsUrl,
+  sharedVehiclePlate,
+  vehicleTypeLabel,
+} from "../../utils/display";
 
-const PURPOSES = [
+const MODES: { value: MapMetric; label: string }[] = [
   { value: "RENT_VEHICLE", label: "Thuê xe" },
   { value: "PARK", label: "Đỗ xe" },
   { value: "CHARGE", label: "Sạc xe" },
-] as const;
+];
+
+function formatCountdown(deadlineIso: string, nowMs: number): string {
+  const ms = Math.max(0, new Date(deadlineIso).getTime() - nowMs);
+  const totalSec = Math.floor(ms / 1000);
+  return `${String(Math.floor(totalSec / 60)).padStart(2, "0")}:${String(totalSec % 60).padStart(2, "0")}`;
+}
 
 export function HomePage() {
   const { user } = useAuth();
   const { data: hubs, loading, error, reload } = useAsync(() => hubApi.list(), [], { refreshEveryMs: 3000 });
+  const activeReservations = useAsync(() => reservationApi.getMyReservations().catch(() => []), [], {
+    refreshEveryMs: 5000,
+  });
+  const currentTrip = useAsync(() => returnApi.getCurrentTrip().catch(() => null), [], { refreshEveryMs: 5000 });
 
-  const [purpose, setPurpose] = useState<(typeof PURPOSES)[number]["value"]>("RENT_VEHICLE");
-  const [searchError, setSearchError] = useState<unknown>(null);
-  const [searching, setSearching] = useState(false);
+  const [mode, setMode] = useState<MapMetric>("RENT_VEHICLE");
+  const [query, setQuery] = useState("");
+  const [selectedHubId, setSelectedHubId] = useState<string | null>(null);
+  const [nowMs, setNowMs] = useState(Date.now());
 
-  async function onSearch() {
-    setSearchError(null);
-    setSearching(true);
-    try {
-      // TODO (Triết – UC01): lấy Hub xuất phát, loại xe, mức pin tối thiểu từ form (đang tạm điền);
-      // hiển thị danh sách phương án trả về và cho chọn (searchApi.confirmOptionSelection).
-      await searchApi.searchMobilityOptions({ purpose, originHubId: hubs?.[0]?.id ?? "", vehicleType: "E_BIKE", minBattery: 0 });
-    } catch (err) {
-      setSearchError(err);
-    } finally {
-      setSearching(false);
+  useEffect(() => {
+    const t = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const filteredHubs = useMemo(() => {
+    const list = hubs ?? [];
+    const q = query.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((h) => h.name.toLowerCase().includes(q) || h.location.toLowerCase().includes(q));
+  }, [hubs, query]);
+
+  // Mặc định chọn Hub đầu tiên khi tải xong
+  useEffect(() => {
+    if (!selectedHubId && filteredHubs[0]) {
+      setSelectedHubId(filteredHubs[0].id);
+    } else if (selectedHubId && filteredHubs.length > 0 && !filteredHubs.some((h) => h.id === selectedHubId)) {
+      setSelectedHubId(filteredHubs[0].id);
     }
-  }
+  }, [filteredHubs, selectedHubId]);
+
+  const selectedHub = useMemo(
+    () => (hubs ?? []).find((h) => h.id === selectedHubId) ?? filteredHubs[0] ?? null,
+    [hubs, filteredHubs, selectedHubId],
+  );
+
+  // Tải danh sách xe tại Hub đang chọn để xem nhanh biển số + % pin ngay trên Trang chủ
+  const selectedHubDetail = useAsync(
+    () => (selectedHub ? hubApi.detail(selectedHub.id) : Promise.resolve(null)),
+    [selectedHub?.id],
+    { refreshEveryMs: 5000 },
+  );
+
+  const topAvailableVehicles = useMemo(() => {
+    return (selectedHubDetail.data?.vehicles ?? [])
+      .filter((v) => v.status === "AVAILABLE")
+      .sort((a, b) => b.batteryLevel - a.batteryLevel)
+      .slice(0, 3);
+  }, [selectedHubDetail.data?.vehicles]);
+
+  const activeBooking = activeReservations.data?.find((r) => r.status === "RESERVED") ?? null;
+  const bookingHubDetail = useAsync(
+    () => (activeBooking ? hubApi.detail(activeBooking.hubId) : Promise.resolve(null)),
+    [activeBooking?.hubId],
+  );
+  const bookedVehicle = bookingHubDetail.data?.vehicles.find((v) => v.id === activeBooking?.vehicleId);
+  const bookedHubName = hubs?.find((h) => h.id === activeBooking?.hubId)?.name;
 
   return (
     <div className="space-y-6">
-      <Card tone="highlight" className="p-6">
-        <p className="text-sm text-white/70">Xin chào,</p>
-        <h1 className="text-2xl font-bold">{user?.fullName}</h1>
-        <p className="mt-4 text-sm text-white/80">Bạn cần làm gì hôm nay?</p>
-        <div className="mt-3 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Mục đích">
-          {PURPOSES.map((p) => (
-            <button
-              key={p.value}
-              role="radio"
-              aria-checked={purpose === p.value}
-              onClick={() => setPurpose(p.value)}
-              className={`rounded-xl px-2 py-2.5 text-sm font-semibold transition ${
-                purpose === p.value ? "bg-lime text-brand-dark" : "bg-white/10 text-white hover:bg-white/20"
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-        <Button className="mt-4" fullWidth loading={searching} onClick={onSearch}>
-          Tìm Hub phù hợp
-        </Button>
-      </Card>
-      <ErrorMessage error={searchError} />
+      {/* Khối Bản đồ ĐHQG-HCM tương tác + Thẻ nổi */}
+      <section className="relative">
+        {/* Thanh chọn chế độ & tìm nhanh nổi phía trên */}
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+              Xin chào, {user?.fullName ?? "bạn"}
+            </p>
+            <h1 className="text-xl font-bold tracking-tight md:text-2xl">Khám phá Mobility Hub tại ĐHQG-HCM</h1>
+          </div>
 
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-bold">Các Hub gần bạn</h2>
-          <Link to="/student/reservations" className="text-sm font-semibold text-brand dark:text-lime">
-            Đặt chỗ của tôi
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <div
+              className="inline-flex rounded-xl border border-neutral-200 bg-white p-1 dark:border-white/10 dark:bg-panel-dark"
+              role="radiogroup"
+              aria-label="Mục đích sử dụng"
+            >
+              {MODES.map((m) => (
+                <button
+                  key={m.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={mode === m.value}
+                  onClick={() => setMode(m.value)}
+                  className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                    mode === m.value
+                      ? "bg-brand text-lime dark:bg-lime dark:text-brand-dark"
+                      : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white"
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Tìm nhanh Hub..."
+              aria-label="Tìm nhanh Hub"
+              className="w-48 rounded-xl border border-neutral-200 bg-white px-3.5 py-2 text-xs outline-none transition focus:border-brand dark:border-white/10 dark:bg-panel-dark dark:focus:border-lime"
+            />
+          </div>
         </div>
+
         {loading && !hubs && <Spinner />}
         <ErrorMessage error={error} onRetry={() => void reload()} />
-        <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {hubs?.map((hub) => (
-            <HubRow key={hub.id} hub={hub} />
-          ))}
-        </ul>
+
+        {/* Bố cục Map-First: Bản đồ thật bên trái (7/12) + Thẻ xem nhanh Hub bên phải (5/12) */}
+        {hubs && hubs.length > 0 && (
+          <div className="grid gap-4 lg:grid-cols-12">
+            <div className="relative lg:col-span-7 xl:col-span-8">
+              <CampusHubMap
+                hubs={filteredHubs}
+                selectedHubId={selectedHub?.id ?? null}
+                onSelectHub={setSelectedHubId}
+                mode="student"
+                metric={mode}
+                className="h-[380px] w-full shadow-sm lg:h-[520px]"
+              />
+
+              {/* Thẻ nổi trạng thái xe đang đặt / chuyến đi đang diễn ra (góc dưới bản đồ trên desktop) */}
+              {currentTrip.data ? (
+                <div className="mt-3 rounded-2xl border border-brand-light/40 bg-brand p-4 text-white shadow-lg lg:absolute lg:inset-x-4 lg:bottom-4 lg:z-[400] lg:mt-0">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-xl bg-white px-3 py-1.5 text-center text-neutral-900">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-500">Biển số</p>
+                        <p className="font-mono text-xs font-extrabold">
+                          {sharedVehiclePlate(currentTrip.data.vehicleCode)}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="inline-block rounded-full bg-lime px-2 py-0.5 text-[10px] font-extrabold text-brand-dark">
+                          ĐANG TRONG CHUYẾN ĐI · {currentTrip.data.vehicleCode}
+                        </span>
+                        <p className="mt-0.5 text-sm font-bold">
+                          {vehicleTypeLabel(currentTrip.data.vehicleType)} · Pin {currentTrip.data.batteryLevel}%
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      to="/student/trips"
+                      className="rounded-xl bg-lime px-4 py-2 text-xs font-bold text-brand-dark transition hover:bg-lime-dark"
+                    >
+                      Trả xe ngay →
+                    </Link>
+                  </div>
+                </div>
+              ) : activeBooking ? (
+                <div className="mt-3 rounded-2xl border border-brand-light/40 bg-brand p-4 text-white shadow-lg lg:absolute lg:inset-x-4 lg:bottom-4 lg:z-[400] lg:mt-0">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-xl bg-white px-3 py-1.5 text-center text-neutral-900">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-500">Biển số</p>
+                        <p className="font-mono text-xs font-extrabold">
+                          {bookedVehicle ? sharedVehiclePlate(bookedVehicle.code) : "Đang tải..."}
+                        </p>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-full bg-lime px-2 py-0.5 text-[10px] font-extrabold text-brand-dark">
+                            ĐANG GIỮ · {formatCountdown(activeBooking.pickupDeadline, nowMs)}
+                          </span>
+                          {bookedVehicle && (
+                            <span className="text-xs font-semibold text-emerald-200">
+                              {bookedVehicle.code} · Pin {bookedVehicle.batteryLevel}%
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-sm font-bold">
+                          {bookedVehicle ? vehicleTypeLabel(bookedVehicle.type) : "Xe dùng chung"} tại{" "}
+                          {bookedHubName ?? "Hub"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        to="/student/trips"
+                        className="rounded-xl bg-lime px-4 py-2 text-xs font-bold text-brand-dark transition hover:bg-lime-dark"
+                      >
+                        Xem xe &amp; Mở khóa
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Thẻ chi tiết Hub đang chọn bên phải */}
+            <div className="lg:col-span-5 xl:col-span-4">
+              {selectedHub ? (
+                <Card className="flex h-full flex-col justify-between space-y-5 p-5">
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          Đang hoạt động
+                        </span>
+                        <h2 className="mt-2 text-xl font-bold">{selectedHub.name}</h2>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">{selectedHub.location}</p>
+                      </div>
+                      <a
+                        href={googleMapsDirectionsUrl(selectedHub.name)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="shrink-0 rounded-lg border border-neutral-200 px-2.5 py-1.5 text-[11px] font-semibold text-neutral-600 transition hover:bg-neutral-50 dark:border-white/10 dark:text-neutral-300 dark:hover:bg-white/5"
+                      >
+                        Chỉ đường ↗
+                      </a>
+                    </div>
+
+                    {/* 3 ô thống kê nhanh */}
+                    <dl className="grid grid-cols-3 gap-2 text-center">
+                      <StatTile
+                        label="Xe sẵn sàng"
+                        value={`${selectedHub.availableVehicles}`}
+                        tone="emerald"
+                      />
+                      <StatTile label="Chỗ trống" value={`${selectedHub.freeSlots}`} tone="neutral" />
+                      <StatTile label="Cổng sạc" value={`${selectedHub.freeChargingPorts}`} tone="amber" />
+                    </dl>
+
+                    {/* Gợi ý 3 xe pin cao nhất tại Hub */}
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-neutral-700 dark:text-neutral-200">
+                        Xe pin cao sẵn sàng nhận ngay
+                      </p>
+                      {topAvailableVehicles.length === 0 ? (
+                        <p className="rounded-xl bg-surface p-3 text-xs text-neutral-500 dark:bg-white/5 dark:text-neutral-400">
+                          Hiện chưa có xe sẵn sàng tại Hub này. Hãy bấm chọn một Hub khác trên bản đồ.
+                        </p>
+                      ) : (
+                        <ul className="space-y-2">
+                          {topAvailableVehicles.map((v, idx) => (
+                            <li
+                              key={v.id}
+                              className={`flex items-center justify-between rounded-xl border px-3 py-2.5 transition ${
+                                idx === 0
+                                  ? "border-emerald-500/50 bg-emerald-50/60 dark:border-lime/40 dark:bg-lime/5"
+                                  : "border-neutral-200/80 bg-surface/60 dark:border-white/10 dark:bg-white/5"
+                              }`}
+                            >
+                              <div>
+                                <p className="font-mono text-xs font-bold">
+                                  {sharedVehiclePlate(v.code)}{" "}
+                                  <span className="font-sans font-semibold text-neutral-500 dark:text-neutral-400">
+                                    · {v.code}
+                                  </span>
+                                </p>
+                                <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                                  {vehicleTypeLabel(v.type)} · ~{estimateRangeKm(v.batteryLevel, v.type)} km
+                                </p>
+                              </div>
+                              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300">
+                                Pin {v.batteryLevel}%
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Nút hành động theo chế độ đang chọn */}
+                  <div className="space-y-2 pt-2">
+                    {mode === "RENT_VEHICLE" && (
+                      <Link
+                        to={`/student/hubs/${selectedHub.id}/reserve`}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-lime transition hover:bg-brand-light dark:bg-lime dark:text-brand-dark dark:hover:bg-lime-dark"
+                      >
+                        Chọn &amp; Đặt xe tại {selectedHub.name} →
+                      </Link>
+                    )}
+                    {mode === "PARK" && (
+                      <Link
+                        to="/student/my-vehicle"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-lime transition hover:bg-brand-light dark:bg-lime dark:text-brand-dark dark:hover:bg-lime-dark"
+                      >
+                        Đặt chỗ đỗ cho xe cá nhân →
+                      </Link>
+                    )}
+                    {mode === "CHARGE" && (
+                      <Link
+                        to="/student/my-vehicle"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-lime transition hover:bg-brand-light dark:bg-lime dark:text-brand-dark dark:hover:bg-lime-dark"
+                      >
+                        Quản lý &amp; Đặt lịch sạc →
+                      </Link>
+                    )}
+                    <div className="flex items-center justify-between pt-1 text-xs">
+                      <Link to="/student/my-vehicle" className="font-medium text-neutral-500 hover:text-brand dark:text-neutral-400 dark:hover:text-lime">
+                        Đỗ xe / Sạc xe cá nhân
+                      </Link>
+                      <Link to="/student/reservations" className="font-semibold text-brand dark:text-lime">
+                        Đặt chỗ của tôi →
+                      </Link>
+                    </div>
+                  </div>
+                </Card>
+              ) : null}
+            </div>
+          </div>
+        )}
       </section>
+
+      {/* Dải chọn nhanh tất cả các Hub */}
+      {hubs && hubs.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base font-bold">Tất cả {hubs.length} Mobility Hub</h2>
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">
+              Bấm vào Hub để xem trên bản đồ hoặc đặt xe ngay
+            </span>
+          </div>
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {hubs.map((hub) => (
+              <HubMiniCard
+                key={hub.id}
+                hub={hub}
+                selected={selectedHub?.id === hub.id}
+                onSelect={() => setSelectedHubId(hub.id)}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
 
-function HubRow({ hub }: { hub: HubStatus }) {
+function StatTile({ label, value, tone }: { label: string; value: string; tone: "emerald" | "neutral" | "amber" }) {
+  const cls =
+    tone === "emerald"
+      ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
+      : tone === "amber"
+        ? "bg-amber-50 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
+        : "bg-surface text-neutral-800 dark:bg-white/5 dark:text-neutral-100";
+  return (
+    <div className={`rounded-xl py-2.5 ${cls}`}>
+      <dd className="text-xl font-extrabold tabular-nums">{value}</dd>
+      <dt className="text-[11px] font-medium opacity-80">{label}</dt>
+    </div>
+  );
+}
+
+function HubMiniCard({
+  hub,
+  selected,
+  onSelect,
+}: {
+  hub: HubStatus;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   return (
     <li>
-      <Card className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="font-semibold">{hub.name}</p>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">{hub.location}</p>
-          </div>
-          <Link
-            to={`/student/hubs/${hub.id}/reserve`}
-            className="shrink-0 rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-white dark:bg-lime dark:text-brand-dark"
-          >
-            Đặt xe
-          </Link>
-        </div>
-        <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
-          <Stat label="Xe sẵn sàng" value={`${hub.availableVehicles}/${hub.totalVehicles}`} />
-          <Stat label="Chỗ trống" value={`${hub.freeSlots}/${hub.totalSlots}`} />
-          <Stat label="Cổng sạc rảnh" value={`${hub.freeChargingPorts}/${hub.totalChargingPorts}`} />
-        </dl>
-      </Card>
+      <button
+        type="button"
+        onClick={onSelect}
+        className={`w-full cursor-pointer rounded-2xl border p-3.5 text-left transition ${
+          selected
+            ? "border-brand bg-brand/5 ring-1 ring-brand dark:border-lime dark:bg-lime/10 dark:ring-lime"
+            : "border-neutral-200/80 bg-white hover:border-neutral-300 dark:border-white/10 dark:bg-panel-dark dark:hover:border-white/20"
+        }`}
+      >
+        <p className="truncate text-sm font-bold">{hub.name}</p>
+        <p className="mt-1 text-xs font-semibold text-emerald-700 dark:text-lime">
+          {hub.availableVehicles} xe · {hub.freeSlots} chỗ trống
+        </p>
+        <p className="mt-0.5 text-[11px] text-neutral-500 dark:text-neutral-400">
+          {hub.freeChargingPorts}/{hub.totalChargingPorts} cổng sạc rảnh
+        </p>
+      </button>
     </li>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg bg-surface py-2 dark:bg-white/5">
-      <dd className="text-base font-bold">{value}</dd>
-      <dt className="text-[11px] text-neutral-500 dark:text-neutral-400">{label}</dt>
-    </div>
   );
 }

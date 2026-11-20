@@ -42,6 +42,7 @@ import { Spinner } from "../../components/Spinner";
 import { StatusBadge } from "../../components/StatusBadge";
 import { useAsync } from "../../hooks/useAsync";
 import type { VehicleSummary } from "../../types";
+import { sharedVehiclePlate } from "../../utils/display";
 
 const dt = (iso: string) =>
   new Date(iso).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
@@ -73,15 +74,18 @@ export function MyReservationsPage() {
 
       {r && r.vehicleReservations.length > 0 && (
         <Section title="Đặt xe dùng chung">
-          {r.vehicleReservations.map((v) => (
-            <Row
-              key={v.id}
-              title={data.vehicles.get(v.vehicleId)?.code ?? "Xe đã đặt"}
-              lines={[data.hubNames.get(v.hubId) ?? "", `Hạn nhận xe: ${dt(v.pickupDeadline)}`]}
-              status={v.status}
-              link={v.status === "RESERVED" ? { to: "/student/trips", label: "Nhận / hủy xe" } : undefined}
-            />
-          ))}
+          {r.vehicleReservations.map((v) => {
+            const veh = data.vehicles.get(v.vehicleId);
+            return (
+              <Row
+                key={v.id}
+                title={veh ? `${sharedVehiclePlate(veh.code)} · ${veh.code}` : "Xe đã đặt"}
+                lines={[data.hubNames.get(v.hubId) ?? "", `Hạn nhận xe: ${dt(v.pickupDeadline)}`]}
+                status={v.status}
+                link={v.status === "RESERVED" ? { to: "/student/trips", label: "Xem xe / nhận hoặc hủy" } : undefined}
+              />
+            );
+          })}
         </Section>
       )}
 

@@ -12,6 +12,7 @@ import { ErrorMessage } from "../../components/ErrorMessage";
 import { StatusBadge } from "../../components/StatusBadge";
 import { useAsync } from "../../hooks/useAsync";
 import type { CancellationPreview, PickUpPreview, Trip, VehicleReservation } from "../../types";
+import { estimateRangeKm, sharedVehiclePlate, vehicleTypeLabel } from "../../utils/display";
 import { newRequestId } from "../../utils/requestId";
 
 type Mode = "idle" | "pickup" | "cancel";
@@ -154,29 +155,55 @@ function ReservationCard({
   const canAct = reservation.status === "RESERVED";
 
   return (
-    <Card className="space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs text-neutral-500">Đặt xe dùng chung</p>
-          <p className="text-lg font-bold">{vehicle?.code ?? "Xe đã đặt"}</p>
-          <p className="text-xs text-neutral-500">
-            {hub.data?.name ?? "..."}
-            {vehicle ? ` · Pin ${vehicle.batteryLevel}%` : ""}
-          </p>
+    <Card className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-center gap-3.5">
+          <div className="rounded-xl border-2 border-brand bg-emerald-50/70 px-3.5 py-2 text-center dark:border-lime dark:bg-lime/10">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-brand dark:text-lime">Biển số xe</p>
+            <p className="font-mono text-sm font-extrabold">
+              {vehicle ? sharedVehiclePlate(vehicle.code) : "..."}
+            </p>
+            {vehicle && <p className="text-[11px] font-semibold text-emerald-700 dark:text-lime">{vehicle.code}</p>}
+          </div>
+          <div>
+            <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+              {vehicle ? vehicleTypeLabel(vehicle.type) : "Xe dùng chung đã đặt"}
+            </p>
+            <p className="text-lg font-bold">{hub.data?.name ?? "Đang tải Hub..."}</p>
+            {vehicle && (
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                Pin {vehicle.batteryLevel}% · Quãng đường ước tính ~{estimateRangeKm(vehicle.batteryLevel, vehicle.type)} km
+              </p>
+            )}
+          </div>
         </div>
         <StatusBadge status={reservation.status} />
       </div>
 
+      {vehicle && (
+        <div className="space-y-1">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-white/10">
+            <div
+              className="h-full rounded-full bg-emerald-600 dark:bg-lime"
+              style={{ width: `${Math.min(100, Math.max(5, vehicle.batteryLevel))}%` }}
+            />
+          </div>
+        </div>
+      )}
+
       {canAct && (
-        <p className={`text-sm ${remaining <= 0 ? "font-semibold text-red-600" : ""}`}>
-          {remaining > 0 ? (
-            <>
-              Hạn nhận xe còn <span className="font-mono font-bold">{formatRemaining(remaining)}</span>
-            </>
-          ) : (
-            "Đã quá hạn nhận xe, hệ thống sẽ giải phóng xe trong giây lát."
-          )}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-surface px-3.5 py-2.5 text-xs dark:bg-white/5">
+          <span className={remaining <= 0 ? "font-semibold text-red-600" : "text-neutral-600 dark:text-neutral-300"}>
+            {remaining > 0 ? (
+              <>
+                Đến Hub, đối chiếu biển số trên thân xe rồi bấm Mở khóa. Giữ xe còn{" "}
+                <span className="font-mono font-bold text-brand dark:text-lime">{formatRemaining(remaining)}</span>
+              </>
+            ) : (
+              "Đã quá hạn nhận xe, hệ thống sẽ giải phóng xe trong giây lát."
+            )}
+          </span>
+        </div>
       )}
       {!canAct && (
         <p className="text-sm text-neutral-500">Đang bàn giao hoặc chờ xác minh kết quả mở khóa; tạm thời chưa thao tác được.</p>
