@@ -13,12 +13,15 @@
 import { eq, inArray } from "drizzle-orm";
 import { systemConfig } from "../config/systemConfig";
 import type { DeviceCommandResult, VehicleTechStatus } from "../constants";
-import { hubs, sharedVehicles } from "../db/schema";
+import { and, desc } from "drizzle-orm";
+import { hubs, sharedVehicles, trips } from "../db/schema";
 import { db } from "../lib/db";
 import type { LockResult, VehiclePosition } from "../types/dto";
 
-/** Tỉ lệ lệnh thiết bị thành công – giảm xuống để thử nhánh lỗi khi demo. */
+/** Tỉ lệ lệnh thiết bị thành công khi SIMULATOR_DEVICE_RESULT=RANDOM. */
 const SUCCESS_RATE = 0.9;
+/** Ép kết quả lệnh thiết bị để demo nhánh lỗi: RANDOM | SUCCESS | FAILED | UNKNOWN (server/.env). */
+const FORCED_RESULT = (process.env.SIMULATOR_DEVICE_RESULT ?? "RANDOM").toUpperCase();
 const DEVICE_DELAY_MS = 300;
 
 function randomInt(min: number, max: number): number {
@@ -26,6 +29,7 @@ function randomInt(min: number, max: number): number {
 }
 
 function randomResult(): DeviceCommandResult {
+  if (FORCED_RESULT === "SUCCESS" || FORCED_RESULT === "FAILED" || FORCED_RESULT === "UNKNOWN") return FORCED_RESULT;
   const r = Math.random();
   if (r < SUCCESS_RATE) return "SUCCESS";
   return r < SUCCESS_RATE + (1 - SUCCESS_RATE) / 2 ? "FAILED" : "UNKNOWN";
@@ -78,13 +82,21 @@ export const vehicleSimulator = {
   },
 
   /**
-   * UC05 bước 6: đọc vị trí xe do thiết bị báo (Hub, vị trí đỗ). Bản giả lập trả vị trí đang lưu của xe;
-   * xe chưa đỗ ở vị trí nào thì trả undefined.
+   * UC05 bước 6: đọc vị trí xe do thiết bị báo (Hub, vị trí đỗ). Xe đang đỗ thì trả vị trí đang lưu.
+   * Xe đang trong lượt trả (Trip RETURN_IN_PROGRESS): giả lập sinh viên đã đưa xe vào đúng vị trí được chỉ định.
    */
   readVehiclePosition(vehicleId: string): VehiclePosition | undefined {
     const v = db.select().from(sharedVehicles).where(eq(sharedVehicles.id, vehicleId)).get();
-    if (!v || !v.hubId || !v.slotId) return undefined;
-    return { hubId: v.hubId, slotId: v.slotId, reportedAt: new Date() };
+    if (!v) return undefined;
+    if (v.hubId && v.slotId) return { hubId: v.hubId, slotId: v.slotId, reportedAt: new Date() };
+    const trip = db
+      .select()
+      .from(trips)
+      .where(and(eq(trips.vehicleId, vehicleId), eq(trips.status, "RETURN_IN_PROGRESS")))
+      .orderBy(desc(trips.startedAt))
+      .get();
+    if (!trip?.returnHubId || !trip.returnSlotId) return undefined;
+    return { hubId: trip.returnHubId, slotId: trip.returnSlotId, reportedAt: new Date() };
   },
 
   /** UC05 bước 7: gửi lệnh khóa xe khi trả; kèm mức pin và tình trạng kỹ thuật thiết bị báo về. Gọi NGOÀI transaction. */
@@ -93,6 +105,12 @@ export const vehicleSimulator = {
     const status = randomResult();
     const v = db.select().from(sharedVehicles).where(eq(sharedVehicles.id, vehicleId)).get();
     const techStatus: VehicleTechStatus = status === "SUCCESS" ? "OK" : "UNKNOWN";
+    // Pin xe sau chuyến đi: giảm nhẹ so với lúc nhận (giả lập)
+    if (status === "SUCCESS" && v) {
+      const battery = Math.max(0, v.batteryLevel - randomInt(3, 10));
+      db.update(sharedVehicles).set({ batteryLevel: battery }).where(eq(sharedVehicles.id, vehicleId)).run();
+      v.batteryLevel = battery;
+    }
     console.log(`[simulator] sendLockCommand(${vehicleId}) → ${status}`);
     return { status, batteryLevel: status === "SUCCESS" ? v?.batteryLevel : undefined, techStatus };
   },

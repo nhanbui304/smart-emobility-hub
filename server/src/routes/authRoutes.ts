@@ -10,4 +10,5 @@ authRoutes.post("/register", validateBody(registerSchema), authController.regist
 authRoutes.post("/login", validateBody(loginSchema), authController.login);
 authRoutes.post("/logout", authController.logout);
 authRoutes.get("/me", requireAuth, authController.me);
+authRoutes.get("/me/vehicles", requireAuth, authController.myVehicles); // thêm ngoài sơ đồ
 authRoutes.patch("/me/theme", requireAuth, validateBody(themeSchema), authController.updateTheme);

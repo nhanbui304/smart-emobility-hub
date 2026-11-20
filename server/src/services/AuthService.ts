@@ -1,7 +1,7 @@
 // Owner: Bùi Quang Nhân – Register Student Account, Sign In, Sign Out, Customize Interface Mode
 import bcrypt from "bcryptjs";
 import type { ThemePreference } from "../constants";
-import type { User } from "../db/schema";
+import type { PrivateVehicle, User } from "../db/schema";
 import { AppError } from "../lib/errors";
 import { userRepository } from "../repositories/UserRepository";
 import type { AuthUser } from "../types/dto";
@@ -48,6 +48,11 @@ export const authService = {
     const user = userRepository.findById(userId);
     if (!user) throw new AppError("UNAUTHORIZED", "Phiên đăng nhập không còn hợp lệ.");
     return toAuthUser(user);
+  },
+
+  /** Thêm ngoài sơ đồ: xe cá nhân của người dùng đang đăng nhập. */
+  getMyVehicles(userId: string): PrivateVehicle[] {
+    return userRepository.findPrivateVehicles(userId);
   },
 
   /** Customize Interface Mode: lưu lựa chọn sáng/tối/theo hệ thống. */
