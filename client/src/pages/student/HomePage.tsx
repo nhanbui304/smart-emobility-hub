@@ -32,10 +32,19 @@ const VEHICLE_TYPE_LABELS: Record<VehicleType, string> = {
   E_MOTORBIKE: "Xe máy điện",
 };
 
+function generateClientUuid(): string {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6]! & 0x0f) | 0x40;
+  b[8] = (b[8]! & 0x3f) | 0x80;
+  const hex = Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 export function HomePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const sessionIdRef = useRef<string>(crypto.randomUUID());
+  const sessionIdRef = useRef<string>(generateClientUuid());
   const { data: hubs, loading, error, reload } = useAsync(() => hubApi.list(), [], { refreshEveryMs: 3000 });
 
   const [purpose, setPurpose] = useState<(typeof PURPOSES)[number]["value"]>("RENT_VEHICLE");
@@ -202,7 +211,10 @@ export function HomePage() {
               min={0}
               max={100}
               value={minBattery}
-              onChange={(e) => setMinBattery(Number(e.target.value))}
+              onChange={(e) => {
+                const parsed = Number.parseInt(e.target.value, 10);
+                setMinBattery(Number.isNaN(parsed) ? 0 : Math.min(100, Math.max(0, parsed)));
+              }}
               className="mt-1 w-full rounded-xl bg-white/10 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-lime"
             />
           </div>
@@ -277,7 +289,13 @@ export function HomePage() {
                       <StatusBadge status={opt.vehicle.status} />
                     </div>
                     <div className="mt-3 flex items-center justify-between">
-                      <span className="text-xs font-medium">Pin hiện tại: {opt.vehicle.batteryLevel}%</span>
+                      <span className="text-xs font-medium">
+                        {opt.optionId.startsWith("park:")
+                          ? "Vị trí đỗ sẵn sàng"
+                          : opt.optionId.startsWith("charge:")
+                            ? "Cổng sạc sẵn sàng"
+                            : `Pin hiện tại: ${opt.vehicle.batteryLevel}%`}
+                      </span>
                       <Button
                         className="px-3 py-1.5 text-xs"
                         loading={confirmingOptionId === opt.optionId}

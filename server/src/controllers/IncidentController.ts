@@ -7,6 +7,7 @@ import { INCIDENT_IMPACTS } from "../constants";
 import { sendOk } from "../lib/response";
 import { requestIdField } from "../lib/schemas";
 import { parseOrThrow } from "../middleware/validate";
+import { listIncidentsAndResources } from "../repositories/operational/incidentOps";
 import { incidentService } from "../services/IncidentService";
 
 export const submitIncidentBody = z.object({
@@ -26,6 +27,11 @@ export const submitResolutionResultBody = z.object({
 });
 
 export const incidentController = {
+  /** GET /api/incidents (hỗ trợ UI Operator lấy danh sách sự cố và tài nguyên của các Hub) */
+  async listOverview(_req: Request, res: Response): Promise<void> {
+    sendOk(res, listIncidentsAndResources());
+  },
+
   /** GET /api/incidents/resources/:resourceId */
   async openIncidentManagement(req: Request, res: Response): Promise<void> {
     const { resourceId } = parseOrThrow(z.object({ resourceId: z.string().min(1) }), req.params);

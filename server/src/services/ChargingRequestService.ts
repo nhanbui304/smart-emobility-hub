@@ -1,8 +1,14 @@
 // Owner: Ngô Minh Triết – UC07 Submit Charging Request, Cancel Charging Request
-// Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
+// Chữ ký method khớp class diagram Submission #3 (docs/mtriet-submission3/Draw-io/UC07.drawio). Đổi chữ ký thì sửa cả sơ đồ.
 import type { ChargingRequest } from "../db/schema";
-import type { CancelChargingResult, ChargingNeed, ChargingProposal, ChargingRequestResult } from "../types/dto";
-import { notImplemented } from "../lib/errors";
+import { AppError } from "../lib/errors";
+import { operationalRepository } from "../repositories/OperationalRepository";
+import type {
+  CancelChargingResult,
+  ChargingNeed,
+  ChargingProposal,
+  ChargingRequestResult,
+} from "../types/dto";
 
 export const chargingRequestService = {
   async prepareChargingRequest(
@@ -11,7 +17,33 @@ export const chargingRequestService = {
     vehicleId: string,
     chargingNeed: ChargingNeed,
   ): Promise<ChargingProposal> {
-    throw notImplemented("ChargingRequestService.prepareChargingRequest");
+    if (!validateChargingNeed(chargingNeed)) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Nhu cầu sạc không hợp lệ (mức pin mục tiêu phải lớn hơn mức pin hiện tại và nằm trong 0–100%).",
+      );
+    }
+
+    if (!operationalRepository.findVehicleChargingRight(studentId, vehicleId)) {
+      throw new AppError("FORBIDDEN", "Bạn không có quyền gửi yêu cầu sạc cho phương tiện này.");
+    }
+
+    if (!operationalRepository.checkVehicleAtHubAndCompatible(hubId, vehicleId)) {
+      throw new AppError(
+        "CONFLICT",
+        "Hub đã chọn không có cổng sạc hoạt động tương thích với đầu cắm của phương tiện.",
+      );
+    }
+
+    const conflicts = operationalRepository.findConflictingChargingRecords(studentId, vehicleId);
+    if (conflicts.length > 0) {
+      throw new AppError(
+        "CONFLICT",
+        "Phương tiện này hiện đã có yêu cầu sạc đang chờ hoặc đang được phân bổ.",
+      );
+    }
+
+    return operationalRepository.evaluateChargingAllocation(hubId, vehicleId, chargingNeed, new Date());
   },
 
   /** UC07: gửi yêu cầu sạc ngay tại Hub; được phân cổng hoặc vào hàng đợi. */
@@ -22,7 +54,21 @@ export const chargingRequestService = {
     vehicleId: string,
     chargingNeed: ChargingNeed,
   ): Promise<ChargingRequestResult> {
-    throw notImplemented("ChargingRequestService.submitChargingRequest");
+    if (!validateChargingNeed(chargingNeed)) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Nhu cầu sạc không hợp lệ (mức pin mục tiêu phải lớn hơn mức pin hiện tại và nằm trong 0–100%).",
+      );
+    }
+
+    return operationalRepository.atomicSubmitChargingRequest(
+      requestId,
+      studentId,
+      hubId,
+      vehicleId,
+      chargingNeed,
+      new Date(),
+    );
   },
 
   /** Cancel Charging Request: hủy yêu cầu chưa bắt đầu sạc. */
@@ -31,18 +77,43 @@ export const chargingRequestService = {
     studentId: string,
     chargingRequestId: string,
   ): Promise<CancelChargingResult> {
-    throw notImplemented("ChargingRequestService.cancelChargingRequest");
+    const existing = operationalRepository.findChargingRequest(chargingRequestId);
+    if (!existing) {
+      throw new AppError("NOT_FOUND", "Không tìm thấy yêu cầu sạc.");
+    }
+    if (existing.studentId !== studentId) {
+      throw new AppError("FORBIDDEN", "Bạn không có quyền hủy yêu cầu sạc của sinh viên khác.");
+    }
+    if (existing.status !== "CANCELLED" && !checkCancellationAllowed(existing)) {
+      throw new AppError(
+        "CONFLICT",
+        "Yêu cầu sạc đã bắt đầu sạc, đã hoàn tất hoặc đã hết hạn nên không thể hủy.",
+      );
+    }
+
+    return operationalRepository.atomicCancelChargingRequest(
+      requestId,
+      studentId,
+      chargingRequestId,
+      new Date(),
+    );
   },
 };
 
-// ---------- Bước nội bộ (method private "–" trong class diagram) ----------
+// ---------- Bước nội bộ (method private "–" trong class diagram UC07.drawio) ----------
 
-/** private (–) trong class diagram. */
+/** private (–) trong class diagram: kiểm tra tính hợp lệ của mức pin hiện tại và mức pin mục tiêu. */
 function validateChargingNeed(chargingNeed: ChargingNeed): boolean {
-  throw notImplemented("ChargingRequestService.validateChargingNeed");
+  return (
+    Number.isInteger(chargingNeed.currentBattery) &&
+    Number.isInteger(chargingNeed.targetBattery) &&
+    chargingNeed.currentBattery >= 0 &&
+    chargingNeed.targetBattery <= 100 &&
+    chargingNeed.targetBattery > chargingNeed.currentBattery
+  );
 }
 
-/** private (–) trong class diagram. */
+/** private (–) trong class diagram: chỉ cho hủy khi yêu cầu còn ở trạng thái WAITING hoặc ALLOCATED. */
 function checkCancellationAllowed(request: ChargingRequest): boolean {
-  throw notImplemented("ChargingRequestService.checkCancellationAllowed");
+  return request.status === "WAITING" || request.status === "ALLOCATED";
 }

@@ -7,6 +7,7 @@ import { sendOk } from "../lib/response";
 import { chargingNeedSchema, requestIdField } from "../lib/schemas";
 import { currentUser } from "../middleware/auth";
 import { parseOrThrow } from "../middleware/validate";
+import { getStudentChargingContext } from "../repositories/operational/chargingRequestOps";
 import { chargingRequestService } from "../services/ChargingRequestService";
 
 export const prepareChargingRequestBody = z.object({
@@ -23,6 +24,12 @@ export const submitChargingRequestBody = z.object({
 export const cancelChargingRequestBody = z.object({ requestId: requestIdField });
 
 export const chargingRequestController = {
+  /** GET /api/charging-requests/my-context (hỗ trợ UI lấy danh sách xe cá nhân & yêu cầu sạc của sinh viên) */
+  async getMyContext(req: Request, res: Response): Promise<void> {
+    const user = currentUser(req);
+    sendOk(res, getStudentChargingContext(user.id));
+  },
+
   /** POST /api/charging-requests/prepare */
   async prepareChargingRequest(req: Request, res: Response): Promise<void> {
     const user = currentUser(req);

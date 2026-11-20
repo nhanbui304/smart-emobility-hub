@@ -1,10 +1,13 @@
 // Owner: Ngô Minh Triết – UC07 Submit Charging Request, Cancel Charging Request
 // Gọi API của ChargingRequestController. Tên hàm và tham số khớp class diagram Submission #3.
 // requestId: sinh bằng crypto.randomUUID() MỘT lần cho mỗi lần bấm xác nhận; thử lại thì gửi lại cùng mã.
-import type { CancelChargingResult, ChargingNeed, ChargingProposal, ChargingRequestResult } from "../types";
+import type { CancelChargingResult, ChargingNeed, ChargingProposal, ChargingRequest, ChargingRequestResult, PrivateVehicle } from "../types";
 import { api } from "./client";
 
 export const chargingRequestApi = {
+  /** GET /api/charging-requests/my-context */
+  getMyContext: () =>
+    api.get<{ vehicles: PrivateVehicle[]; requests: ChargingRequest[] }>("/charging-requests/my-context"),
   /** POST /api/charging-requests/prepare */
   prepareChargingRequest: (hubId: string, vehicleId: string, chargingNeed: ChargingNeed) =>
     api.post<ChargingProposal>("/charging-requests/prepare", { hubId, vehicleId, chargingNeed }),
