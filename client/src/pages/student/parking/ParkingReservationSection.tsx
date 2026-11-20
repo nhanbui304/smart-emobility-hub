@@ -1,6 +1,6 @@
 // Owner: Bùi Quang Nhân – UC06 Reserve Parking Space, Cancel Parking Reservation, mục 2.3.1
 // Chọn Hub, xe, khung giờ → xem vị trí trống → giữ tạm (đếm ngược) → xác nhận đặt chỗ / bỏ giữ → hủy đặt chỗ.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { authApi } from "../../../api/auth";
 import { ApiError } from "../../../api/client";
 import { hubApi } from "../../../api/hubs";
@@ -57,10 +57,34 @@ export function ParkingReservationSection() {
     if (!vehicleId && vehicles.data?.[0]) setVehicleId(vehicles.data[0].id);
   }, [vehicles.data, vehicleId]);
 
-  const timeRange = () => ({
-    startTime: new Date(`${date}T${startTime}`).toISOString(),
-    endTime: new Date(`${date}T${endTime}`).toISOString(),
-  });
+  const pendingReq = useRef<Record<string, string>>({});
+
+  /** Giữ nguyên requestId khi gặp NETWORK_ERROR để bấm thử lại không gửi trùng thao tác. */
+  async function withRequestId<T>(key: string, fn: (requestId: string) => Promise<T>): Promise<T> {
+    const requestId = (pendingReq.current[key] ??= newRequestId());
+    try {
+      const res = await fn(requestId);
+      delete pendingReq.current[key];
+      return res;
+    } catch (err) {
+      if (!(err instanceof ApiError && err.code === "NETWORK_ERROR")) {
+        delete pendingReq.current[key];
+      }
+      throw err;
+    }
+  }
+
+  const timeRange = () => {
+    if (!date || !startTime || !endTime) {
+      throw new Error("Vui lòng chọn đầy đủ ngày, giờ bắt đầu và giờ kết thúc.");
+    }
+    const start = new Date(`${date}T${startTime}`);
+    const end = new Date(`${date}T${endTime}`);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      throw new Error("Ngày hoặc giờ không hợp lệ.");
+    }
+    return { startTime: start.toISOString(), endTime: end.toISOString() };
+  };
 
   function rememberCodes(list: ParkingSlot[]) {
     setSlotCodes((prev) => ({ ...prev, ...Object.fromEntries(list.map((s) => [s.id, s.code])) }));
@@ -93,8 +117,11 @@ export function ParkingReservationSection() {
   const hold = () =>
     run("hold", async () => {
       if (!selectedSlotId) return;
+      const range = timeRange();
       try {
-        await parkingApi.holdSlot(newRequestId(), selectedSlotId, vehicleId, timeRange());
+        await withRequestId(`hold:${selectedSlotId}:${vehicleId}:${range.startTime}:${range.endTime}`, (reqId) =>
+          parkingApi.holdSlot(reqId, selectedSlotId, vehicleId, range),
+        );
         setSlots(null);
         await activeHold.reload();
       } catch (err) {
@@ -113,7 +140,10 @@ export function ParkingReservationSection() {
   const confirm = (current: ActiveHold) =>
     run("confirm", async () => {
       try {
-        setBooking(await parkingApi.confirmReservation(newRequestId(), current.hold.id));
+        const confirmed = await withRequestId(`confirm:${current.hold.id}`, (reqId) =>
+          parkingApi.confirmReservation(reqId, current.hold.id),
+        );
+        setBooking(confirmed);
       } finally {
         await activeHold.reload();
       }
@@ -121,7 +151,7 @@ export function ParkingReservationSection() {
 
   const releaseHold = (current: ActiveHold) =>
     run("release", async () => {
-      await parkingApi.cancelHold(newRequestId(), current.hold.id);
+      await withRequestId(`release:${current.hold.id}`, (reqId) => parkingApi.cancelHold(reqId, current.hold.id));
       setNotice("Đã bỏ lượt giữ chỗ.");
       await activeHold.reload();
     });

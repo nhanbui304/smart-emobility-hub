@@ -75,7 +75,14 @@ export const returnService = {
       throw new AppError("NOT_FOUND", "Không tìm thấy chuyến đi của bạn.");
     }
     // Ext 6b, 2b: gửi lặp hoặc đã trả xong → trả lại kết quả đã ghi, không gửi lệnh khóa lần nữa
-    if (operationalRepository.findProcessedRequest(requestId) || trip.status === "ENDED") return resultOf(trip, "SUCCESS");
+    const done = operationalRepository.findProcessedRequest(requestId);
+    if (done) {
+      if (done.actorId !== studentId || done.operation !== "CONFIRM_RETURN" || done.resultId !== tripId) {
+        throw new AppError("CONFLICT", "Mã yêu cầu đã được dùng cho thao tác khác, vui lòng thử lại.");
+      }
+      return resultOf(trip, "SUCCESS");
+    }
+    if (trip.status === "ENDED") return resultOf(trip, "SUCCESS");
     if (trip.status === "PENDING_RECONCILIATION") return resultOf(trip, "UNKNOWN");
 
     const handover = operationalRepository.findReturnHandoverContext(tripId, studentId);
@@ -154,7 +161,8 @@ export const returnService = {
     }
     const handover = operationalRepository.findReturnHandoverContext(tripId, studentId);
     if (!handover) {
-      if (operationalRepository.findProcessedRequest(requestId)) return trip;
+      const done = operationalRepository.findProcessedRequest(requestId);
+      if (done && done.actorId === studentId && done.operation === "ABANDON_RETURN") return trip;
       throw new AppError("CONFLICT", "Không có lượt trả xe đang thực hiện.");
     }
     db.transaction(() => operationalRepository.releaseNewReturnAllocation(requestId, handover.allocationId));

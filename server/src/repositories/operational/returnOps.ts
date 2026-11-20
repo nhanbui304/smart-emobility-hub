@@ -162,16 +162,18 @@ export const returnOps = {
 
   /** UC05 Ext 7b – chưa rõ kết quả khóa: Trip chờ đối soát, xe chờ xác minh; xe và chỗ không được cấp lại. */
   markPendingVerification(tripId: string, vehicleId: string, slotId: string): Trip {
-    db.update(sharedVehicles)
-      .set({ status: "PENDING_VERIFICATION", lastUpdatedAt: new Date() })
-      .where(eq(sharedVehicles.id, vehicleId))
-      .run();
-    return db
-      .update(trips)
-      .set({ status: "PENDING_RECONCILIATION", returnSlotId: slotId })
-      .where(eq(trips.id, tripId))
-      .returning()
-      .get()!;
+    return db.transaction(() => {
+      db.update(sharedVehicles)
+        .set({ status: "PENDING_VERIFICATION", lastUpdatedAt: new Date() })
+        .where(eq(sharedVehicles.id, vehicleId))
+        .run();
+      return db
+        .update(trips)
+        .set({ status: "PENDING_RECONCILIATION", returnSlotId: slotId })
+        .where(eq(trips.id, tripId))
+        .returning()
+        .get()!;
+    });
   },
 
   /**
@@ -218,16 +220,18 @@ export const returnOps = {
    * Trip chờ đối soát, xe ở vị trí và chờ xác minh – không cấp cho người khác.
    */
   saveHandoverForReconciliation(tripId: string, vehicleId: string, slotId: string, lockResult: LockResult): Trip {
-    db.update(sharedVehicles)
-      .set({ status: "PENDING_VERIFICATION", batteryLevel: lockResult.batteryLevel, lastUpdatedAt: new Date() })
-      .where(eq(sharedVehicles.id, vehicleId))
-      .run();
-    return db
-      .update(trips)
-      .set({ status: "PENDING_RECONCILIATION", returnSlotId: slotId })
-      .where(eq(trips.id, tripId))
-      .returning()
-      .get()!;
+    return db.transaction(() => {
+      db.update(sharedVehicles)
+        .set({ status: "PENDING_VERIFICATION", batteryLevel: lockResult.batteryLevel, lastUpdatedAt: new Date() })
+        .where(eq(sharedVehicles.id, vehicleId))
+        .run();
+      return db
+        .update(trips)
+        .set({ status: "PENDING_RECONCILIATION", returnSlotId: slotId })
+        .where(eq(trips.id, tripId))
+        .returning()
+        .get()!;
+    });
   },
 
   /**

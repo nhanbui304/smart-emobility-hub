@@ -1,6 +1,6 @@
 // Owner: Bùi Quang Nhân – UC05 Return Shared Vehicle
 // Chuyến đi hiện tại → chọn Hub trả → nhận vị trí đỗ → đỗ xe, xác nhận (khóa xe) → kết quả; hoặc dừng trả xe.
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ApiError } from "../../../api/client";
 import { hubApi } from "../../../api/hubs";
 import { newRequestId } from "../../../api/requestId";
@@ -42,12 +42,31 @@ export function ReturnVehicleSection() {
     }
   }
 
+  const pendingReq = useRef<Record<string, string>>({});
+
+  /** Giữ nguyên requestId khi gặp NETWORK_ERROR để bấm thử lại không gửi trùng thao tác. */
+  async function withRequestId<T>(key: string, fn: (requestId: string) => Promise<T>): Promise<T> {
+    const requestId = (pendingReq.current[key] ??= newRequestId());
+    try {
+      const res = await fn(requestId);
+      delete pendingReq.current[key];
+      return res;
+    } catch (err) {
+      if (!(err instanceof ApiError && err.code === "NETWORK_ERROR")) {
+        delete pendingReq.current[key];
+      }
+      throw err;
+    }
+  }
+
   const prepare = (info: CurrentTripInfo, targetHubId: string) =>
     run("prepare", async () => {
       setAlternatives([]);
       setResult(null);
       try {
-        await returnApi.prepareReturn(newRequestId(), info.trip.id, targetHubId);
+        await withRequestId(`prepare:${info.trip.id}:${targetHubId}`, (reqId) =>
+          returnApi.prepareReturn(reqId, info.trip.id, targetHubId),
+        );
       } catch (err) {
         // Ext 3a: Hub hết chỗ → gợi ý Hub khác
         const details = err instanceof ApiError ? (err.details as { alternativeHubs?: AlternativeHub[] }) : undefined;
@@ -58,12 +77,16 @@ export function ReturnVehicleSection() {
 
   const confirm = (info: CurrentTripInfo) =>
     run("confirm", async () => {
-      setResult(await returnApi.confirmReturn(newRequestId(), info.trip.id));
+      const res = await withRequestId(`confirm:${info.trip.id}`, (reqId) =>
+        returnApi.confirmReturn(reqId, info.trip.id),
+      );
+      setResult(res);
     });
 
   const abandon = (info: CurrentTripInfo) =>
     run("abandon", async () => {
-      await returnApi.abandonReturn(newRequestId(), info.trip.id);
+      await withRequestId(`abandon:${info.trip.id}`, (reqId) => returnApi.abandonReturn(reqId, info.trip.id));
+      setResult(null);
     });
 
   const info = current.data ?? null;
