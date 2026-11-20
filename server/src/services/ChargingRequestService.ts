@@ -1,8 +1,13 @@
 // Owner: Ngô Minh Triết – UC07 Submit Charging Request, Cancel Charging Request
 // Chữ ký method khớp class diagram Submission #3 (docs/mtriet-submission3/Draw-io/UC07.drawio). Đổi chữ ký thì sửa cả sơ đồ.
-import type { ChargingRequest } from "../db/schema";
+import type { ChargingRequest, PrivateVehicle } from "../db/schema";
 import { AppError } from "../lib/errors";
 import { operationalRepository } from "../repositories/OperationalRepository";
+import {
+  getStudentChargingContext,
+  hasConflictingActiveChargingReservation,
+  recordPreparedChargingProposal,
+} from "../repositories/operational/chargingRequestOps";
 import type {
   CancelChargingResult,
   ChargingNeed,
@@ -11,6 +16,11 @@ import type {
 } from "../types/dto";
 
 export const chargingRequestService = {
+  /** Hỗ trợ UI lấy danh sách xe cá nhân & yêu cầu sạc của sinh viên đang đăng nhập (đi qua Service đúng phân tầng). */
+  async getMyContext(studentId: string): Promise<{ vehicles: PrivateVehicle[]; requests: ChargingRequest[] }> {
+    return getStudentChargingContext(studentId);
+  },
+
   async prepareChargingRequest(
     studentId: string,
     hubId: string,
@@ -35,15 +45,18 @@ export const chargingRequestService = {
       );
     }
 
+    const now = new Date();
     const conflicts = operationalRepository.findConflictingChargingRecords(studentId, vehicleId);
-    if (conflicts.length > 0) {
+    if (conflicts.length > 0 || hasConflictingActiveChargingReservation(vehicleId, now)) {
       throw new AppError(
         "CONFLICT",
-        "Phương tiện này hiện đã có yêu cầu sạc đang chờ hoặc đang được phân bổ.",
+        "Phương tiện này hiện đã có yêu cầu sạc hoặc lịch sạc xung đột đang hiệu lực.",
       );
     }
 
-    return operationalRepository.evaluateChargingAllocation(hubId, vehicleId, chargingNeed, new Date());
+    const proposal = operationalRepository.evaluateChargingAllocation(hubId, vehicleId, chargingNeed, now);
+    recordPreparedChargingProposal(studentId, hubId, vehicleId, proposal, now);
+    return proposal;
   },
 
   /** UC07: gửi yêu cầu sạc ngay tại Hub; được phân cổng hoặc vào hàng đợi. */

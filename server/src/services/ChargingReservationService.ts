@@ -8,6 +8,7 @@ import {
   findAlternativeHubSuggestions,
   findProcessedReservationCreateResult,
   getStoredSlotOptionEntry,
+  hasConflictingImmediateChargingRequest,
 } from "../repositories/operational/chargingReservationOps";
 import type { CancellationCheck, CancellationResult, ChargingNeed, ChargingSlotOption, CreateResult, RescheduleForm, ReservationDetail, SlotQueryResult, UpdatedReservation } from "../types/dto";
 
@@ -95,20 +96,20 @@ export const chargingReservationService = {
       );
     }
 
+    const now = new Date();
     const conflicts = operationalRepository.findConflictingRequestsOrSchedules(
       studentId,
       vehicleId,
       date,
       timeRange,
     );
-    if (conflicts.length > 0) {
+    if (conflicts.length > 0 || hasConflictingImmediateChargingRequest(vehicleId, timeRange, now)) {
       throw new AppError(
         "CONFLICT",
-        "Xe của bạn đã có một lịch sạc khác trùng khung giờ này. Vui lòng chọn khung giờ khác.",
+        "Xe của bạn đã có yêu cầu sạc hoặc lịch sạc khác trùng khung giờ này. Vui lòng chọn khung giờ khác.",
       );
     }
 
-    const now = new Date();
     const result = operationalRepository.queryAvailableChargingSlots(
       hubId,
       vehicleId,

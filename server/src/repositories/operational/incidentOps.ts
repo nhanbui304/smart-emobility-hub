@@ -7,6 +7,7 @@ import {
   chargingPorts,
   chargingRequests,
   chargingReservations,
+  chargingSessions,
   hubs,
   incidents,
   parkingAllocations,
@@ -114,6 +115,40 @@ function resolveResource(resourceId: string): ResolvedResource | undefined {
   }
 
   return undefined;
+}
+
+/**
+ * UC11 Ext 5a (BTL1 tr. 39): Kiểm tra tài nguyên có đang được sử dụng thực tế không
+ * (xe đang trong chuyến đi IN_USE, cổng đang có phiên sạc ACTIVE/IN_USE, vị trí đỗ đang IN_USE).
+ */
+function isResourceCurrentlyInUse(resource: ResolvedResource): boolean {
+  if (resource.resourceType === "SHARED_VEHICLE") {
+    if (resource.status === "IN_USE") return true;
+    const activeTrip = db
+      .select({ id: trips.id })
+      .from(trips)
+      .where(and(eq(trips.vehicleId, resource.id), inArray(trips.status, ["ACTIVE", "RETURN_IN_PROGRESS"])))
+      .get();
+    return Boolean(activeTrip);
+  }
+  if (resource.resourceType === "CHARGING_PORT") {
+    if (resource.status === "IN_USE") return true;
+    const activeSession = db
+      .select({ id: chargingSessions.id })
+      .from(chargingSessions)
+      .where(and(eq(chargingSessions.portId, resource.id), eq(chargingSessions.status, "ACTIVE")))
+      .get();
+    return Boolean(activeSession);
+  }
+  if (resource.resourceType === "PARKING_SLOT") {
+    const activeParking = db
+      .select({ id: parkingAllocations.id })
+      .from(parkingAllocations)
+      .where(and(eq(parkingAllocations.slotId, resource.id), eq(parkingAllocations.status, "IN_USE")))
+      .get();
+    return Boolean(activeParking);
+  }
+  return false;
 }
 
 function setResourceRestrictedStatus(resourceType: ResourceType, resourceId: string, now: Date): void {
@@ -289,6 +324,7 @@ export const incidentOps = {
 
       const now = new Date();
       const operatorId = getOperatorActorId();
+      const currentlyInUse = isResourceCurrentlyInUse(resource);
 
       const inserted = db
         .insert(incidents)
@@ -300,7 +336,8 @@ export const incidentOps = {
           affectedScope: affectedScope.trim(),
           status: "OPEN",
           reportedBy: operatorId,
-          priorityHandling: impactLevel === "HIGH",
+          // UC11 Ext 5a: tài nguyên đang được sử dụng → đánh dấu ưu tiên xử lý
+          priorityHandling: impactLevel === "HIGH" || currentlyInUse,
           notificationPending: false,
           version: 1,
           createdAt: now,
@@ -309,8 +346,12 @@ export const incidentOps = {
         .returning()
         .get()!;
 
-      // Hạn chế cấp mới ngay lập tức (đồng bộ UC09, UC10, UC13)
-      setResourceRestrictedStatus(resource.resourceType, resource.id, now);
+      // UC11 bước 4 & Ext 5a: chặn phân bổ mới qua bản ghi incidents mở;
+      // chỉ chuyển status tài nguyên sang OUT_OF_SERVICE / UNDER_MAINTENANCE khi chưa đang IN_USE
+      // (không coi việc chặn phân bổ mới là đã dừng sử dụng hoặc giải phóng chỗ đỗ).
+      if (!currentlyInUse) {
+        setResourceRestrictedStatus(resource.resourceType, resource.id, now);
+      }
 
       db.insert(processedRequests)
         .values({
@@ -324,7 +365,9 @@ export const incidentOps = {
 
       return {
         success: true,
-        message: `Đã ghi nhận sự cố cho ${resource.label} và hạn chế phân bổ mới.`,
+        message: currentlyInUse
+          ? `Đã ghi nhận sự cố ưu tiên cho ${resource.label} (đang được sử dụng) và chặn phân bổ mới.`
+          : `Đã ghi nhận sự cố cho ${resource.label} và hạn chế phân bổ mới.`,
         incidentId: inserted.id,
       };
     });
@@ -702,7 +745,10 @@ export const incidentOps = {
         .returning()
         .get()!;
 
-      restoreResourceOperationalStatus(current.resourceType, current.resourceId, now);
+      const resource = resolveResource(current.resourceId);
+      if (!resource || !isResourceCurrentlyInUse(resource)) {
+        restoreResourceOperationalStatus(current.resourceType, current.resourceId, now);
+      }
 
       db.insert(processedRequests)
         .values({

@@ -2,8 +2,13 @@
 // Chữ ký method khớp class diagram Submission #3 (docs/mtriet-submission3/Draw-io/UC11.drawio). Đổi chữ ký thì sửa cả sơ đồ.
 import { systemConfig } from "../config/systemConfig";
 import { INCIDENT_IMPACTS, type IncidentImpact } from "../constants";
+import type { Incident } from "../db/schema";
 import { AppError } from "../lib/errors";
 import { operationalRepository } from "../repositories/OperationalRepository";
+import {
+  listIncidentsAndResources,
+  type IncidentResourceOption,
+} from "../repositories/operational/incidentOps";
 import type {
   ConsentPlan,
   HandlingPlan,
@@ -16,6 +21,11 @@ import type {
 import { notificationService } from "./NotificationService";
 
 export const incidentService = {
+  /** Hỗ trợ UI Operator tải danh sách sự cố và tài nguyên của các Hub (đi qua Service đúng phân tầng). */
+  async listOverview(): Promise<{ incidents: Incident[]; resources: IncidentResourceOption[] }> {
+    return listIncidentsAndResources();
+  },
+
   async getIncidentContext(resourceId: string): Promise<IncidentContext> {
     if (!resourceId || !resourceId.trim()) {
       throw new AppError("VALIDATION_ERROR", "Vui lòng cung cấp mã tài nguyên hợp lệ.");
@@ -97,7 +107,7 @@ export const incidentService = {
     return result;
   },
 
-  /** UC11 bước 7: xác nhận kết quả khắc phục; đóng sự cố & khôi phục tài nguyên (hoặc giữ hạn chế nếu còn sự cố khác). */
+  /** UC11 bước 7 & Ext 8a / 9a: xác nhận kết quả khắc phục; đóng sự cố & khôi phục tài nguyên (hoặc giữ hạn chế nếu còn sự cố khác). */
   async verifyResolution(
     requestId: string,
     incidentId: string,
@@ -105,8 +115,20 @@ export const incidentService = {
   ): Promise<IncidentResult> {
     const context = operationalRepository.queryResourceAndRemainingImpacts(incidentId);
 
-    if (!evaluateResolutionEvidence(result, context)) {
+    // UC11 Ext 8a: Chưa khắc phục xong → lưu tiến độ thành công, giữ trạng thái IN_PROGRESS & giữ hạn chế
+    if (!result.isResolved) {
+      if (!result.evidence || result.evidence.trim().length === 0) {
+        throw new AppError("VALIDATION_ERROR", "Vui lòng nhập ghi chú tiến độ xử lý sự cố.");
+      }
       return operationalRepository.saveIncidentProgress(requestId, incidentId, result);
+    }
+
+    // UC11 Ext 9a: Operator yêu cầu đóng sự cố (isResolved = true) nhưng chưa đủ căn cứ xác nhận khắc phục
+    if (!evaluateResolutionEvidence(result, context)) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Chưa đủ căn cứ xác nhận khắc phục. Vui lòng bổ sung kết quả kiểm tra kỹ thuật chi tiết trước khi đóng sự cố.",
+      );
     }
 
     const auditEntry = `Đã xác nhận khắc phục: ${result.evidence.trim()}`;
@@ -186,10 +208,10 @@ function identifyChangesToConfirmedCommitments(plan: HandlingPlan): string[] {
   return plan.allocationChanges.filter((item) => item.trim().length > 0);
 }
 
-/** private (–) trong class diagram: đánh giá bằng chứng xác minh sự cố đã khắc phục hoàn tất hay chưa. */
+/** private (–) trong class diagram: đánh giá bằng chứng xác minh sự cố đã khắc phục hoàn tất hay chưa (tối thiểu 5 ký tự). */
 function evaluateResolutionEvidence(
   result: ResolutionResult,
   _context: VerificationContext,
 ): boolean {
-  return Boolean(result.isResolved) && Boolean(result.evidence && result.evidence.trim().length > 0);
+  return Boolean(result.isResolved) && Boolean(result.evidence && result.evidence.trim().length >= 5);
 }

@@ -40,6 +40,46 @@ const processedChargingOps = new Map<
   { actorId: string; kind: "SUBMIT" | "CANCEL"; chargingRequestId: string }
 >();
 
+/**
+ * Lưu phương án mới nhất đã hiển thị cho sinh viên ở bước prepareChargingRequest (UC07 bước 5–6)
+ * để phát hiện nhánh Ext 7a: nếu trước đó báo cấp cổng ngay mà lúc xác nhận đã hết cổng thì
+ * không tự đổi sang hàng chờ khi chưa được sinh viên đồng ý lại.
+ */
+const preparedAllocationCache = new Map<string, { canAllocateNow: boolean; preparedAt: Date }>();
+
+function proposalCacheKey(studentId: string, hubId: string, vehicleId: string): string {
+  return `${studentId}:${hubId}:${vehicleId}`;
+}
+
+export function recordPreparedChargingProposal(
+  studentId: string,
+  hubId: string,
+  vehicleId: string,
+  proposal: ChargingProposal,
+  now: Date = new Date(),
+): void {
+  preparedAllocationCache.set(proposalCacheKey(studentId, hubId, vehicleId), {
+    canAllocateNow: proposal.canAllocateNow,
+    preparedAt: now,
+  });
+}
+
+/** UC07 Ext 4d: Kiểm tra phương tiện có lịch sạc (charging_reservations) đang hiệu lực trùng thời điểm hiện tại hay không. */
+export function hasConflictingActiveChargingReservation(vehicleId: string, now: Date): boolean {
+  const windowEnd = new Date(now.getTime() + IMMEDIATE_WINDOW_MINUTES * 60_000);
+  return db
+    .select()
+    .from(chargingReservations)
+    .where(
+      and(
+        eq(chargingReservations.privateVehicleId, vehicleId),
+        inArray(chargingReservations.status, [...ACTIVE_RESERVATION_STATUSES]),
+      ),
+    )
+    .all()
+    .some((r) => rangesOverlap(r.startTime, r.endTime, now, windowEnd));
+}
+
 function getClaimWindowMinutes(): number {
   const cfg = systemConfig as Record<string, number>;
   return typeof cfg.chargingAllocationClaimMinutes === "number"
@@ -374,15 +414,33 @@ export const chargingRequestOps = {
         throw new AppError("CONFLICT", "Hub không có cổng sạc hoạt động tương thích với phương tiện của bạn.");
       }
       const conflicts = this.findConflictingChargingRecords(studentId, vehicleId);
-      if (conflicts.length > 0) {
+      if (conflicts.length > 0 || hasConflictingActiveChargingReservation(vehicleId, now)) {
         throw new AppError(
           "CONFLICT",
-          "Phương tiện này hiện đã có một yêu cầu sạc đang chờ hoặc đang được phân bổ tại hệ thống.",
+          "Phương tiện này hiện đã có một yêu cầu sạc hoặc lịch sạc xung đột đang hiệu lực.",
         );
       }
 
       // 3. Đánh giá phân bổ mới nhất ngay trong transaction
       const proposal = this.evaluateChargingAllocation(hubId, vehicleId, chargingNeed, now);
+
+      // UC07 Ext 7a: Nếu lúc chuẩn bị hệ thống đề xuất cấp cổng ngay nhưng hiện tại đã hết cổng
+      // -> báo khả năng phân bổ thay đổi và yêu cầu sinh viên xác nhận lại (không tự đẩy vào hàng chờ).
+      const cacheKey = proposalCacheKey(studentId, hubId, vehicleId);
+      const prevPrepared = preparedAllocationCache.get(cacheKey);
+      const isFreshPrepared =
+        prevPrepared !== undefined &&
+        now.getTime() - prevPrepared.preparedAt.getTime() <= getClaimWindowMinutes() * 60_000;
+      if (isFreshPrepared && prevPrepared.canAllocateNow && !proposal.canAllocateNow) {
+        preparedAllocationCache.set(cacheKey, { canAllocateNow: false, preparedAt: now });
+        throw new AppError(
+          "CONFLICT",
+          "Khả năng phân bổ cổng sạc tại Hub vừa thay đổi (hiện không còn cổng trống). Vui lòng xem lại phương án hàng chờ và xác nhận lại.",
+          { reason: "ALLOCATION_CHANGED", updatedProposal: proposal },
+        );
+      }
+      preparedAllocationCache.delete(cacheKey);
+
       const status = proposal.canAllocateNow && proposal.proposedPortId ? "ALLOCATED" : "WAITING";
       const assignedPortId = status === "ALLOCATED" ? proposal.proposedPortId! : null;
       const allocationDeadline = status === "ALLOCATED" ? (proposal.allocationDeadline ?? null) : null;

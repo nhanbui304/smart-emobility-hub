@@ -7,7 +7,6 @@ import { sendOk } from "../lib/response";
 import { chargingNeedSchema, requestIdField } from "../lib/schemas";
 import { currentUser } from "../middleware/auth";
 import { parseOrThrow } from "../middleware/validate";
-import { getStudentChargingContext } from "../repositories/operational/chargingRequestOps";
 import { chargingRequestService } from "../services/ChargingRequestService";
 
 export const prepareChargingRequestBody = z.object({
@@ -27,7 +26,7 @@ export const chargingRequestController = {
   /** GET /api/charging-requests/my-context (hỗ trợ UI lấy danh sách xe cá nhân & yêu cầu sạc của sinh viên) */
   async getMyContext(req: Request, res: Response): Promise<void> {
     const user = currentUser(req);
-    sendOk(res, getStudentChargingContext(user.id));
+    sendOk(res, await chargingRequestService.getMyContext(user.id));
   },
 
   /** POST /api/charging-requests/prepare */

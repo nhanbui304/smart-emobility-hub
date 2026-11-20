@@ -5,6 +5,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { systemConfig } from "../../config/systemConfig";
 import {
   chargingPorts,
+  chargingRequests,
   chargingReservations,
   chargingSessions,
   hubs,
@@ -185,6 +186,29 @@ function isPortAvailableForWindow(
   }
 
   return true;
+}
+
+/** UC08 Ext 4d: Kiểm tra xe cá nhân có yêu cầu sạc ngay (charging_requests) đang hoạt động trùng khung giờ sát hiện tại hay không. */
+export function hasConflictingImmediateChargingRequest(
+  vehicleId: string,
+  timeRange: TimeRange,
+  now: Date,
+): boolean {
+  const immediateEnd = new Date(now.getTime() + 60 * 60_000);
+  if (!rangesOverlap(timeRange.startTime, timeRange.endTime, now, immediateEnd)) {
+    return false;
+  }
+  const activeReq = db
+    .select({ id: chargingRequests.id })
+    .from(chargingRequests)
+    .where(
+      and(
+        eq(chargingRequests.vehicleId, vehicleId),
+        inArray(chargingRequests.status, ["WAITING", "ALLOCATED", "CHARGING"]),
+      ),
+    )
+    .get();
+  return Boolean(activeReq);
 }
 
 export function getStoredSlotOptionEntry(
@@ -530,9 +554,10 @@ export const chargingReservationOps = {
 
       const restrictedIds = getRestrictedResourceIds();
       const hasVehicleConflict =
-        this.findConflictingRequestsOrSchedules(studentId, vehicleId, timeRange.startTime, timeRange).length > 0;
+        this.findConflictingRequestsOrSchedules(studentId, vehicleId, timeRange.startTime, timeRange).length > 0 ||
+        hasConflictingImmediateChargingRequest(vehicleId, timeRange, now);
       if (hasVehicleConflict) {
-        throw new AppError("CONFLICT", "Xe của bạn đã có một lịch sạc khác trùng khung giờ này.");
+        throw new AppError("CONFLICT", "Xe của bạn đã có yêu cầu sạc hoặc lịch sạc khác trùng khung giờ này.");
       }
 
       const hubSlots = db
