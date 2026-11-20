@@ -4,7 +4,8 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { sendOk } from "../lib/response";
-import { requestIdField, timeRangeSchema, versionField } from "../lib/schemas";
+import { requestIdField, timeRangeSchema } from "../lib/schemas";
+import { currentUser } from "../middleware/auth";
 import { parseOrThrow } from "../middleware/validate";
 import { smartChargingService } from "../services/SmartChargingService";
 
@@ -19,12 +20,12 @@ export const generateProposedScheduleBody = z.object({
   ruleId: z.string().min(1),
 });
 export const validatePlanBody = z.object({
-  adjustments: z.array(z.object({ demandId: z.string().min(1), portId: z.string().min(1), positionId: z.string().min(1), timeRange: timeRangeSchema, allocatedPowerKw: z.number() })),
+  adjustments: z.array(z.object({ demandId: z.string().min(1).optional(), portId: z.string().min(1), positionId: z.string().min(1), timeRange: timeRangeSchema, allocatedPowerKw: z.number() })),
 });
 export const applyChargingScheduleBody = z.object({
   requestId: requestIdField,
   planDraftId: z.string().min(1),
-  baseVersion: versionField,
+  baseVersion: z.number().int().nonnegative(),
 });
 
 export const chargingScheduleController = {
@@ -51,6 +52,6 @@ export const chargingScheduleController = {
   /** POST /api/charging-schedules/apply */
   async applyChargingSchedule(req: Request, res: Response): Promise<void> {
     const { requestId, planDraftId, baseVersion } = req.body as z.infer<typeof applyChargingScheduleBody>;
-    sendOk(res, await smartChargingService.applyChargingSchedule(requestId, planDraftId, baseVersion));
+    sendOk(res, await smartChargingService.applyChargingSchedule(requestId, planDraftId, baseVersion, currentUser(req).id));
   },
 };

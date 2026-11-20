@@ -4,8 +4,15 @@
  * chọn cho bản demo. Muốn đổi thì đổi ở đây, không viết số cứng trong service.
  */
 export const systemConfig = {
-  /** UC06: thời gian giữ tạm vị trí đỗ trước khi xác nhận (phút). */
-  parkingHoldMinutes: 30,
+  /**
+   * UC06, mục 2.3.1: thời gian giữ tạm vị trí đỗ trước khi xác nhận (phút).
+   * Kiểm thử TC-2.3.1-01 có thể đặt ngắn hơn bằng biến môi trường PARKING_HOLD_MINUTES (ví dụ 1).
+   */
+  parkingHoldMinutes: Number(process.env.PARKING_HOLD_MINUTES ?? 30),
+  /** UC06: khung giờ đặt chỗ đỗ dài tối đa (giờ). */
+  parkingMaxDurationHours: 24,
+  /** UC05: thời gian giữ vị trí cho lượt trả xe đang chờ sinh viên đưa xe vào (phút). */
+  returnAllocationMinutes: 30,
   /** UC02: hạn nhận xe sau khi đặt (phút). */
   pickupDeadlineMinutes: 30,
   /** UC02: mức pin tối thiểu để xe được hiển thị là có thể đặt (%). */
@@ -14,6 +21,8 @@ export const systemConfig = {
   pickupBatteryThreshold: 20,
   /** UC07: dưới mức này được ưu tiên trong hàng đợi sạc (%). */
   lowBatteryChargingPriority: 25,
+  /** UC07/UC13: thời gian nhận cổng sạc kể từ khi bắt đầu khung được cấp. */
+  chargingAllocationClaimMinutes: 15,
   /** UC10: cảnh báo thiếu xe khi số xe khả dụng của Hub <= ngưỡng này. */
   lowVehicleThreshold: 2,
   /** UC10: cảnh báo sắp đầy khi số chỗ trống của Hub <= ngưỡng này. */
@@ -26,6 +35,6 @@ export const systemConfig = {
   schedulerIntervalMs: 15_000,
   /** UC11/UC13: thời hạn sinh viên phản hồi đồng ý thay đổi (phút). */
   consentResponseDeadlineMinutes: 60,
-} as const;
+};
 
 export type SystemConfig = typeof systemConfig;

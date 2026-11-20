@@ -7,6 +7,7 @@ import { validateBody } from "../middleware/validate";
 export const redistributionRoutes = Router();
 redistributionRoutes.use(requireAuth, requireRole("OPERATOR"));
 
+redistributionRoutes.get("/", redistributionController.listOrders);
 redistributionRoutes.post("/options", validateBody(getRedistributionOptionsBody), redistributionController.getRedistributionOptions);
 redistributionRoutes.post("/", validateBody(createOrderBody), redistributionController.createOrder);
 redistributionRoutes.post("/:orderId/items/:vehicleId/depart", validateBody(confirmDepartureBody), redistributionController.confirmDeparture);
