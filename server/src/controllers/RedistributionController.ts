@@ -27,6 +27,11 @@ export const cancelPendingItemsBody = z.object({ requestId: requestIdField });
 export const closeOrderBody = z.object({ requestId: requestIdField });
 
 export const redistributionController = {
+  /** GET /api/redistribution-orders */
+  async listOrders(_req: Request, res: Response): Promise<void> {
+    sendOk(res, await redistributionService.listOrders());
+  },
+
   /** POST /api/redistribution-orders/options */
   async getRedistributionOptions(req: Request, res: Response): Promise<void> {
     const { sourceHubId, targetHubId, eta } = req.body as z.infer<typeof getRedistributionOptionsBody>;

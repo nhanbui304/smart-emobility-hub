@@ -4,7 +4,14 @@
 import type { RedistributionItem, RedistributionOrder, RedistributionPreview } from "../types";
 import { api } from "./client";
 
+export type RedistributionOrderView = RedistributionOrder & {
+  items: RedistributionItem[];
+  vehicleCodes: Record<string, string>;
+};
+
 export const redistributionApi = {
+  /** GET /api/redistribution-orders */
+  listOrders: () => api.get<RedistributionOrderView[]>("/redistribution-orders"),
   /** POST /api/redistribution-orders/options */
   getRedistributionOptions: (sourceHubId: string, targetHubId: string, eta: string) =>
     api.post<RedistributionPreview>("/redistribution-orders/options", { sourceHubId, targetHubId, eta }),

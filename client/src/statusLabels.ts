@@ -28,6 +28,8 @@ export const statusLabels: Record<string, string> = {
   CLOSED: "Đã đóng",
   CREATED: "Mới tạo",
   PARTIALLY_COMPLETED: "Hoàn tất một phần",
+  PENDING: "Chưa xuất phát",
+  ARRIVED: "Đã tới Hub đích",
   RUNNING: "Đang chạy",
   FAILED: "Thất bại",
   LOW_VEHICLE: "Thiếu xe",
