@@ -7,7 +7,7 @@ import { db } from "../lib/db";
 import { AppError } from "../lib/errors";
 import { hubRepository } from "../repositories/HubRepository";
 import { operationalRepository } from "../repositories/OperationalRepository";
-import { findCurrentTrip } from "../repositories/operational/returnOps";
+import { findCurrentTrip, findReturnAllocationById } from "../repositories/operational/returnOps";
 import { vehicleSimulator } from "../simulator/VehicleSimulator";
 import type {
   CurrentTripInfo,
@@ -31,6 +31,19 @@ export const returnService = {
     const trip = operationalRepository.findTripForReturn(tripId);
     if (!trip || !validateTripForReturn(trip, studentId)) {
       throw new AppError("NOT_FOUND", "Không tìm thấy chuyến đi của bạn.");
+    }
+    // Gửi lặp cùng requestId (kể cả khi lần trước đã lấy chỗ cuối của Hub) → trả lại phân bổ cũ, không báo hết chỗ
+    const done = operationalRepository.findProcessedRequest(requestId);
+    if (done) {
+      if (done.actorId !== studentId || done.operation !== "PREPARE_RETURN") {
+        throw new AppError("CONFLICT", "Mã yêu cầu đã được dùng cho thao tác khác, vui lòng thử lại.");
+      }
+      const allocation = findReturnAllocationById(done.resultId);
+      if (!allocation || allocation.vehicleRef !== trip.vehicleId) {
+        throw new AppError("CONFLICT", "Mã yêu cầu đã được dùng cho thao tác khác, vui lòng thử lại.");
+      }
+      const slotCode = hubRepository.listSlots().find((s) => s.id === allocation.slotId)?.code ?? "";
+      return { trip, allocation, slotCode };
     }
     if (trip.status === "ENDED") throw new AppError("CONFLICT", "Chuyến đi đã kết thúc, xe đã được trả.");
     if (trip.status === "PENDING_RECONCILIATION") {
@@ -77,10 +90,12 @@ export const returnService = {
     // Ext 6b, 2b: gửi lặp hoặc đã trả xong → trả lại kết quả đã ghi, không gửi lệnh khóa lần nữa
     const done = operationalRepository.findProcessedRequest(requestId);
     if (done) {
-      if (done.actorId !== studentId || done.operation !== "CONFIRM_RETURN" || done.resultId !== tripId) {
+      if (done.actorId !== studentId || done.operation !== "CONFIRM_RETURN") {
         throw new AppError("CONFLICT", "Mã yêu cầu đã được dùng cho thao tác khác, vui lòng thử lại.");
       }
-      return resultOf(trip, "SUCCESS");
+      if (done.resultId === tripId) return resultOf(trip, "SUCCESS");
+      if (done.resultId === `${tripId}:FAILED`) return resultOf(trip, "FAILED");
+      throw new AppError("CONFLICT", "Mã yêu cầu đã được dùng cho thao tác khác, vui lòng thử lại.");
     }
     if (trip.status === "ENDED") return resultOf(trip, "SUCCESS");
     if (trip.status === "PENDING_RECONCILIATION") return resultOf(trip, "UNKNOWN");

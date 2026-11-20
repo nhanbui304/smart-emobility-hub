@@ -49,7 +49,7 @@ export const parkingService = {
     if (operationalRepository.findProcessedRequest(requestId)) {
       // Gửi lặp (Ext 8d): trả lại lượt giữ đã tạo, không kiểm tra lại điều kiện
       return db.transaction(() =>
-        operationalRepository.atomicCheckAndHold(requestId, studentId, slotId, timeRange, now),
+        operationalRepository.atomicCheckAndHold(requestId, studentId, slotId, timeRange, now, vehicleId),
       );
     }
     if (!recheckReservationConditions(studentId, vehicleId, slotId, timeRange, now)) {
@@ -60,7 +60,7 @@ export const parkingService = {
     }
     const holdDeadline = computeHoldDeadline(now, timeRange.startTime);
     return db.transaction(() =>
-      operationalRepository.atomicCheckAndHold(requestId, studentId, slotId, timeRange, holdDeadline),
+      operationalRepository.atomicCheckAndHold(requestId, studentId, slotId, timeRange, holdDeadline, vehicleId),
     );
   },
 

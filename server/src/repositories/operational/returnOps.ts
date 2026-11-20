@@ -151,13 +151,18 @@ export const returnOps = {
   /**
    * UC05 Ext 7a – khóa xe FAILED: chưa xác nhận bàn giao. Trip vẫn RETURN_IN_PROGRESS,
    * xe vẫn ở vị trí (chỗ không cấp cho ai khác) và trở lại IN_USE để sinh viên thử khóa lại.
+   * Ghi requestId vào processed_requests (kết quả `${tripId}:FAILED`) để gửi lặp cùng mã không gửi lệnh khóa lần hai.
    */
   recordLockFailure(requestId: string, tripId: string): void {
-    const trip = getTrip(tripId);
-    db.update(sharedVehicles)
-      .set({ status: "IN_USE", lastUpdatedAt: new Date() })
-      .where(eq(sharedVehicles.id, trip.vehicleId))
-      .run();
+    db.transaction(() => {
+      const trip = getTrip(tripId);
+      if (previousResultId(requestId, trip.studentId, "CONFIRM_RETURN")) return;
+      db.update(sharedVehicles)
+        .set({ status: "IN_USE", lastUpdatedAt: new Date() })
+        .where(eq(sharedVehicles.id, trip.vehicleId))
+        .run();
+      recordProcessedRequest(requestId, trip.studentId, "CONFIRM_RETURN", `${tripId}:FAILED`);
+    });
   },
 
   /** UC05 Ext 7b – chưa rõ kết quả khóa: Trip chờ đối soát, xe chờ xác minh; xe và chỗ không được cấp lại. */
@@ -274,6 +279,11 @@ export function findCurrentTrip(studentId: string): Trip | undefined {
     )
     .orderBy(desc(trips.startedAt))
     .get();
+}
+
+/** Tra cứu phân bổ đỗ xe theo id (dùng để trả lại kết quả cũ khi gửi lặp prepareReturn). */
+export function findReturnAllocationById(allocationId: string): ParkingAllocation | undefined {
+  return db.select().from(parkingAllocations).where(eq(parkingAllocations.id, allocationId)).get();
 }
 
 function returnWindow(now: Date): TimeRange {

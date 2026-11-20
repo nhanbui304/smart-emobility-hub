@@ -61,7 +61,7 @@ Lý do tách: `OperationalRepository` có 51 method của 4 người; để chun
 
 Ghi chú hiện thực UC05, UC06:
 
-- `atomicCheckAndHold` trong sơ đồ không nhận `vehicleId`; code lấy xe cá nhân của sinh viên (service đã kiểm tra quyền dùng xe). Dữ liệu mẫu mỗi sinh viên có một xe.
+- `atomicCheckAndHold` trong sơ đồ có 5 tham số bắt buộc; code nhận thêm tham số tùy chọn cuối `vehicleId?: string` để lưu đúng xe đã chọn khi sinh viên có nhiều hơn một xe cá nhân.
 - Vị trí có cổng sạc dành cho UC07, UC08 nên không được dùng để đặt chỗ đỗ (UC06) hay phân bổ khi trả xe (UC05).
 - Phân bổ chỗ cho lượt trả xe có trạng thái `IN_USE` (không hết hạn theo giờ); trả xong chuyển `USED`, dừng trả xe chuyển `CANCELLED`.
 - Hàm hỗ trợ dùng chung trong `repositories/operational/common.ts`: `previousResultId`, `recordProcessedRequest` (chống gửi lặp trong transaction).

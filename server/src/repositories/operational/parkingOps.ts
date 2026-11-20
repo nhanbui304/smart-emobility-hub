@@ -55,6 +55,7 @@ export const parkingOps = {
     slotId: string,
     timeRange: TimeRange,
     holdDeadline: Date,
+    vehicleId?: string,
   ): ParkingAllocation {
     const now = new Date();
     const doneId = previousResultId(requestId, studentId, "HOLD_PARKING_SLOT");
@@ -79,9 +80,11 @@ export const parkingOps = {
       });
     }
 
-    // Sơ đồ không truyền vehicleId vào method này: lấy xe cá nhân của sinh viên (đã được service kiểm tra quyền).
-    const vehicle = db.select().from(privateVehicles).where(eq(privateVehicles.ownerId, studentId)).get();
-    if (!vehicle) throw new AppError("FORBIDDEN", "Bạn chưa đăng ký phương tiện cá nhân.");
+    // Lưu đúng xe sinh viên đã chọn (tham số vehicleId tùy chọn giữ tương thích chữ ký sơ đồ Sub #3).
+    const vehicle = vehicleId
+      ? parkingOps.findVehicleRight(studentId, vehicleId)
+      : db.select().from(privateVehicles).where(eq(privateVehicles.ownerId, studentId)).get();
+    if (!vehicle) throw new AppError("FORBIDDEN", "Bạn không có quyền sử dụng phương tiện này.");
 
     const hold = db
       .insert(parkingAllocations)
