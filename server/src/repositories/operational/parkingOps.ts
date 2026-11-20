@@ -1,7 +1,7 @@
 // Owner: Bùi Quang Nhân – UC06 Reserve Parking Space, Cancel Parking Reservation, mục 2.3.1
 // Một phần của «repository» OperationalRepository (Sub #3) – xem ../OperationalRepository.ts.
 // Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
-import { and, asc, desc, eq, inArray, isNotNull, lte } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, lte, ne } from "drizzle-orm";
 import {
   hubs,
   parkingAllocations,
@@ -232,22 +232,33 @@ export function listServingSlots(hubId: string): ParkingSlot[] {
  * Phân bổ còn chặn chỗ trong khoảng thời gian: HELD còn hạn, CONFIRMED chồng lấn thời gian,
  * IN_USE (đang dùng cho lượt trả xe) luôn chặn.
  */
-function blocks(a: ParkingAllocation, range: TimeRange, now: Date): boolean {
+interface ParkingWindow {
+  startTime: Date;
+  endTime?: Date;
+}
+
+function blocks(a: ParkingAllocation, range: ParkingWindow, now: Date): boolean {
   if (a.status === "IN_USE") return true;
-  const overlaps = a.startTime < range.endTime && a.endTime > range.startTime;
+  const overlaps = (!range.endTime || a.startTime < range.endTime) && a.endTime > range.startTime;
   if (a.status === "CONFIRMED") return overlaps;
   if (a.status === "HELD") return overlaps && a.holdExpiresAt !== null && a.holdExpiresAt > now;
   return false;
 }
 
-function blockedSlotIds(slotIds: string[], range: TimeRange, now: Date, excludeAllocationId?: string): Set<string> {
+function blockedSlotIds(
+  slotIds: string[], range: ParkingWindow, now: Date, excludeAllocationId?: string, excludeVehicleId?: string,
+): Set<string> {
   const blocked = new Set<string>();
   if (slotIds.length === 0) return blocked;
   // Xe dùng chung đang đỗ chiếm vị trí cho tới khi được nhận đi
   for (const v of db
     .select({ slotId: sharedVehicles.slotId })
     .from(sharedVehicles)
-    .where(and(isNotNull(sharedVehicles.slotId), inArray(sharedVehicles.slotId, slotIds)))
+    .where(and(
+      isNotNull(sharedVehicles.slotId),
+      inArray(sharedVehicles.slotId, slotIds),
+      excludeVehicleId ? ne(sharedVehicles.id, excludeVehicleId) : undefined,
+    ))
     .all()) {
     if (v.slotId) blocked.add(v.slotId);
   }
@@ -270,7 +281,7 @@ function blockedSlotIds(slotIds: string[], range: TimeRange, now: Date, excludeA
  * Số xe đang được điều chuyển tới Hub (UC12: IN_TRANSIT luôn giữ chỗ; PENDING giữ chỗ khi không có ETA hoặc ETA <= range.endTime).
  * Dùng chung giữa UC06 (đặt chỗ), UC05 (trả xe) và UC12 (điều chuyển) để không cấp trùng sức chứa ở Hub đích.
  */
-export function inboundRedistributionCount(hubId: string, range: TimeRange): number {
+export function inboundRedistributionCount(hubId: string, range: ParkingWindow): number {
   return db
     .select({ status: redistributionItems.status, eta: redistributionOrders.eta })
     .from(redistributionItems)
@@ -282,36 +293,41 @@ export function inboundRedistributionCount(hubId: string, range: TimeRange): num
       ),
     )
     .all()
-    .filter((row) => row.status === "IN_TRANSIT" || !row.eta || row.eta <= range.endTime).length;
+    .filter((row) => row.status === "IN_TRANSIT" || !row.eta || !range.endTime || row.eta <= range.endTime).length;
 }
 
 /** Vị trí thường chưa bị xe đỗ hay phân bổ chặn (chưa trừ phần sức chứa giữ cho điều chuyển). */
-function rawFreeSlots(hubId: string, range: TimeRange, now: Date): ParkingSlot[] {
+function rawFreeSlots(hubId: string, range: ParkingWindow, now: Date, excludeAllocationId?: string): ParkingSlot[] {
   const slots = listServingSlots(hubId);
   const blocked = blockedSlotIds(
     slots.map((s) => s.id),
     range,
     now,
+    excludeAllocationId,
   );
   return slots.filter((s) => !blocked.has(s.id));
 }
 
 /** Hub còn dư ít nhất 1 chỗ sau khi trừ sức chứa giữ cho các xe điều chuyển tới Hub đích. */
-export function hasCapacityForNewAllocation(hubId: string, range: TimeRange, now: Date): boolean {
-  return rawFreeSlots(hubId, range, now).length > inboundRedistributionCount(hubId, range);
+export function hasCapacityForNewAllocation(
+  hubId: string, range: ParkingWindow, now: Date, excludeAllocationId?: string,
+): boolean {
+  return rawFreeSlots(hubId, range, now, excludeAllocationId).length > inboundRedistributionCount(hubId, range);
 }
 
 /** Vị trí thường còn trống của Hub trong khoảng thời gian (trả rỗng nếu toàn bộ chỗ trống đã giữ cho xe điều chuyển). */
-export function listFreeSlots(hubId: string, range: TimeRange, now: Date): ParkingSlot[] {
+export function listFreeSlots(hubId: string, range: ParkingWindow, now: Date): ParkingSlot[] {
   const free = rawFreeSlots(hubId, range, now);
   if (free.length <= inboundRedistributionCount(hubId, range)) return [];
   return free;
 }
 
 /** Vị trí có trống trong khoảng thời gian không (bỏ qua một phân bổ, ví dụ đặt chỗ của chính lượt trả xe). */
-export function isSlotFree(slot: ParkingSlot, range: TimeRange, now: Date, excludeAllocationId?: string): boolean {
-  if (slot.status !== "IN_SERVICE") return false;
-  return !blockedSlotIds([slot.id], range, now, excludeAllocationId).has(slot.id);
+export function isSlotFree(
+  slot: ParkingSlot, range: ParkingWindow, now: Date, excludeAllocationId?: string, excludeVehicleId?: string,
+): boolean {
+  if (slot.status !== "IN_SERVICE" || slot.hasCharger) return false;
+  return !blockedSlotIds([slot.id], range, now, excludeAllocationId, excludeVehicleId).has(slot.id);
 }
 
 /** Đặt chỗ đã xác nhận của sinh viên cho xe tại Hub, đang trong khung giờ (UC05 bước 3). */

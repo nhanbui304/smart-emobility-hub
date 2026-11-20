@@ -60,9 +60,8 @@ export function ReturnVehicleSection() {
   const [result, setResult] = useState<ReturnResult | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(loadPendingConfirm);
 
-  const pendingReq = useRef<Record<string, string>>(
-    pendingConfirm ? { [`confirm:${pendingConfirm.tripId}`]: pendingConfirm.requestId } : {},
-  );
+  const pendingReq = useRef<Record<string, string>>({});
+  const confirming = useRef(false);
   const autoRecoveredReqId = useRef<string | null>(null);
 
   function updatePendingConfirm(next: PendingConfirm | null) {
@@ -114,38 +113,34 @@ export function ReturnVehicleSection() {
       }
     });
 
-  const confirm = (info: CurrentTripInfo) =>
-    run("confirm", async () => {
-      try {
-        const res = await withRequestId(`confirm:${info.trip.id}`, (reqId) => {
-          // Lưu requestId trước khi gửi để khôi phục kết quả trả xe nếu mất phản hồi sau khi server đã kết thúc chuyến (Ext 9b)
-          updatePendingConfirm({ tripId: info.trip.id, requestId: reqId });
-          return returnApi.confirmReturn(reqId, info.trip.id);
-        });
-        updatePendingConfirm(null);
-        setResult(res);
-      } catch (err) {
-        if (!(err instanceof ApiError && err.code === "NETWORK_ERROR")) {
-          updatePendingConfirm(null);
-        }
-        throw err;
-      }
-    });
-
-  const recoverConfirm = (pending: PendingConfirm) =>
-    run("confirm", async () => {
+  async function sendConfirmation(pending: PendingConfirm) {
+    if (confirming.current) return;
+    confirming.current = true;
+    setResult(null);
+    // Lưu mã trước khi gửi để tải lại trang vẫn khôi phục được kết quả nếu mất phản hồi.
+    updatePendingConfirm(pending);
+    await run("confirm", async () => {
       try {
         const res = await returnApi.confirmReturn(pending.requestId, pending.tripId);
-        delete pendingReq.current[`confirm:${pending.tripId}`];
         updatePendingConfirm(null);
         setResult(res);
       } catch (err) {
-        if (!(err instanceof ApiError && err.code === "NETWORK_ERROR")) {
-          delete pendingReq.current[`confirm:${pending.tripId}`];
-          updatePendingConfirm(null);
-        }
+        const retryable = err instanceof ApiError && (
+          err.code === "NETWORK_ERROR" ||
+          (err.details as { code?: string } | undefined)?.code === "RETURN_CONFIRM_IN_PROGRESS"
+        );
+        if (!retryable) updatePendingConfirm(null);
         throw err;
+      } finally {
+        confirming.current = false;
       }
+    });
+  }
+
+  const confirm = (info: CurrentTripInfo) =>
+    sendConfirmation({
+      tripId: info.trip.id,
+      requestId: pendingConfirm?.tripId === info.trip.id ? pendingConfirm.requestId : newRequestId(),
     });
 
   const abandon = (info: CurrentTripInfo) =>
@@ -162,12 +157,12 @@ export function ReturnVehicleSection() {
       updatePendingConfirm(null);
       return;
     }
-    if (current.loading || current.error || current.data || result || busy === "confirm") return;
+    if (current.loading || current.error || current.data || confirming.current || busy === "confirm") return;
     if (autoRecoveredReqId.current === pendingConfirm.requestId) return;
     autoRecoveredReqId.current = pendingConfirm.requestId;
-    void recoverConfirm(pendingConfirm);
+    void sendConfirmation(pendingConfirm);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current.loading, current.error, current.data, pendingConfirm, result, busy]);
+  }, [current.loading, current.error, current.data, pendingConfirm, busy]);
 
   const info = current.data ?? null;
   const selectedHubId = hubId || hubs.data?.[0]?.id || "";
@@ -177,7 +172,6 @@ export function ReturnVehicleSection() {
       {result?.outcome === "SUCCESS" && !info && <ReturnSuccess result={result} />}
 
       {!info ? (
-        !result &&
         (pendingConfirm ? (
           <Card className="space-y-3 p-5">
             <p className="font-semibold">Đang khôi phục kết quả trả xe</p>
@@ -185,11 +179,11 @@ export function ReturnVehicleSection() {
               Kết nối vừa bị gián đoạn trong lúc xác nhận trả xe. Bấm bên dưới để kiểm tra lại kết quả đã ghi nhận trên
               hệ thống.
             </p>
-            <Button fullWidth loading={busy === "confirm"} onClick={() => void recoverConfirm(pendingConfirm)}>
+            <Button fullWidth loading={busy === "confirm"} onClick={() => void sendConfirmation(pendingConfirm)}>
               Kiểm tra lại kết quả trả xe
             </Button>
           </Card>
-        ) : (
+        ) : !result && (
           <Card tone="highlight">
             <p className="text-sm text-white/70">Chuyến đi hiện tại</p>
             <p className="mt-1 text-lg font-semibold">{current.loading ? "Đang tải…" : "Chưa có chuyến đi"}</p>

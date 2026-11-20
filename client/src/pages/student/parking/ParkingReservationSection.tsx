@@ -12,6 +12,7 @@ import { Card } from "../../../components/Card";
 import { ErrorMessage } from "../../../components/ErrorMessage";
 import { Spinner } from "../../../components/Spinner";
 import { StatusBadge } from "../../../components/StatusBadge";
+import { useAuth } from "../../../context/AuthContext";
 import { useAsync } from "../../../hooks/useAsync";
 import type { ActiveHold, ParkingAllocation, ParkingBooking, ParkingSlot } from "../../../types";
 
@@ -31,40 +32,27 @@ function formatRange(start: string, end: string): string {
   return `${timeFormat.format(new Date(start))} – ${timeFormat.format(new Date(end))}`;
 }
 
-const SLOT_CODES_KEY = "smart-emobility:parking-slot-codes";
-const BOOKING_CACHE_KEY = "smart-emobility:parking-bookings";
-
-function readStorage<T>(key: string, fallback: T): T {
-  try {
-    const raw = sessionStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function writeStorage(key: string, value: unknown): void {
-  try {
-    sessionStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // bỏ qua lỗi storage
-  }
+interface BookingAllocation extends ParkingAllocation {
+  slotCode?: string;
+  hubName?: string;
 }
 
 export function ParkingReservationSection() {
+  const { user } = useAuth();
+  return user && <ParkingReservations key={user.id} />;
+}
+
+function ParkingReservations() {
   const vehicles = useAsync(() => authApi.myVehicles(), []);
   const hubs = useAsync(() => hubApi.list(), []);
   // Lượt giữ còn hạn được lấy từ server nên tải lại trang vẫn thấy, và không được gia hạn (Ext 7b)
   const activeHold = useAsync(() => parkingApi.getActiveHold(), [], { refreshEveryMs: 10_000 });
-  // Đặt chỗ đã xác nhận lấy từ server (GET /api/me/reservations) để F5 vẫn xem và hủy được (Ext 9a); fallback sessionStorage khi API chưa triển khai
-  const confirmedBookings = useAsync(async (): Promise<ParkingAllocation[]> => {
+  const confirmedBookings = useAsync(async (): Promise<BookingAllocation[] | null> => {
     try {
       const res = await myReservationsApi.list();
       return res.parkingAllocations.filter((a) => a.status === "CONFIRMED");
     } catch (err) {
-      if (err instanceof ApiError && err.code === "NOT_IMPLEMENTED") {
-        return readStorage<ParkingBooking[]>(BOOKING_CACHE_KEY, []).map((b) => b.allocation);
-      }
+      if (err instanceof ApiError && err.code === "NOT_IMPLEMENTED") return null;
       throw err;
     }
   }, []);
@@ -75,10 +63,9 @@ export function ParkingReservationSection() {
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("10:00");
   const [slots, setSlots] = useState<ParkingSlot[] | null>(null);
-  const [slotCodes, setSlotCodes] = useState<Record<string, string>>(() => readStorage(SLOT_CODES_KEY, {}));
-  const [bookingDetails, setBookingDetails] = useState<Record<string, ParkingBooking>>(() =>
-    Object.fromEntries(readStorage<ParkingBooking[]>(BOOKING_CACHE_KEY, []).map((b) => [b.allocation.id, b])),
-  );
+  const [slotCodes, setSlotCodes] = useState<Record<string, string>>({});
+  // Phiếu vừa nhận từ server trong phiên này vẫn xem được khi API danh sách chưa triển khai.
+  const [bookingDetails, setBookingDetails] = useState<Record<string, ParkingBooking>>({});
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [cancelledBooking, setCancelledBooking] = useState<ParkingAllocation | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -122,31 +109,18 @@ export function ParkingReservationSection() {
   };
 
   function rememberCodes(list: ParkingSlot[]) {
-    setSlotCodes((prev) => {
-      const next = { ...prev, ...Object.fromEntries(list.map((s) => [s.id, s.code])) };
-      writeStorage(SLOT_CODES_KEY, next);
-      return next;
-    });
+    setSlotCodes((prev) => ({ ...prev, ...Object.fromEntries(list.map((s) => [s.id, s.code])) }));
   }
 
   function rememberBooking(confirmed: ParkingBooking) {
-    setSlotCodes((prev) => {
-      const next = { ...prev, [confirmed.allocation.slotId]: confirmed.slotCode };
-      writeStorage(SLOT_CODES_KEY, next);
-      return next;
-    });
-    setBookingDetails((prev) => {
-      const next = { ...prev, [confirmed.allocation.id]: confirmed };
-      writeStorage(BOOKING_CACHE_KEY, Object.values(next));
-      return next;
-    });
+    setSlotCodes((prev) => ({ ...prev, [confirmed.allocation.slotId]: confirmed.slotCode }));
+    setBookingDetails((prev) => ({ ...prev, [confirmed.allocation.id]: confirmed }));
   }
 
   function forgetBooking(bookingId: string) {
     setBookingDetails((prev) => {
       const next = { ...prev };
       delete next[bookingId];
-      writeStorage(BOOKING_CACHE_KEY, Object.values(next));
       return next;
     });
   }
@@ -226,12 +200,16 @@ export function ParkingReservationSection() {
 
   if (vehicles.loading || hubs.loading) return <Spinner />;
   const currentHold = activeHold.data ?? null;
-  const activeBookings = confirmedBookings.data ?? [];
+  const activeBookings: BookingAllocation[] = confirmedBookings.data
+    ?? Object.values(bookingDetails).map((booking) => booking.allocation);
 
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-bold">Đặt chỗ đỗ</h2>
       <ErrorMessage error={vehicles.error ?? hubs.error ?? activeHold.error ?? confirmedBookings.error} />
+      {!confirmedBookings.loading && !confirmedBookings.error && confirmedBookings.data === null && (
+        <p className="text-sm text-neutral-500">Chưa tải được danh sách đặt chỗ từ các lần trước.</p>
+      )}
 
       {activeBookings.map((allocation) => {
         const detail = bookingDetails[allocation.id];
@@ -239,7 +217,8 @@ export function ParkingReservationSection() {
           <BookingCard
             key={allocation.id}
             allocation={allocation}
-            slotCode={detail?.slotCode ?? slotCodes[allocation.slotId]}
+            slotCode={allocation.slotCode ?? detail?.slotCode ?? slotCodes[allocation.slotId]}
+            hubName={allocation.hubName ?? hubs.data?.find((hub) => hub.id === detail?.hubId)?.name}
             arrivalConditions={detail?.arrivalConditions}
             busy={busy === `cancelBooking:${allocation.id}`}
             onCancel={() => void cancelBooking(allocation)}
@@ -448,12 +427,14 @@ function HoldCard({
 function BookingCard({
   allocation,
   slotCode,
+  hubName,
   arrivalConditions,
   busy,
   onCancel,
 }: {
   allocation: ParkingAllocation;
   slotCode?: string;
+  hubName?: string;
   arrivalConditions?: string;
   busy: boolean;
   onCancel: () => void;
@@ -468,14 +449,20 @@ function BookingCard({
         <dt className="text-neutral-500">Mã đặt chỗ</dt>
         <dd className="font-mono font-semibold">{allocation.id.slice(0, 8).toUpperCase()}</dd>
         <dt className="text-neutral-500">Vị trí</dt>
-        <dd className="font-semibold">{slotCode ?? allocation.slotId}</dd>
+        <dd className="font-semibold">{[hubName, slotCode].filter(Boolean).join(" · ") || "Vị trí đã chọn"}</dd>
         <dt className="text-neutral-500">Khung giờ</dt>
         <dd>{formatRange(allocation.startTime, allocation.endTime)}</dd>
       </dl>
       <p className="rounded-lg bg-surface px-3 py-2 text-sm dark:bg-white/5">
         {arrivalConditions ?? "Đến Hub đúng khung giờ đã đặt; đặt chỗ chưa sử dụng sẽ hết hạn khi kết thúc khung giờ."}
       </p>
-      <Button variant="outline" fullWidth loading={busy} onClick={onCancel}>
+      <Button
+        variant="outline"
+        fullWidth
+        loading={busy}
+        disabled={new Date(allocation.startTime).getTime() <= Date.now()}
+        onClick={onCancel}
+      >
         Hủy đặt chỗ
       </Button>
     </Card>

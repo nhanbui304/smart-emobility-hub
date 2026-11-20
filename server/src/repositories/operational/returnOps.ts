@@ -1,7 +1,7 @@
 // Owner: Bùi Quang Nhân – UC05 Return Shared Vehicle
 // Một phần của «repository» OperationalRepository (Sub #3) – xem ../OperationalRepository.ts.
 // Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { systemConfig } from "../../config/systemConfig";
 import type { VehicleStatus } from "../../constants";
 import {
@@ -15,7 +15,6 @@ import {
 } from "../../db/schema";
 import { db } from "../../lib/db";
 import { AppError } from "../../lib/errors";
-import type { TimeRange } from "../../lib/schemas";
 import type {
   HubReturnContext,
   LockResult,
@@ -38,10 +37,12 @@ export const returnOps = {
   queryHubReturnContext(hubId: string, vehicleId: string, studentId: string, now: Date): HubReturnContext {
     const hub = db.select().from(hubs).where(eq(hubs.id, hubId)).get();
     if (!hub) return { hubId, accepting: false, availableSlots: [] };
-    const window = returnWindow(now);
+    // Xe đã trả sẽ chiếm chỗ cho đến khi được nhận đi, kể cả sau cửa sổ bàn giao.
+    const window = { startTime: now };
     const booking = findUsableBooking(hubId, vehicleId, studentId, now);
     // Ext 3c: vị trí của đặt chỗ đang sự cố hoặc bị chiếm thì không dùng (không hủy đặt chỗ)
-    const bookingUsable = booking && isSlotFree(booking.slot, window, now, booking.allocation.id);
+    const bookingUsable = booking && isSlotFree(booking.slot, window, now, booking.allocation.id)
+      && hasCapacityForNewAllocation(hubId, window, now, booking.allocation.id);
     return {
       hubId,
       accepting: listServingSlots(hubId).length > 0,
@@ -71,29 +72,34 @@ export const returnOps = {
 
     const current = findReturnAllocation(trip);
     if (current) {
-      if (trip.returnHubId === hubId) return { trip, allocation: current };
+      if (trip.returnHubId === hubId) {
+        recordProcessedRequest(requestId, trip.studentId, "PREPARE_RETURN", current.id);
+        return { trip, allocation: current };
+      }
       releaseReturnAllocation(trip, current);
     }
 
     const slot = db.select().from(parkingSlots).where(eq(parkingSlots.id, slotPlan.slotId)).get();
     if (!slot || slot.hubId !== hubId) throw new AppError("CONFLICT", "Vị trí không thuộc Hub đã chọn.");
 
+    const window = { startTime: now };
+    // Ext 4a: chỗ vừa được phân bổ cho yêu cầu khác → báo để service chọn chỗ khác.
+    if (!isSlotFree(slot, window, now, slotPlan.bookingId)) {
+      throw new AppError("CONFLICT", "Vị trí vừa được phân bổ cho yêu cầu khác.", { code: "SLOT_TAKEN" });
+    }
+    if (!hasCapacityForNewAllocation(hubId, window, now, slotPlan.bookingId)) {
+      throw new AppError("CONFLICT", "Hub không còn đủ sức chứa tiếp nhận (đang giữ chỗ cho xe điều chuyển).");
+    }
+
     let allocation: ParkingAllocation;
     if (slotPlan.bookingId) {
       const booking = getAllocation(slotPlan.bookingId);
-      if (booking.status !== "CONFIRMED" || booking.studentId !== trip.studentId || booking.slotId !== slot.id) {
+      if (booking.status !== "CONFIRMED" || booking.studentId !== trip.studentId || booking.slotId !== slot.id
+        || booking.vehicleRef !== trip.vehicleId || booking.startTime > now || booking.endTime <= now) {
         throw new AppError("CONFLICT", "Đặt chỗ không còn dùng được cho lượt trả xe này.");
       }
       allocation = setStatus(booking.id, "IN_USE");
     } else {
-      const window = returnWindow(now);
-      // Ext 4a: chỗ vừa được phân bổ cho yêu cầu khác → báo để service chọn chỗ khác
-      if (!isSlotFree(slot, window, now)) {
-        throw new AppError("CONFLICT", "Vị trí vừa được phân bổ cho yêu cầu khác.", { code: "SLOT_TAKEN" });
-      }
-      if (!hasCapacityForNewAllocation(hubId, window, now)) {
-        throw new AppError("CONFLICT", "Hub không còn đủ sức chứa tiếp nhận (đang giữ chỗ cho xe điều chuyển).");
-      }
       allocation = db
         .insert(parkingAllocations)
         .values({
@@ -101,7 +107,7 @@ export const returnOps = {
           slotId: slot.id,
           vehicleRef: trip.vehicleId,
           startTime: now,
-          endTime: window.endTime,
+          endTime: new Date(now.getTime() + systemConfig.returnAllocationMinutes * 60_000),
           status: "IN_USE",
         })
         .returning()
@@ -142,12 +148,14 @@ export const returnOps = {
   markHandoverInProgress(requestId: string, tripId: string, vehicleId: string, slotId: string): void {
     const vehicle = getVehicle(vehicleId);
     if (vehicle.status === "HANDING_OVER") {
-      throw new AppError("CONFLICT", "Yêu cầu trả xe đang được xử lý, vui lòng chờ kết quả.");
+      throw new AppError("CONFLICT", "Yêu cầu trả xe đang được xử lý, vui lòng chờ kết quả.", {
+        code: "RETURN_CONFIRM_IN_PROGRESS",
+      });
     }
-    const slot = db.select().from(parkingSlots).where(eq(parkingSlots.id, slotId)).get();
-    if (!slot) throw new AppError("NOT_FOUND", "Không tìm thấy vị trí đỗ.");
+    const now = new Date();
+    const { slot } = checkHandoverSlot(getTrip(tripId), vehicleId, slotId, now);
     db.update(sharedVehicles)
-      .set({ status: "HANDING_OVER", hubId: slot.hubId, slotId, lastUpdatedAt: new Date() })
+      .set({ status: "HANDING_OVER", hubId: slot.hubId, slotId, lastUpdatedAt: now })
       .where(eq(sharedVehicles.id, vehicleId))
       .run();
   },
@@ -161,6 +169,7 @@ export const returnOps = {
     db.transaction(() => {
       const trip = getTrip(tripId);
       if (previousResultId(requestId, trip.studentId, "CONFIRM_RETURN")) return;
+      checkHandoverSlot(trip, trip.vehicleId, trip.returnSlotId ?? "", new Date());
       db.update(sharedVehicles)
         .set({ status: "IN_USE", lastUpdatedAt: new Date() })
         .where(eq(sharedVehicles.id, trip.vehicleId))
@@ -171,18 +180,7 @@ export const returnOps = {
 
   /** UC05 Ext 7b – chưa rõ kết quả khóa: Trip chờ đối soát, xe chờ xác minh; xe và chỗ không được cấp lại. */
   markPendingVerification(tripId: string, vehicleId: string, slotId: string): Trip {
-    return db.transaction(() => {
-      db.update(sharedVehicles)
-        .set({ status: "PENDING_VERIFICATION", lastUpdatedAt: new Date() })
-        .where(eq(sharedVehicles.id, vehicleId))
-        .run();
-      return db
-        .update(trips)
-        .set({ status: "PENDING_RECONCILIATION", returnSlotId: slotId })
-        .where(eq(trips.id, tripId))
-        .returning()
-        .get()!;
-    });
+    return returnOps.saveHandoverForReconciliation(tripId, vehicleId, slotId, { status: "UNKNOWN", techStatus: "UNKNOWN" });
   },
 
   /**
@@ -202,12 +200,11 @@ export const returnOps = {
     const trip = getTrip(tripId);
     if (previousResultId(requestId, trip.studentId, "CONFIRM_RETURN") || trip.status === "ENDED") return trip;
 
-    const slot = db.select().from(parkingSlots).where(eq(parkingSlots.id, slotId)).get();
-    if (!slot) throw new AppError("NOT_FOUND", "Không tìm thấy vị trí đỗ.");
-
-    const allocation = findReturnAllocation(trip);
-    const usedId = bookingId ?? allocation?.id;
-    if (usedId) setStatus(usedId, "USED");
+    const { slot, allocation } = checkHandoverSlot(trip, vehicleId, slotId, returnedAt);
+    if ((bookingId && bookingId !== allocation.id) || getVehicle(vehicleId).slotId !== slotId) {
+      throw new AppError("CONFLICT", "Vị trí xe đã thay đổi trong lúc bàn giao.");
+    }
+    setStatus(allocation.id, "USED");
 
     db.update(sharedVehicles)
       .set({ status: vehicleServiceStatus, hubId: slot.hubId, slotId, lastUpdatedAt: returnedAt })
@@ -230,8 +227,15 @@ export const returnOps = {
    */
   saveHandoverForReconciliation(tripId: string, vehicleId: string, slotId: string, lockResult: LockResult): Trip {
     return db.transaction(() => {
+      const occupiedByOther = db.select({ id: sharedVehicles.id }).from(sharedVehicles)
+        .where(and(eq(sharedVehicles.slotId, slotId), ne(sharedVehicles.id, vehicleId))).get();
       db.update(sharedVehicles)
-        .set({ status: "PENDING_VERIFICATION", batteryLevel: lockResult.batteryLevel, lastUpdatedAt: new Date() })
+        .set({
+          status: "PENDING_VERIFICATION",
+          batteryLevel: lockResult.batteryLevel,
+          slotId: occupiedByOther && getVehicle(vehicleId).slotId === slotId ? null : undefined,
+          lastUpdatedAt: new Date(),
+        })
         .where(eq(sharedVehicles.id, vehicleId))
         .run();
       return db
@@ -290,10 +294,6 @@ export function findReturnAllocationById(allocationId: string): ParkingAllocatio
   return db.select().from(parkingAllocations).where(eq(parkingAllocations.id, allocationId)).get();
 }
 
-function returnWindow(now: Date): TimeRange {
-  return { startTime: now, endTime: new Date(now.getTime() + systemConfig.returnAllocationMinutes * 60_000) };
-}
-
 function getTrip(tripId: string): Trip {
   const trip = returnOps.findTripForReturn(tripId);
   if (!trip) throw new AppError("NOT_FOUND", "Không tìm thấy chuyến đi.");
@@ -325,11 +325,24 @@ function findReturnAllocation(trip: Trip): ParkingAllocation | undefined {
     .where(
       and(
         eq(parkingAllocations.slotId, trip.returnSlotId),
+        eq(parkingAllocations.studentId, trip.studentId),
         eq(parkingAllocations.vehicleRef, trip.vehicleId),
         eq(parkingAllocations.status, "IN_USE"),
       ),
     )
     .get();
+}
+
+/** Kiểm tra trước lệnh khóa và trước khi chốt bàn giao vì thiết bị được gọi ngoài giao dịch. */
+function checkHandoverSlot(trip: Trip, vehicleId: string, slotId: string, now: Date) {
+  const allocation = findReturnAllocation(trip);
+  const slot = db.select().from(parkingSlots).where(eq(parkingSlots.id, slotId)).get();
+  if (trip.status !== "RETURN_IN_PROGRESS" || trip.vehicleId !== vehicleId || trip.returnSlotId !== slotId
+    || !allocation || !slot || trip.returnHubId !== slot.hubId
+    || !isSlotFree(slot, { startTime: now }, now, allocation.id, vehicleId)) {
+    throw new AppError("CONFLICT", "Vị trí trả đã thay đổi hoặc không còn khả dụng. Hãy kiểm tra lại hoặc liên hệ Operator.");
+  }
+  return { slot, allocation };
 }
 
 /** Trả lại chỗ của lượt trả: phân bổ mới → CANCELLED, đặt chỗ trước → CONFIRMED; Trip về ACTIVE. */

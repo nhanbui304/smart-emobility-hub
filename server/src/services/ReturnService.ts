@@ -14,6 +14,7 @@ import type {
   HubReturnContext,
   LockResult,
   OperatorAlert,
+  ReturnAllocation,
   ReturnPreparation,
   ReturnResult,
   ReturnSlotPlan,
@@ -45,6 +46,7 @@ export const returnService = {
       if (
         allocation.status === "CANCELLED" ||
         allocation.status === "EXPIRED" ||
+        trip.returnHubId !== hubId ||
         trip.returnSlotId !== allocation.slotId
       ) {
         throw new AppError(
@@ -52,12 +54,17 @@ export const returnService = {
           "Yêu cầu chuẩn bị trả xe này đã cũ do chuyến đi đã đổi Hub hoặc dừng trả xe. Vui lòng tạo yêu cầu mới.",
         );
       }
-      const slotCode = hubRepository.listSlots().find((s) => s.id === allocation.slotId)?.code ?? "";
-      return { trip, allocation, slotCode };
+      return withReturnSlotCode({ trip, allocation });
     }
     if (trip.status === "ENDED") throw new AppError("CONFLICT", "Chuyến đi đã kết thúc, xe đã được trả.");
     if (trip.status === "PENDING_RECONCILIATION") {
       throw new AppError("CONFLICT", "Lượt trả xe đang chờ Operator đối soát. Vui lòng liên hệ Operator.");
+    }
+    const handover = operationalRepository.findReturnHandoverContext(tripId, studentId);
+    if (handover?.hubId === hubId) {
+      return withReturnSlotCode(db.transaction(() =>
+        operationalRepository.atomicAllocateReturnSlot(requestId, tripId, hubId, { slotId: handover.slotId }),
+      ));
     }
 
     for (let attempt = 1; ; attempt++) {
@@ -74,11 +81,10 @@ export const returnService = {
       }
       const slotPlan = selectReturnSlot(context);
       try {
-        const { trip: updatedTrip, allocation } = db.transaction(() =>
+        const allocated = db.transaction(() =>
           operationalRepository.atomicAllocateReturnSlot(requestId, tripId, hubId, slotPlan),
         );
-        const slotCode = hubRepository.listSlots().find((s) => s.id === allocation.slotId)?.code ?? "";
-        return { trip: updatedTrip, allocation, slotCode };
+        return withReturnSlotCode(allocated);
       } catch (err) {
         const slotTaken =
           err instanceof AppError && (err.details as { code?: string } | undefined)?.code === "SLOT_TAKEN";
@@ -119,16 +125,14 @@ export const returnService = {
       throw new AppError("CONFLICT", "Xe chưa ở đúng vị trí được chỉ định. Vui lòng đưa xe vào đúng vị trí rồi thử lại.");
     }
 
-    operationalRepository.markHandoverInProgress(requestId, tripId, handover.vehicleId, handover.slotId);
+    db.transaction(() =>
+      operationalRepository.markHandoverInProgress(requestId, tripId, handover.vehicleId, handover.slotId),
+    );
     // Mất liên lạc với thiết bị coi như chưa rõ kết quả khóa (Ext 7b)
     const lock = await vehicleSimulator
       .sendLockCommand(handover.vehicleId)
       .catch((): LockResult => ({ status: "UNKNOWN", techStatus: "UNKNOWN" }));
 
-    if (lock.status === "FAILED") {
-      operationalRepository.recordLockFailure(requestId, tripId);
-      return resultOf(operationalRepository.findTripForReturn(tripId)!, "FAILED");
-    }
     if (lock.status === "UNKNOWN") {
       const pending = operationalRepository.markPendingVerification(tripId, handover.vehicleId, handover.slotId);
       await alertOperator({
@@ -142,9 +146,13 @@ export const returnService = {
       return resultOf(pending, "UNKNOWN");
     }
 
-    const returnedAt = new Date();
-    const serviceStatus = determineVehicleServiceStatus(lock.batteryLevel ?? -1, lock.techStatus);
     try {
+      if (lock.status === "FAILED") {
+        operationalRepository.recordLockFailure(requestId, tripId);
+        return resultOf(operationalRepository.findTripForReturn(tripId)!, "FAILED");
+      }
+      const returnedAt = new Date();
+      const serviceStatus = determineVehicleServiceStatus(lock.batteryLevel ?? -1, lock.techStatus);
       const ended = db.transaction(() =>
         operationalRepository.atomicCompleteReturn(
           requestId,
@@ -168,13 +176,13 @@ export const returnService = {
       );
       await alertOperator({
         alertType: "RETURN_RECORD_FAILED",
-        message: "Xe đã khóa tại vị trí nhưng ghi nhận trả xe lỗi, cần đối soát.",
+        message: "Chưa hoàn tất ghi nhận trả xe, cần đối soát trạng thái khóa và vị trí.",
         tripId,
         vehicleId: handover.vehicleId,
         hubId: handover.hubId,
         slotId: handover.slotId,
       });
-      return { ...resultOf(saved, "SUCCESS"), pendingReconciliation: true };
+      return resultOf(saved, "UNKNOWN");
     }
   },
 
@@ -244,6 +252,11 @@ function determineVehicleServiceStatus(batteryLevel: number, techStatus: Vehicle
 }
 
 // ---------- Hàm hỗ trợ (không có trong sơ đồ) ----------
+
+function withReturnSlotCode({ trip, allocation }: ReturnAllocation): ReturnPreparation {
+  const slotCode = hubRepository.listSlots().find((s) => s.id === allocation.slotId)?.code ?? "";
+  return { trip, allocation, slotCode };
+}
 
 function resultOf(trip: Trip, outcome: ReturnResult["outcome"]): ReturnResult {
   return {
