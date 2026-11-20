@@ -21,6 +21,8 @@ export const systemConfig = {
   pickupBatteryThreshold: 20,
   /** UC07: dưới mức này được ưu tiên trong hàng đợi sạc (%). */
   lowBatteryChargingPriority: 25,
+  /** UC07/UC13: thời gian nhận cổng sạc kể từ khi bắt đầu khung được cấp. */
+  chargingAllocationClaimMinutes: 15,
   /** UC10: cảnh báo thiếu xe khi số xe khả dụng của Hub <= ngưỡng này. */
   lowVehicleThreshold: 2,
   /** UC10: cảnh báo sắp đầy khi số chỗ trống của Hub <= ngưỡng này. */
