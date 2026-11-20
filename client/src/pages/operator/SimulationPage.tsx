@@ -10,6 +10,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { hubApi } from "../../api/hubs";
+import { newRequestId } from "../../api/requestId";
 import { simulationApi } from "../../api/simulation";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
@@ -95,7 +96,7 @@ export function SimulationPage() {
   const [stoppingRun, setStoppingRun] = useState<boolean>(false);
   const [retryingSave, setRetryingSave] = useState<boolean>(false);
   const [handoffLoadingId, setHandoffLoadingId] = useState<string | null>(null);
-  const [pendingRequestId, setPendingRequestId] = useState<string>(() => crypto.randomUUID());
+  const [pendingRequestId, setPendingRequestId] = useState(newRequestId);
 
   const [error, setError] = useState<unknown>(null);
 
@@ -209,7 +210,7 @@ export function SimulationPage() {
       setPreview(simPreview);
       setRunId(null);
       setRunOutcome(null);
-      setPendingRequestId(crypto.randomUUID());
+      setPendingRequestId(newRequestId());
     } catch (err) {
       setError(err);
     } finally {
@@ -231,6 +232,7 @@ export function SimulationPage() {
     setStartingRun(true);
     try {
       const started = await simulationApi.runSimulation(pendingRequestId, scenarioDraftId);
+      setPendingRequestId(newRequestId());
       setRunId(started.runId);
       setRunOutcome({ status: "RUNNING" });
     } catch (err) {

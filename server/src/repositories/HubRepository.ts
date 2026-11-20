@@ -5,8 +5,10 @@ import {
   chargingPorts,
   chargingReservations,
   hubs,
+  incidents,
   parkingAllocations,
   parkingSlots,
+  redistributionItems,
   sharedVehicles,
   vehicleReservations,
   type Hub,
@@ -37,6 +39,24 @@ export const hubRepository = {
       return db.select().from(sharedVehicles).where(eq(sharedVehicles.hubId, hubId)).orderBy(sharedVehicles.code).all();
     }
     return db.select().from(sharedVehicles).all();
+  },
+
+  listVehicleIdsWithOpenIncidents(): string[] {
+    return db
+      .select({ id: incidents.resourceId })
+      .from(incidents)
+      .where(and(eq(incidents.resourceType, "SHARED_VEHICLE"), inArray(incidents.status, ["OPEN", "IN_PROGRESS"])))
+      .all()
+      .map((row) => row.id);
+  },
+
+  listVehicleIdsInRedistribution(): string[] {
+    return db
+      .select({ id: redistributionItems.vehicleId })
+      .from(redistributionItems)
+      .where(inArray(redistributionItems.status, ["PENDING", "IN_TRANSIT"]))
+      .all()
+      .map((row) => row.id);
   },
 
   /** Cổng sạc kèm hubId (lấy qua vị trí đỗ chứa cổng). */

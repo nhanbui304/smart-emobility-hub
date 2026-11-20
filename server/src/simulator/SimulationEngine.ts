@@ -57,7 +57,6 @@ export function computeBaselineMetrics(state: OperationalState): SimulationMetri
  * Tính chỉ số Kịch bản giả định (Scenario) trên cùng bản chụp OperationalState và cùng điều kiện so sánh.
  */
 export function computeScenarioMetrics(state: OperationalState, scenario: Scenario): SimulationMetrics {
-  const baseline = computeBaselineMetrics(state);
   const { scenarioType, assumptions } = scenario;
   const targetHubId = assumptions.hubId;
 
@@ -102,7 +101,7 @@ export function computeScenarioMetrics(state: OperationalState, scenario: Scenar
 
     const busyVehicles = Math.max(1, h.totalVehicles - Math.min(h.totalVehicles, availVehicles));
     const effectivePorts = Math.max(1, freePorts + Math.round(totalPorts * 0.5));
-    const hubWaitMinutes = Math.max(1.0, (busyVehicles / effectivePorts) * 4.5 + deficit * 2.5);
+    const hubWaitMinutes = (busyVehicles / effectivePorts) * 4.5 + deficit * 2.5;
     totalWaitWeighted += hubWaitMinutes;
 
     const isOverloaded =
@@ -115,15 +114,7 @@ export function computeScenarioMetrics(state: OperationalState, scenario: Scenar
   }
 
   const hubCount = Math.max(1, state.hubs.length);
-  let waitingTimeMinutes = Math.round((totalWaitWeighted / hubCount) * 10) / 10;
-
-  // Đảm bảo tính nhất quán theo chiều hướng kịch bản khi so sánh với baseline
-  if (scenarioType === "ADD_CHARGERS" && waitingTimeMinutes >= baseline.waitingTimeMinutes) {
-    waitingTimeMinutes = Math.max(1.0, Math.round((baseline.waitingTimeMinutes * 0.65) * 10) / 10);
-  }
-  if (scenarioType === "ADD_VEHICLES" && unavailableVehicles > baseline.unavailableVehicles) {
-    unavailableVehicles = Math.max(0, baseline.unavailableVehicles - (assumptions.additionalVehicles ?? 2));
-  }
+  const waitingTimeMinutes = Math.round((totalWaitWeighted / hubCount) * 10) / 10;
 
   return {
     unavailableVehicles,

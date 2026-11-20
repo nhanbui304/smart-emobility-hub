@@ -6,6 +6,7 @@ import { chargingReservationApi } from "../../api/chargingReservation";
 import { ApiError } from "../../api/client";
 import { hubApi } from "../../api/hubs";
 import { myReservationsApi } from "../../api/myReservations";
+import { newRequestId } from "../../api/requestId";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { StatusBadge } from "../../components/StatusBadge";
@@ -22,8 +23,6 @@ import type {
   TimeRange,
   UpdatedReservation,
 } from "../../types";
-
-const DEMO_RESERVATION_ID = "cr-demo-01";
 
 type PanelMode = "VIEW" | "RESCHEDULE_CRITERIA" | "RESCHEDULE_CONFIRM" | "CANCEL_CONFIRM";
 
@@ -64,20 +63,16 @@ export function ManageChargingSchedulePanel() {
   const [hubs, setHubs] = useState<HubStatus[]>([]);
   const hubNameById = useMemo(() => new Map(hubs.map((h) => [h.id, h.name])), [hubs]);
 
-  // Bước 1–3: danh sách lịch sạc thực tế của sinh viên (nếu có) + 1 lịch mẫu demo để test độc lập
+  // Bước 1–3: danh sách lịch sạc thuộc tài khoản đang đăng nhập.
   const [myReservations, setMyReservations] = useState<ChargingReservation[]>([]);
   const quickItems = useMemo(() => {
-    const items = myReservations.map((r) => ({
+    return myReservations.map((r) => ({
       id: r.id,
       label: `Lịch ${r.id.slice(0, 8)} (${formatDateTimeVi(r.startTime)})`,
     }));
-    if (!items.some((item) => item.id === DEMO_RESERVATION_ID)) {
-      items.push({ id: DEMO_RESERVATION_ID, label: "Lịch sạc mẫu" });
-    }
-    return items;
   }, [myReservations]);
 
-  const [reservationIdInput, setReservationIdInput] = useState<string>(DEMO_RESERVATION_ID);
+  const [reservationIdInput, setReservationIdInput] = useState("");
   const [activeReservationId, setActiveReservationId] = useState<string>("");
   const [detail, setDetail] = useState<ReservationDetail | null>(null);
   const [mode, setMode] = useState<PanelMode>("VIEW");
@@ -114,24 +109,27 @@ export function ManageChargingSchedulePanel() {
       .catch(() => undefined);
   }, []);
 
-  // Tự động đồng bộ danh sách lịch sạc của sinh viên từ DB; nếu chưa có thì tải lịch mẫu duy nhất
+  // Đồng bộ danh sách lịch sạc của sinh viên từ server.
   useEffect(() => {
     let mounted = true;
+    setMyReservations([]);
+    setDetail(null);
+    setActiveReservationId("");
+    setReservationIdInput("");
     myReservationsApi
       .list()
       .then((res) => {
         if (!mounted) return;
         const list = res.chargingReservations ?? [];
         setMyReservations(list);
-        const firstId = list[0]?.id ?? DEMO_RESERVATION_ID;
-        setReservationIdInput(firstId);
-        void selectReservation(firstId);
+        const first = list[0];
+        if (first) void selectReservation(first.id);
       })
-      .catch(() => {
+      .catch((err) => {
         if (!mounted) return;
-        setMyReservations([]);
-        setReservationIdInput(DEMO_RESERVATION_ID);
-        void selectReservation(DEMO_RESERVATION_ID);
+        if (!(err instanceof ApiError && err.code === "NOT_IMPLEMENTED")) {
+          setErrorMsg("Không tải được danh sách lịch sạc.");
+        }
       });
     return () => {
       mounted = false;
@@ -239,7 +237,7 @@ export function ManageChargingSchedulePanel() {
     if (!picked) return;
     setSelectedOption(picked);
     // Sinh requestId MỘT lần cho thao tác xác nhận này; nếu retry gửi lại cùng requestId (Ext 10d)
-    setPendingRescheduleRequestId(crypto.randomUUID());
+    setPendingRescheduleRequestId(newRequestId());
     setErrorMsg(null);
     setMode("RESCHEDULE_CONFIRM");
   }
@@ -247,7 +245,7 @@ export function ManageChargingSchedulePanel() {
   /** ChargingReservationView.confirmReschedule() – Bước 9–11 */
   async function confirmReschedule() {
     if (!activeReservationId || !selectedOption || !rescheduleForm) return;
-    const reqId = pendingRescheduleRequestId ?? crypto.randomUUID();
+    const reqId = pendingRescheduleRequestId ?? newRequestId();
     setPendingRescheduleRequestId(reqId);
     setBusy(true);
     setErrorMsg(null);
@@ -330,7 +328,7 @@ export function ManageChargingSchedulePanel() {
         setMode("VIEW");
         return;
       }
-      setPendingCancelRequestId(crypto.randomUUID());
+      setPendingCancelRequestId(newRequestId());
       setMode("CANCEL_CONFIRM");
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Không thể kiểm tra điều kiện hủy lịch sạc.");
@@ -342,7 +340,7 @@ export function ManageChargingSchedulePanel() {
   /** ChargingReservationView.confirmCancel() – Ext 4b.1 */
   async function confirmCancel() {
     if (!activeReservationId || !cancellationCheck) return;
-    const reqId = pendingCancelRequestId ?? crypto.randomUUID();
+    const reqId = pendingCancelRequestId ?? newRequestId();
     setPendingCancelRequestId(reqId);
     setBusy(true);
     setErrorMsg(null);
@@ -405,6 +403,7 @@ export function ManageChargingSchedulePanel() {
         <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-300">
           Chọn lịch sạc hoặc nhập mã lịch
         </label>
+        {quickItems.length === 0 && <p className="text-xs text-neutral-500">Chưa có lịch sạc trong danh sách.</p>}
         <div className="flex flex-wrap gap-2">
           {quickItems.map((q) => (
             <button
@@ -426,7 +425,7 @@ export function ManageChargingSchedulePanel() {
             type="text"
             value={reservationIdInput}
             onChange={(e) => setReservationIdInput(e.target.value)}
-            placeholder="Nhập mã lịch sạc (vd: cr-demo-01)"
+            placeholder="Nhập mã lịch sạc"
             className="flex-1 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand dark:border-white/15 dark:bg-neutral-900 dark:focus:border-lime"
           />
           <Button

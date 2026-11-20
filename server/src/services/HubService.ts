@@ -1,6 +1,7 @@
 // Owner: Lê Quốc Linh – View Hub and Resource Status (luồng mẫu cho cả nhóm); Nguyễn Hoàng Nhân – UC10, mục 2.3.3 (getReceivableSlotCount, getHubReservations)
 // Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
 import type { Hub } from "../db/schema";
+import { systemConfig } from "../config/systemConfig";
 import { AppError } from "../lib/errors";
 import type { TimeRange } from "../lib/schemas";
 import { hubRepository } from "../repositories/HubRepository";
@@ -75,6 +76,10 @@ function buildStatuses(hubs: Hub[], now: Date): HubStatus[] {
   const vehicles = hubRepository.listVehicles();
   const ports = hubRepository.listPortsWithHub();
   const allocations = hubRepository.listActiveAllocationsAt(now);
+  const restrictedVehicleIds = new Set([
+    ...hubRepository.listVehicleIdsWithOpenIncidents(),
+    ...hubRepository.listVehicleIdsInRedistribution(),
+  ]);
 
   // Vị trí đang có xe dùng chung đỗ hoặc đang được giữ/đặt thì không còn trống
   const occupiedSlotIds = new Set<string>();
@@ -91,7 +96,11 @@ function buildStatuses(hubs: Hub[], now: Date): HubStatus[] {
       id: hub.id,
       name: hub.name,
       location: hub.location,
-      availableVehicles: hubVehicles.filter((v) => v.status === "AVAILABLE").length,
+      availableVehicles: hubVehicles.filter((v) =>
+        v.status === "AVAILABLE" &&
+        v.batteryLevel >= systemConfig.reservableBatteryThreshold &&
+        !restrictedVehicleIds.has(v.id)
+      ).length,
       totalVehicles: hubVehicles.length,
       freeSlots: hubSlots.filter((s) => s.status === "IN_SERVICE" && !occupiedSlotIds.has(s.id)).length,
       totalSlots: hubSlots.length,

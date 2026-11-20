@@ -4,11 +4,9 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { SCENARIO_TYPES } from "../constants";
-import { AppError } from "../lib/errors";
 import { sendOk } from "../lib/response";
 import { requestIdField, timeRangeSchema } from "../lib/schemas";
 import { parseOrThrow } from "../middleware/validate";
-import { getRecommendationById } from "../repositories/SimulationRunRepository";
 import { simulationService } from "../services/SimulationService";
 
 export const prepareSimulationBody = z.object({ hubIds: z.array(z.string().min(1)), timeRange: timeRangeSchema });
@@ -66,14 +64,7 @@ export const simulationController = {
   /** POST /api/simulations/handoffs (UC14 Ext 9b: Chuyển sang nghiệp vụ điều phối UC12 / UC13) */
   async prepareOperationalHandoff(req: Request, res: Response): Promise<void> {
     const { recommendationId } = req.body as z.infer<typeof prepareOperationalHandoffBody>;
-    const rec = getRecommendationById(recommendationId);
-    if (!rec) {
-      throw new AppError("NOT_FOUND", "Không tìm thấy khuyến nghị điều phối.");
-    }
-    sendOk(res, {
-      targetUseCase: rec.targetUseCase,
-      recommendationContext: rec,
-    });
+    sendOk(res, simulationService.prepareOperationalHandoff(recommendationId));
   },
 
   /**

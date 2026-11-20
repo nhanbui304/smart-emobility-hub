@@ -1,7 +1,8 @@
 // Owner: Nguyễn Hoàng Nhân – UC13 Manage Smart Charging Schedule
 // Một phần của «repository» OperationalRepository (Sub #3) – xem ../OperationalRepository.ts.
 // Chữ ký method khớp class diagram Submission #3 (docs/hoangnhan_submission3/UC13.drawio). Đổi chữ ký thì sửa cả sơ đồ.
-import { and, desc, eq, gt, inArray, lt } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, lt, or } from "drizzle-orm";
+import { systemConfig } from "../../config/systemConfig";
 import {
   chargingPorts,
   chargingRequests,
@@ -12,9 +13,9 @@ import {
   incidents,
   parkingAllocations,
   parkingSlots,
+  privateVehicles,
   processedRequests,
   sharedVehicles,
-  users,
 } from "../../db/schema";
 import { db } from "../../lib/db";
 import { AppError } from "../../lib/errors";
@@ -72,6 +73,82 @@ export function listHubChargingPortsWithSlots(hubId: string) {
     .where(eq(parkingSlots.hubId, hubId))
     .orderBy(parkingSlots.code)
     .all();
+}
+
+export function committedChargingPortIds(
+  context: ChargingContext,
+  portsWithSlots: ReturnType<typeof listHubChargingPortsWithSlots>,
+): Set<string> {
+  return new Set([
+    ...context.activeSessions.map((session) => session.portId),
+    ...context.confirmedReservations.map((reservation) => reservation.portId),
+    ...portsWithSlots.filter(({ port }) => port.status === "IN_USE").map(({ port }) => port.id),
+  ]);
+}
+
+/** Dùng cùng các ràng buộc ở bước kiểm tra nháp và trong giao dịch áp dụng. */
+export function validateScheduleConstraints(stored: StoredPlanDraft, context: ChargingContext): void {
+  const portsWithSlots = listHubChargingPortsWithSlots(stored.hubId);
+  const resourcesByPort = new Map(portsWithSlots.map((resource) => [resource.port.id, resource]));
+  const demandsById = new Map(context.demands.map((demand) => [demand.demandId, demand]));
+  const restricted = new Set(context.restrictedResources.map((restriction) => restriction.resourceId));
+  const committed = committedChargingPortIds(context, portsWithSlots);
+  const heldSlots = new Set(context.activeHolds.map((hold) => hold.positionId));
+  const usedPorts = new Set<string>();
+  const served = new Set<string>();
+  let totalPower = 0;
+
+  for (const allocation of stored.draft.proposedAllocations) {
+    const { demandId, portId, positionId, timeRange, allocatedPowerKw } = allocation;
+    const resource = resourcesByPort.get(portId);
+    if (!resource || resource.slot.id !== positionId) {
+      throw new AppError("CONFLICT", "Cổng sạc và vị trí phải khớp và thuộc Hub đang điều phối.");
+    }
+    if (restricted.has(portId) || restricted.has(positionId) || heldSlots.has(positionId)) {
+      throw new AppError("CONFLICT", "Cổng hoặc vị trí sạc đang bị hạn chế hoặc đã được giữ.");
+    }
+    if (
+      timeRange.startTime.getTime() !== stored.timeRange.startTime.getTime() ||
+      timeRange.endTime.getTime() !== stored.timeRange.endTime.getTime()
+    ) {
+      throw new AppError("CONFLICT", "Khung giờ phân bổ phải trùng khung giờ của kế hoạch.");
+    }
+    if (!Number.isFinite(allocatedPowerKw) || allocatedPowerKw <= 0 || allocatedPowerKw > resource.port.maxPowerKw) {
+      throw new AppError("CONFLICT", "Công suất phân bổ phải lớn hơn 0 và không vượt định mức cổng sạc.");
+    }
+    if (usedPorts.has(portId)) {
+      throw new AppError("CONFLICT", "Cổng sạc bị phân bổ nhiều lần trong cùng kế hoạch.");
+    }
+    if (demandId) {
+      const demand = demandsById.get(demandId);
+      if (!demand || stored.demandPortMap.get(demandId) !== portId || served.has(demandId)) {
+        throw new AppError("CONFLICT", "Nhu cầu sạc phải còn khả dụng tại Hub và chỉ được phân bổ một lần.");
+      }
+      if (committed.has(portId) || (demand.connectorType && resource.port.connectorType !== demand.connectorType)) {
+        throw new AppError("CONFLICT", "Cổng sạc đã có cam kết hoặc không tương thích với xe.");
+      }
+      served.add(demandId);
+    } else if (!committed.has(portId)) {
+      throw new AppError("CONFLICT", "Cổng chưa có cam kết phải được gắn với một nhu cầu sạc.");
+    }
+    usedPorts.add(portId);
+    totalPower += allocatedPowerKw;
+  }
+
+  if (served.size !== stored.demandPortMap.size || totalPower > context.hubPowerCapacityKw + 1e-6) {
+    throw new AppError("CONFLICT", "Kế hoạch sạc không nhất quán hoặc vượt công suất khả dụng của Hub.");
+  }
+  for (const portId of committed) {
+    const resource = resourcesByPort.get(portId);
+    if (
+      resource &&
+      !restricted.has(portId) &&
+      !restricted.has(resource.slot.id) &&
+      !usedPorts.has(portId)
+    ) {
+      throw new AppError("CONFLICT", "Kế hoạch làm mất phân bổ của phiên đang chạy hoặc lịch đã xác nhận.");
+    }
+  }
 }
 
 export const chargingScheduleOps = {
@@ -190,18 +267,20 @@ export const chargingScheduleOps = {
               and(
                 inArray(parkingAllocations.slotId, chargerSlotIds),
                 inArray(parkingAllocations.status, ["HELD", "CONFIRMED", "IN_USE"]),
-                lt(parkingAllocations.startTime, timeRange.endTime),
-                gt(parkingAllocations.endTime, timeRange.startTime),
+                or(
+                  eq(parkingAllocations.status, "IN_USE"),
+                  and(lt(parkingAllocations.startTime, timeRange.endTime), gt(parkingAllocations.endTime, timeRange.startTime)),
+                ),
               ),
             )
             .all()
-            .filter((a) => a.status !== "HELD" || !a.holdExpiresAt || a.holdExpiresAt > now);
+            .filter((a) => a.status !== "HELD" || (a.holdExpiresAt !== null && a.holdExpiresAt > now));
 
     const activeHolds: PositionHold[] = overlappingAllocations.map((a) => ({
       positionId: a.slotId,
       timeRange: {
         startTime: a.startTime,
-        endTime: a.endTime,
+        endTime: a.status === "IN_USE" ? timeRange.endTime : a.endTime,
       },
     }));
 
@@ -226,18 +305,33 @@ export const chargingScheduleOps = {
       )
       .orderBy(chargingRequests.createdAt)
       .all();
+    const requestVehicleIds = hubRequests.map((request) => request.vehicleId);
+    const privateConnectorById = new Map(
+      requestVehicleIds.length === 0
+        ? []
+        : db.select({ id: privateVehicles.id, connectorType: privateVehicles.connectorType }).from(privateVehicles)
+          .where(inArray(privateVehicles.id, requestVehicleIds)).all().map((vehicle) => [vehicle.id, vehicle.connectorType] as const),
+    );
+    const slotByPort = new Map(hubPortsWithSlots.map(({ port, slot }) => [port.id, slot.id]));
 
     for (const req of hubRequests) {
-      if (restrictedSet.has(req.vehicleId)) continue;
+      seenVehicleIds.add(req.vehicleId);
+      if (req.assignedPortId && req.status !== "WAITING") {
+        const positionId = slotByPort.get(req.assignedPortId);
+        if (positionId && req.status === "ALLOCATED" && (!req.allocationDeadline || req.allocationDeadline > now)) {
+          activeHolds.push({ positionId, timeRange });
+        }
+      }
+      if (req.status !== "WAITING" || restrictedSet.has(req.vehicleId)) continue;
       demands.push({
         demandId: req.id,
         vehicleId: req.vehicleId,
+        connectorType: privateConnectorById.get(req.vehicleId),
         chargingNeed: {
           currentBattery: req.currentBattery,
           targetBattery: req.targetBattery,
         },
       });
-      seenVehicleIds.add(req.vehicleId);
       if (!batteryMap.has(req.vehicleId)) {
         batteryMap.set(req.vehicleId, req.currentBattery);
       }
@@ -247,8 +341,7 @@ export const chargingScheduleOps = {
     // nhu cầu sạc của xe thuộc phạm vi điều phối vận hành")
     for (const v of hubVehicles) {
       if (seenVehicleIds.has(v.id) || restrictedSet.has(v.id)) continue;
-      const needsCharging =
-        v.status === "CHARGING" || (v.status === "AVAILABLE" && v.batteryLevel < 85);
+      const needsCharging = v.status === "AVAILABLE" && v.batteryLevel < 85;
       if (needsCharging) {
         demands.push({
           demandId: `demand-${v.code}`,
@@ -295,11 +388,14 @@ export const chargingScheduleOps = {
    * - Lưu bản ghi mới vào bảng charging_schedule_versions và processed_requests.
    * - Không tự ghi nhận xe đã bắt đầu sạc (Bước 9).
    */
-  atomicApplyChargingSchedule(requestId: string, planDraftId: string, baseVersion: number): ApplyResult {
+  atomicApplyChargingSchedule(requestId: string, planDraftId: string, baseVersion: number, operatorId: string): ApplyResult {
     return db.transaction(() => {
       // 1. Kiểm tra gửi lặp (UC13 Ext 8c)
       const existingReq = commonOps.findProcessedRequest(requestId);
       if (existingReq) {
+        if (existingReq.operation !== "APPLY_CHARGING_PLAN" || existingReq.actorId !== operatorId) {
+          throw new AppError("CONFLICT", "Mã yêu cầu đã được dùng cho thao tác khác.");
+        }
         const prevVersion = db
           .select()
           .from(chargingScheduleVersions)
@@ -313,6 +409,7 @@ export const chargingScheduleOps = {
             appliedNow: false,
           };
         }
+        throw new AppError("NOT_FOUND", "Không tìm thấy kết quả của yêu cầu đã xử lý.");
       }
 
       // 2. Tìm bản nháp kế hoạch
@@ -326,7 +423,7 @@ export const chargingScheduleOps = {
 
       // 3. Kiểm tra baseVersion (UC13 Ext 8a: Nhu cầu, tài nguyên hoặc kế hoạch đã thay đổi)
       const currentVersion = getLatestScheduleVersionNumber(stored.hubId);
-      if (currentVersion !== baseVersion) {
+      if (currentVersion !== baseVersion || stored.baseVersion !== baseVersion) {
         throw new AppError(
           "VERSION_CONFLICT",
           `Kế hoạch sạc tại Hub đã thay đổi (phiên bản hiện tại: v${currentVersion}, phiên bản đang sửa: v${baseVersion}). Vui lòng tải lại dữ liệu.`,
@@ -334,31 +431,15 @@ export const chargingScheduleOps = {
         );
       }
 
-      // 4. Kiểm tra lại tài nguyên trong kế hoạch không bị sự cố mới phát sinh sau bước 5 (UC13 Ext 8a)
+      // 4. Mỗi lần áp dụng mới phải kiểm tra lại cả tài nguyên và các cam kết sau bước duyệt.
+      const now = new Date();
+      if (stored.timeRange.endTime <= now) {
+        throw new AppError("CONFLICT", "Khung giờ của kế hoạch sạc đã kết thúc.");
+      }
       const freshContext = this.queryChargingContext(stored.hubId, stored.timeRange);
-      const restrictedIds = new Set(freshContext.restrictedResources.map((r) => r.resourceId));
-      for (const alloc of stored.draft.proposedAllocations) {
-        if (restrictedIds.has(alloc.portId) || restrictedIds.has(alloc.positionId)) {
-          throw new AppError(
-            "CONFLICT",
-            "Tài nguyên sạc trong kế hoạch vừa bị hạn chế do sự cố mới phát sinh. Vui lòng tải lại dữ liệu.",
-          );
-        }
-      }
-
-      const totalAllocatedKw = stored.draft.proposedAllocations.reduce(
-        (sum, a) => sum + a.allocatedPowerKw,
-        0,
-      );
-      if (totalAllocatedKw > freshContext.hubPowerCapacityKw + 1e-6) {
-        throw new AppError(
-          "CONFLICT",
-          `Công suất khả dụng tại Hub đã thay đổi (${freshContext.hubPowerCapacityKw} kW < ${totalAllocatedKw.toFixed(1)} kW). Vui lòng tải lại dữ liệu.`,
-        );
-      }
+      validateScheduleConstraints(stored, freshContext);
 
       // 5. Lưu phiên bản kế hoạch mới (version = baseVersion + 1)
-      const now = new Date();
       const inserted = db
         .insert(chargingScheduleVersions)
         .values({
@@ -374,29 +455,33 @@ export const chargingScheduleOps = {
         .get()!;
 
       // Cập nhật cổng được phân bổ cho các yêu cầu sạc WAITING thuộc servedRequests (không tự bắt đầu phiên sạc)
-      for (const demandId of stored.draft.servedRequests) {
-        const assignedPortId = stored.demandPortMap.get(demandId);
-        if (assignedPortId && !demandId.startsWith("demand-")) {
-          db.update(chargingRequests)
-            .set({
-              assignedPortId,
-              status: "ALLOCATED",
-              updatedAt: now,
-            })
-            .where(and(eq(chargingRequests.id, demandId), eq(chargingRequests.status, "WAITING")))
-            .run();
+      for (const allocation of stored.draft.proposedAllocations) {
+        const { demandId, portId, timeRange } = allocation;
+        if (!demandId || demandId.startsWith("demand-")) continue;
+        // Khi cấp cổng theo kế hoạch tương lai, tính hạn nhận từ lúc khung cấp bắt đầu.
+        const claimStart = Math.max(now.getTime(), timeRange.startTime.getTime());
+        const allocationDeadline = new Date(Math.min(
+          claimStart + systemConfig.chargingAllocationClaimMinutes * 60_000,
+          timeRange.endTime.getTime(),
+        ));
+        const updated = db.update(chargingRequests)
+          .set({ assignedPortId: portId, status: "ALLOCATED", allocationDeadline, updatedAt: now })
+          .where(and(
+            eq(chargingRequests.id, demandId),
+            eq(chargingRequests.hubId, stored.hubId),
+            eq(chargingRequests.status, "WAITING"),
+          ))
+          .run();
+        if (updated.changes !== 1) {
+          throw new AppError("CONFLICT", "Yêu cầu sạc không còn trong hàng chờ tại Hub.");
         }
       }
 
       // 6. Ghi nhận processed_requests chống gửi lặp
-      const operatorUser =
-        db.select().from(users).where(eq(users.role, "OPERATOR")).get() ??
-        db.select().from(users).get()!;
-
       db.insert(processedRequests)
         .values({
           requestId,
-          actorId: operatorUser.id,
+          actorId: operatorId,
           operation: "APPLY_CHARGING_PLAN",
           resultId: inserted.id,
           createdAt: now,

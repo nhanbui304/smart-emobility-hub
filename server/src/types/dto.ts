@@ -130,6 +130,7 @@ export interface ChargingContext {
 export interface ChargingDemand {
   demandId: string;
   vehicleId: string;
+  connectorType?: ConnectorType;
   chargingNeed: ChargingNeed;
 }
 
@@ -321,7 +322,7 @@ export interface PickUpResult {
 }
 
 export interface PlanAdjustment {
-  demandId: string;
+  demandId?: string;
   portId: string;
   positionId: string;
   timeRange: TimeRange;
@@ -329,6 +330,7 @@ export interface PlanAdjustment {
 }
 
 export interface PlanAllocation {
+  demandId?: string;
   portId: string;
   positionId: string;
   timeRange: TimeRange;

@@ -23,13 +23,13 @@
        │
        ▼
 [Service: server/src/services/SmartChargingService.ts & NotificationService.ts]
-  • smartChargingService (+4 method public & -7 hàm private ở cuối file khớp 100% UC13.drawio)
+  • smartChargingService (4 method public, kiểm tra ràng buộc dùng chung với giao dịch áp dụng)
   • notificationService.notifyAffectedParties(scheduleVersionId, changeSummary)
        │
        ▼
 [Repository: server/src/repositories/operational/chargingScheduleOps.ts & common.ts]
   • operationalRepository.queryChargingContext(hubId, timeRange)
-  • operationalRepository.atomicApplyChargingSchedule(requestId, planDraftId, baseVersion)
+  • operationalRepository.atomicApplyChargingSchedule(requestId, planDraftId, baseVersion, operatorId)
   • operationalRepository.markNotificationPending(scheduleVersionId)
   • operationalRepository.findProcessedRequest(requestId)
        │
@@ -88,11 +88,12 @@
 ### 2.4. Bước 7–9: Áp dụng kế hoạch nguyên tử & Thông báo (`applyChargingSchedule`)
 * **Căn cứ:** BTL1 Bảng 2.13 Bước 7–9, Ext 8a, Ext 8b, Ext 8c, Ext 9a.
 * **Thực hiện:**
-  1. Gọi `operationalRepository.atomicApplyChargingSchedule(requestId, planDraftId, baseVersion)` bên trong `db.transaction(() => { ... })`:
+  1. `operationalRepository.atomicApplyChargingSchedule(requestId, planDraftId, baseVersion, operatorId)` mở giao dịch SQLite. Controller lấy `operatorId` từ phiên đăng nhập.
      * **Chống gửi lặp (`Ext 8c`):** Kiểm tra `findProcessedRequest(requestId)`. Nếu đã xử lý, trả lại ngay kết quả phiên bản cũ (`appliedNow = false`), không tạo phiên bản trùng.
-     * **Kiểm tra xung đột phiên bản & sự cố mới (`Ext 8a`):** Kiểm tra phiên bản mới nhất của Hub trong DB phải khớp `baseVersion`, và không có cổng/vị trí nào trong kế hoạch vừa bị báo sự cố sau bước 5. Nếu lệch `baseVersion` → Ném `AppError("VERSION_CONFLICT")` để giao diện yêu cầu tải lại bước 2.
+     * **Kiểm tra xung đột phiên bản và tài nguyên (`Ext 8a`):** Kiểm tra lại nhu cầu, cổng, vị trí, công suất và các cam kết trong giao dịch. Nếu lệch `baseVersion`, giao diện yêu cầu lập lại kế hoạch.
      * **Lưu phiên bản mới (`Bước 8`):** Insert bản ghi mới vào `charging_schedule_versions` với `version = baseVersion + 1`, danh sách `allocations` (JSON), `appliedAt = now`. Ghi dòng `processed_requests` (`operation = "APPLY_CHARGING_PLAN"`).
      * **Không tự bắt đầu phiên sạc (`Bước 9`):** Chỉ cập nhật kế hoạch phân bổ, không tự tạo `charging_session`.
+     * **Giả định MVP cho UC07/UC13:** Khi một yêu cầu `WAITING` được cấp cổng, hạn nhận mặc định là 15 phút tính từ thời điểm bắt đầu khung cấp hoặc thời điểm áp dụng nếu muộn hơn. Hạn nhận không vượt thời điểm kết thúc khung cấp. Giá trị nằm ở `systemConfig.chargingAllocationClaimMinutes`.
   2. Gọi `notificationService.notifyAffectedParties(scheduleVersionId, changeSummary)`:
      * Nếu thông báo thất bại (`!sent` hoặc lỗi ngoại lệ), gọi `operationalRepository.markNotificationPending(scheduleVersionId)` (**Ext 9a**: giữ nguyên kế hoạch đã áp dụng, đánh dấu thông báo chưa gửi để thử lại).
 

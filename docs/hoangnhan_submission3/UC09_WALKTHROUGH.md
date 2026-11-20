@@ -66,7 +66,7 @@
 1. Khởi chạy ứng dụng (`npm run dev`), mở trình duyệt tại `http://localhost:5173`.
 2. Đăng nhập bằng tài khoản sinh viên: **`student1@hub.local`** / **`student123`**.
 3. Vào tab **"Xe của tôi"** (menu dưới cùng) → Kéo xuống thẻ **"UC09 · Quản lý lịch sạc cá nhân"**.
-4. Hệ thống tự nạp sẵn lịch sạc mẫu **`cr-demo-01`** (xe `59-X1 123.45`, đầu cắm `STANDARD_PLUG`, trạng thái `Đã xác nhận`).
+4. Sau khi seed, chọn lịch sạc mẫu **`cr-demo-01`** của tài khoản này. Khi chạy riêng nhánh UC09, có thể nhập trực tiếp mã lịch mẫu.
 5. **Thử luồng Đổi lịch:** Bấm **"Đổi lịch sạc"** → chọn Hub mới (vd: *ĐH Bách Khoa*) & khung giờ mới → bấm **"Tìm phương án mới"** → chọn 1 cổng sạc → xem **bảng đối chiếu Lịch cũ vs Lịch dự kiến mới** → bấm **"Xác nhận đổi lịch"** → thấy hướng dẫn mới (`v2`) và chi tiết lịch tự động cập nhật.
 6. **Thử luồng Hủy lịch:** Bấm **"Hủy lịch sạc"** → xác nhận hủy → trạng thái chuyển sang **`Đã hủy`** và các nút Đổi/Hủy tự khóa (chế độ chỉ xem).
-7. **Thử kiểm soát quyền sở hữu (`Ext 2a`):** Nhập mã **`cr-demo-s2`** (lịch của `student2`) và bấm **"Xem lịch"** → hệ thống từ chối truy cập ngay lập tức.
+7. **Thử kiểm soát quyền sở hữu (`Ext 2a`):** Đăng nhập bằng `student2@hub.local`, nhập mã **`cr-demo-01`** và bấm **"Xem lịch"**. Hệ thống từ chối truy cập.

@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { chargingScheduleApi } from "../../api/chargingSchedule";
 import { ApiError } from "../../api/client";
 import { hubApi } from "../../api/hubs";
+import { newRequestId } from "../../api/requestId";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { ErrorMessage } from "../../components/ErrorMessage";
@@ -72,7 +73,7 @@ export function SmartChargingPanel() {
 
   const [appliedResult, setAppliedResult] = useState<ScheduleResult | null>(null);
   const [applying, setApplying] = useState<boolean>(false);
-  const [pendingRequestId, setPendingRequestId] = useState<string>(() => crypto.randomUUID());
+  const [pendingRequestId, setPendingRequestId] = useState(newRequestId);
 
   const [error, setError] = useState<unknown>(null);
   const [versionConflictNotice, setVersionConflictNotice] = useState<string | null>(null);
@@ -128,7 +129,7 @@ export function SmartChargingPanel() {
       setEditableAllocations(proposed.proposedAllocations.map((a) => ({ ...a })));
       setValidatedPlan(null);
       setAppliedResult(null);
-      setPendingRequestId(crypto.randomUUID());
+      setPendingRequestId(newRequestId());
     } catch (err) {
       setError(err);
     } finally {
@@ -151,8 +152,8 @@ export function SmartChargingPanel() {
     setError(null);
     setValidating(true);
     try {
-      const adjustments: PlanAdjustment[] = editableAllocations.map((alloc, idx) => ({
-        demandId: draft.servedRequests[idx] ?? `alloc-${idx}`,
+      const adjustments: PlanAdjustment[] = editableAllocations.map((alloc) => ({
+        demandId: alloc.demandId,
         portId: alloc.portId,
         positionId: alloc.positionId,
         timeRange: alloc.timeRange,
@@ -160,7 +161,7 @@ export function SmartChargingPanel() {
       }));
       const validated = await chargingScheduleApi.validatePlan(draft.planDraftId, adjustments);
       setValidatedPlan(validated);
-      setPendingRequestId(crypto.randomUUID());
+      setPendingRequestId(newRequestId());
     } catch (err) {
       setValidatedPlan(null);
       setError(err);
@@ -451,7 +452,7 @@ export function SmartChargingPanel() {
               </thead>
               <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
                 {editableAllocations.map((alloc, idx) => {
-                  const demandId = draft.servedRequests[idx] ?? `Cam kết #${idx + 1}`;
+                  const demandId = alloc.demandId ?? `Cam kết #${idx + 1}`;
                   const demandObj = context?.demands.find((d) => d.demandId === demandId);
                   return (
                     <tr key={alloc.portId}>

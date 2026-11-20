@@ -9,6 +9,7 @@ import {
   findRunById,
   findSnapshotById,
   getFailedRunReason,
+  getRecommendationById,
   getScenarioDraft,
   getUnsavedRunResult,
   saveScenarioDraft,
@@ -31,9 +32,18 @@ import type {
   SnapshotDataAssessment,
   SnapshotInfo,
   SnapshotReady,
+  TargetWorkflow,
 } from "../types/dto";
 
 export const simulationService = {
+  prepareOperationalHandoff(recommendationId: string): TargetWorkflow {
+    const recommendation = getRecommendationById(recommendationId);
+    if (!recommendation) {
+      throw new AppError("NOT_FOUND", "Không tìm thấy khuyến nghị điều phối.");
+    }
+    return { targetUseCase: recommendation.targetUseCase, recommendationContext: recommendation };
+  },
+
   /**
    * UC14 bước 1–2: Đọc trạng thái vận hành (chỉ đọc, qua operationalRepository.readOperationalState),
    * đánh giá dữ liệu (assessSnapshotData), lưu bản chụp (storeSnapshot).

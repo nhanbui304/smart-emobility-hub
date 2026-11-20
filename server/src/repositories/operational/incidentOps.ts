@@ -2,11 +2,20 @@
 // Một phần của «repository» OperationalRepository (Sub #3) – xem ../OperationalRepository.ts.
 // Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
 import type { IncidentImpact } from "../../constants";
+import { eq } from "drizzle-orm";
+import { incidents } from "../../db/schema";
 import type { AffectedContext, ConsentPlan, HandlingPlan, IncidentContext, IncidentDetails, IncidentResult, ResolutionResult, VerificationContext } from "../../types/dto";
 import { db } from "../../lib/db";
 import { notImplemented } from "../../lib/errors";
 
 export const incidentOps = {
+  markIncidentNotificationPending(incidentId: string): void {
+    db.update(incidents)
+      .set({ notificationPending: true, updatedAt: new Date() })
+      .where(eq(incidents.id, incidentId))
+      .run();
+  },
+
   queryResourceStatusAndOpenIncidents(resourceId: string): IncidentContext {
     throw notImplemented("OperationalRepository.queryResourceStatusAndOpenIncidents");
   },

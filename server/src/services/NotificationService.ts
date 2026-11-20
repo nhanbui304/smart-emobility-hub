@@ -1,8 +1,6 @@
 // Owner: Nguyễn Hoàng Nhân (UC13) – dùng chung cho UC05, UC11 và các scheduler
 // Chữ ký method khớp class diagram Submission #3 (docs/hoangnhan_submission3/UC13.drawio). Đổi chữ ký thì sửa cả sơ đồ.
-import { eq } from "drizzle-orm";
-import { incidents } from "../db/schema";
-import { db } from "../lib/db";
+import { operationalRepository } from "../repositories/OperationalRepository";
 import type { AffectedContext, ChangeSummary, NotificationResult, OperatorAlert } from "../types/dto";
 
 export const notificationService = {
@@ -57,13 +55,7 @@ export const notificationService = {
 
   /** UC11 Ext 7a: Đánh dấu sự cố chưa gửi được thông báo để thử lại sau. */
   async markNotificationPending(incidentId: string): Promise<void> {
-    db.update(incidents)
-      .set({
-        notificationPending: true,
-        updatedAt: new Date(),
-      })
-      .where(eq(incidents.id, incidentId))
-      .run();
+    operationalRepository.markIncidentNotificationPending(incidentId);
   },
 
   /** UC04 / UC05: Gửi cảnh báo nội bộ cho Operator khi cần xác minh mở/khóa xe hoặc đối soát. */

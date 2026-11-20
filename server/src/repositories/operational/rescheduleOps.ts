@@ -34,8 +34,6 @@ import { commonOps } from "./common";
 /** Các trạng thái lịch sạc vẫn đang giữ cổng/vị trí sạc (không tính CANCELLED / COMPLETED / EXPIRED). */
 const ACTIVE_RESERVATION_STATUSES = ["CONFIRMED", "CHARGING", "AWAITING_DISCONNECT"] as const;
 
-/** Mã lịch mẫu duy nhất dùng để demo UC09 độc lập khi UC08 chưa tạo dữ liệu. */
-const DEMO_RESERVATION_ID = "cr-demo-01";
 /** Hệ số giới hạn công suất cung cấp điện của Hub (đồng bộ với UC13 chargingScheduleOps). */
 const HUB_POWER_SAFETY_FACTOR = 0.85;
 
@@ -66,54 +64,6 @@ function purgeExpiredOptions(now: Date): void {
       rescheduleOptionStore.delete(id);
     }
   }
-}
-
-/**
- * Khởi tạo 1 lịch sạc demo kết nối động từ dữ liệu thực trong DB (private_vehicles ⋈ charging_ports ⋈ parking_slots)
- * khi người dùng mở mã mẫu "cr-demo-01" mà bảng charging_reservations chưa có bản ghi này.
- */
-function ensureDemoReservationIfRequested(reservationId: string): ChargingReservation | undefined {
-  if (reservationId !== DEMO_RESERVATION_ID) return undefined;
-
-  const vehicle = db.select().from(privateVehicles).get();
-  if (!vehicle) return undefined;
-
-  const compatibleRow = db
-    .select({ port: chargingPorts, slot: parkingSlots })
-    .from(chargingPorts)
-    .innerJoin(parkingSlots, eq(chargingPorts.slotId, parkingSlots.id))
-    .where(
-      and(
-        eq(chargingPorts.connectorType, vehicle.connectorType),
-        eq(parkingSlots.hasCharger, true),
-        eq(parkingSlots.status, "IN_SERVICE"),
-      ),
-    )
-    .all()
-    .find((row) => row.port.status !== "OUT_OF_SERVICE");
-
-  if (!compatibleRow) return undefined;
-
-  const startTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  startTime.setMinutes(0, 0, 0);
-  const endTime = new Date(startTime.getTime() + 90 * 60 * 1000);
-
-  return db
-    .insert(chargingReservations)
-    .values({
-      id: DEMO_RESERVATION_ID,
-      studentId: vehicle.ownerId,
-      privateVehicleId: vehicle.id,
-      portId: compatibleRow.port.id,
-      startTime,
-      endTime,
-      currentBattery: systemConfig.reservableBatteryThreshold,
-      targetBattery: 100 - systemConfig.pickupBatteryThreshold,
-      status: "CONFIRMED",
-      version: 1,
-    })
-    .returning()
-    .get();
 }
 
 /** Kiểm tra tài nguyên (cổng sạc hoặc vị trí đỗ) có đang bị hạn chế do sự cố OPEN/IN_PROGRESS (UC11 bước 4). */
@@ -456,13 +406,11 @@ export function getPortAndHubInfo(portId: string): { hubId: string; hubName: str
 export const rescheduleOps = {
   /** UC09 bước 2 / 5 / 7 / Ext 4b: tìm bản ghi lịch sạc theo mã. */
   findReservation(reservationId: string): ChargingReservation | undefined {
-    const existing = db
+    return db
       .select()
       .from(chargingReservations)
       .where(eq(chargingReservations.id, reservationId))
       .get();
-    if (existing) return existing;
-    return ensureDemoReservationIfRequested(reservationId);
   },
 
   /**
