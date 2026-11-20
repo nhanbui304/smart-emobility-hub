@@ -1,16 +1,25 @@
 // Owner: Ngô Minh Triết – UC01 Find Suitable Hub and Mobility Option
 // Danh sách Hub (View Hub and Resource Status) do Lê Quốc Linh làm – đã chạy thật, tự tải lại mỗi 3 giây.
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { hubApi } from "../../api/hubs";
 import { searchApi } from "../../api/search";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { ErrorMessage } from "../../components/ErrorMessage";
 import { Spinner } from "../../components/Spinner";
+import { StatusBadge } from "../../components/StatusBadge";
 import { useAuth } from "../../context/AuthContext";
 import { useAsync } from "../../hooks/useAsync";
-import type { HubStatus } from "../../types";
+import type {
+  HubStatus,
+  MobilityOption,
+  OptionSelectionResult,
+  SearchCriteria,
+  SearchFormConfig,
+  SearchResult,
+  VehicleType,
+} from "../../types";
 
 const PURPOSES = [
   { value: "RENT_VEHICLE", label: "Thuê xe" },
@@ -18,21 +27,68 @@ const PURPOSES = [
   { value: "CHARGE", label: "Sạc xe" },
 ] as const;
 
+const VEHICLE_TYPE_LABELS: Record<VehicleType, string> = {
+  E_BIKE: "Xe đạp điện",
+  E_MOTORBIKE: "Xe máy điện",
+};
+
 export function HomePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
   const { data: hubs, loading, error, reload } = useAsync(() => hubApi.list(), [], { refreshEveryMs: 3000 });
 
   const [purpose, setPurpose] = useState<(typeof PURPOSES)[number]["value"]>("RENT_VEHICLE");
+  const [formConfig, setFormConfig] = useState<SearchFormConfig | null>(null);
+  const [originHubId, setOriginHubId] = useState<string>("");
+  const [vehicleType, setVehicleType] = useState<VehicleType>("E_BIKE");
+  const [minBattery, setMinBattery] = useState<number>(30);
+
+  const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  const [selectionResult, setSelectionResult] = useState<OptionSelectionResult | null>(null);
   const [searchError, setSearchError] = useState<unknown>(null);
   const [searching, setSearching] = useState(false);
+  const [confirmingOptionId, setConfirmingOptionId] = useState<string | null>(null);
 
-  async function onSearch() {
+  useEffect(() => {
+    let active = true;
+    void searchApi
+      .loadSearchForm()
+      .then((cfg) => {
+        if (!active) return;
+        setFormConfig(cfg);
+        setOriginHubId((prev) => prev || cfg.defaultHubId);
+        if (cfg.availableVehicleTypes.length > 0) {
+          setVehicleType(cfg.availableVehicleTypes[0]);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!originHubId && hubs && hubs.length > 0) {
+      setOriginHubId(hubs[0].id);
+    }
+  }, [hubs, originHubId]);
+
+  const hubNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    hubs?.forEach((h) => map.set(h.id, h.name));
+    return map;
+  }, [hubs]);
+
+  async function submitSearch(criteria: SearchCriteria) {
     setSearchError(null);
+    setSelectionResult(null);
+    setSelectedOptionId(null);
     setSearching(true);
     try {
-      // TODO (Triết – UC01): lấy Hub xuất phát, loại xe, mức pin tối thiểu từ form (đang tạm điền);
-      // hiển thị danh sách phương án trả về và cho chọn (searchApi.confirmOptionSelection).
-      await searchApi.searchMobilityOptions({ purpose, originHubId: hubs?.[0]?.id ?? "", vehicleType: "E_BIKE", minBattery: 0 });
+      const res = await searchApi.searchMobilityOptions(criteria);
+      setSearchResult(res);
     } catch (err) {
       setSearchError(err);
     } finally {
@@ -40,6 +96,40 @@ export function HomePage() {
     }
   }
 
+  async function onSearch() {
+    await submitSearch({
+      purpose,
+      originHubId,
+      vehicleType,
+      minBattery,
+    });
+  }
+
+  function reviseCriteria() {
+    setSearchResult(null);
+    setSelectionResult(null);
+    setSelectedOptionId(null);
+    setSearchError(null);
+  }
+
+  async function selectMobilityOption(option: MobilityOption) {
+    setSearchError(null);
+    setConfirmingOptionId(option.optionId);
+    try {
+      const res = await searchApi.confirmOptionSelection(sessionIdRef.current, option.optionId);
+      setSelectionResult(res);
+      setSearchResult(res.updatedResult);
+      if (!res.optionChanged) {
+        setSelectedOptionId(option.optionId);
+      } else {
+        setSelectedOptionId(null);
+      }
+    } catch (err) {
+      setSearchError(err);
+    } finally {
+      setConfirmingOptionId(null);
+    }
+  }
   return (
     <div className="space-y-6">
       <Card tone="highlight" className="p-6">
@@ -61,11 +151,161 @@ export function HomePage() {
             </button>
           ))}
         </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div>
+            <label htmlFor="uc01-origin-hub" className="block text-xs text-white/80">
+              Hub xuất phát
+            </label>
+            <select
+              id="uc01-origin-hub"
+              value={originHubId}
+              onChange={(e) => setOriginHubId(e.target.value)}
+              className="mt-1 w-full rounded-xl bg-white/10 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-lime"
+            >
+              <option value="" className="text-neutral-900">
+                -- Chọn Hub --
+              </option>
+              {hubs?.map((h) => (
+                <option key={h.id} value={h.id} className="text-neutral-900">
+                  {h.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="uc01-vehicle-type" className="block text-xs text-white/80">
+              Loại phương tiện
+            </label>
+            <select
+              id="uc01-vehicle-type"
+              value={vehicleType}
+              onChange={(e) => setVehicleType(e.target.value as VehicleType)}
+              className="mt-1 w-full rounded-xl bg-white/10 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-lime"
+            >
+              {(formConfig?.availableVehicleTypes ?? ["E_BIKE", "E_MOTORBIKE"]).map((vt) => (
+                <option key={vt} value={vt} className="text-neutral-900">
+                  {VEHICLE_TYPE_LABELS[vt]}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="uc01-min-battery" className="block text-xs text-white/80">
+              Pin tối thiểu (%)
+            </label>
+            <input
+              id="uc01-min-battery"
+              type="number"
+              min={0}
+              max={100}
+              value={minBattery}
+              onChange={(e) => setMinBattery(Number(e.target.value))}
+              className="mt-1 w-full rounded-xl bg-white/10 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-lime"
+            />
+          </div>
+        </div>
+
         <Button className="mt-4" fullWidth loading={searching} onClick={onSearch}>
           Tìm Hub phù hợp
         </Button>
       </Card>
       <ErrorMessage error={searchError} />
+
+      {searchResult && (
+        <Card className="p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-base font-bold">Phương án phù hợp ({searchResult.options.length})</h2>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                Cập nhật lúc: {new Date(searchResult.updatedAt).toLocaleTimeString("vi-VN")} • Lưu ý: tài nguyên chưa được giữ chỗ.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={reviseCriteria}
+              className="text-xs font-semibold text-brand underline dark:text-lime"
+            >
+              Sửa tiêu chí
+            </button>
+          </div>
+
+          {searchResult.unverifiedFlags.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
+              <StatusBadge status="DATA_STALE" />
+              <span>Một số dữ liệu Hub/xe chưa được xác minh mới nhất.</span>
+            </div>
+          )}
+
+          {selectionResult?.optionChanged && (
+            <div className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+              Phương án vừa chọn đã thay đổi trạng thái hoặc không còn đáp ứng tiêu chí. Danh sách bên dưới đã được cập nhật, vui lòng chọn lại.
+            </div>
+          )}
+
+          {searchResult.options.length === 0 ? (
+            <div className="mt-4 rounded-xl bg-surface p-4 text-sm dark:bg-white/5">
+              <p className="font-semibold">Không tìm thấy phương án phù hợp.</p>
+              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Gợi ý: thử giảm mức pin tối thiểu, đổi loại phương tiện hoặc chọn Hub xuất phát khác.
+              </p>
+            </div>
+          ) : (
+            <ul className="mt-4 grid gap-3 md:grid-cols-2">
+              {searchResult.options.map((opt) => {
+                const isSelected = selectedOptionId === opt.optionId;
+                return (
+                  <li
+                    key={opt.optionId}
+                    className={`rounded-xl border p-4 transition ${
+                      isSelected
+                        ? "border-brand bg-brand/5 dark:border-lime dark:bg-lime/10"
+                        : "border-neutral-200 dark:border-white/10"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold">
+                          {opt.vehicle.code} • {VEHICLE_TYPE_LABELS[opt.vehicle.type]}
+                        </p>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                          {hubNameMap.get(opt.hubId) ?? opt.hubId} • Cách khoảng {opt.estimatedDistance} km
+                        </p>
+                      </div>
+                      <StatusBadge status={opt.vehicle.status} />
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-xs font-medium">Pin hiện tại: {opt.vehicle.batteryLevel}%</span>
+                      <Button
+                        className="px-3 py-1.5 text-xs"
+                        loading={confirmingOptionId === opt.optionId}
+                        onClick={() => void selectMobilityOption(opt)}
+                      >
+                        {isSelected ? "Đã chọn" : "Chọn phương án"}
+                      </Button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          {selectionResult && !selectionResult.optionChanged && selectedOptionId && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-900 dark:bg-emerald-500/10 dark:text-emerald-200">
+              <span>Đã ghi nhận lựa chọn trong phiên làm việc (tài nguyên chưa bị khóa).</span>
+              <div className="flex flex-wrap gap-2">
+                {selectionResult.nextActions.map((actionPath) => (
+                  <Button key={actionPath} className="px-3 py-1.5 text-xs" onClick={() => navigate(actionPath)}>
+                    Tiếp tục đặt dịch vụ
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
 
       <section>
         <div className="mb-3 flex items-center justify-between">
