@@ -76,7 +76,7 @@ jobs:
           curl -fsS "http://$address/student/trips" | grep -F 'id="root"'
 
       - name: Upload release artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: smart-emobility-hub-release-${{ env.RELEASE_SHA }}
           path: release-bundle/
