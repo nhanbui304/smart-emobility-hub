@@ -65,14 +65,24 @@ jobs:
           cp -r client/dist release-bundle/client/dist
 
       - name: Verify Docker image from deployment bundle
+        shell: bash
         run: |
           docker build -t "smart-emobility-hub:$RELEASE_SHA" release-bundle
           SESSION_SECRET="$(openssl rand -hex 32)"
           export SESSION_SECRET
           container="$(docker run -d -p 127.0.0.1::3000 -e SESSION_SECRET "smart-emobility-hub:$RELEASE_SHA")"
-          trap 'docker rm -f "$container" >/dev/null' EXIT
+          cleanup() {
+            if [ "$?" -ne 0 ]; then
+              docker logs "$container" >&2 || true
+            fi
+            docker rm -f "$container" >/dev/null || true
+          }
+          trap cleanup EXIT
           address="$(docker port "$container" 3000/tcp)"
-          curl -fsS --max-time 3 --retry 15 --retry-connrefused --retry-delay 1 "http://$address/api/health" | jq -e '.data.status == "up"'
+          health_response="$RUNNER_TEMP/smart-emobility-health.json"
+          curl -fsS --max-time 3 --retry 15 --retry-all-errors --retry-delay 1 \
+            --output "$health_response" "http://$address/api/health"
+          jq -e '.data.status == "up"' "$health_response"
           curl -fsS "http://$address/student/trips" | grep -F 'id="root"'
 
       - name: Upload release artifact
