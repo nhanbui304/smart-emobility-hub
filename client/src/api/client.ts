@@ -10,11 +10,14 @@ import axios, { AxiosError } from "axios";
 export class ApiError extends Error {
   code: string;
   status?: number;
+  /** Dữ liệu kèm lỗi từ server (ví dụ danh sách Hub gợi ý, vị trí còn trống). */
+  details?: unknown;
 
-  constructor(code: string, message: string, status?: number) {
+  constructor(code: string, message: string, status?: number, details?: unknown) {
     super(message);
     this.code = code;
     this.status = status;
+    this.details = details;
   }
 }
 
@@ -31,7 +34,7 @@ function toApiError(err: unknown): ApiError {
     const body = err.response?.data;
     if (body && body.ok === false) {
       if (err.response?.status === 401) onUnauthorized?.();
-      return new ApiError(body.error.code, body.error.message, err.response?.status);
+      return new ApiError(body.error.code, body.error.message, err.response?.status, body.error.details);
     }
     if (!err.response) return new ApiError("NETWORK_ERROR", "Không kết nối được máy chủ. Server đã chạy chưa?");
     return new ApiError("HTTP_ERROR", `Lỗi ${err.response.status}`, err.response.status);

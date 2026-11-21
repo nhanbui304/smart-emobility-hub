@@ -41,7 +41,7 @@ export const chargingRequestService = {
     if (!operationalRepository.checkVehicleAtHubAndCompatible(hubId, vehicleId)) {
       throw new AppError(
         "CONFLICT",
-        "Hub đã chọn không có cổng sạc hoạt động tương thích với đầu cắm của phương tiện.",
+        "Không xác minh được xe đang ở Hub đã chọn hoặc Hub không có cổng sạc tương thích.",
       );
     }
 

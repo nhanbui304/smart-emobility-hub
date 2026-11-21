@@ -1,17 +1,27 @@
 // Owner: Lê Quốc Linh – UC12 Coordinate Vehicle Redistribution
 // Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
-import type { RedistributionItem, RedistributionOrder } from "../db/schema";
+import type { RequestOperation } from "../constants";
+import type { ProcessedRequest, RedistributionItem, RedistributionOrder } from "../db/schema";
+import { db } from "../lib/db";
+import { AppError } from "../lib/errors";
+import { hubRepository } from "../repositories/HubRepository";
+import { redistributionRepository } from "../repositories/RedistributionRepository";
 import type { RedistributionPreview } from "../types/dto";
-import { notImplemented } from "../lib/errors";
 
 export const redistributionService = {
+  async listOrders() {
+    return redistributionRepository.listOrders();
+  },
+
+  /** UC12 bước 2–4: hiển thị xe có thể điều chuyển và sức chứa tiếp nhận của Hub đích tại thời điểm dự kiến. */
   async getRedistributionOptions(
     sourceHubId: string,
     targetHubId: string,
     vehicleIds: string[],
     eta: Date,
   ): Promise<RedistributionPreview> {
-    throw notImplemented("RedistributionService.getRedistributionOptions");
+    assertValidRequest(sourceHubId, targetHubId, eta);
+    return redistributionRepository.findRedistributionOptions(sourceHubId, targetHubId, vehicleIds, eta);
   },
 
   /** UC12 bước 1–4: tạo lệnh điều chuyển xe giữa hai Hub. */
@@ -23,7 +33,37 @@ export const redistributionService = {
     eta: Date,
     operatorId: string,
   ): Promise<RedistributionOrder> {
-    throw notImplemented("RedistributionService.createOrder");
+    const done = redistributionRepository.findProcessedRequest(requestId);
+    if (done) {
+      assertSameOperation(done, "CREATE_REDISTRIBUTION_ORDER", operatorId);
+      return redistributionRepository.findOrderWithItems(done.resultId);
+    }
+
+    const uniqueVehicleIds = [...new Set(vehicleIds)];
+    if (uniqueVehicleIds.length === 0) throw new AppError("VALIDATION_ERROR", "Hãy chọn ít nhất một xe để điều chuyển.");
+    assertValidRequest(sourceHubId, targetHubId, eta);
+    if (!checkVehicleEligibility(uniqueVehicleIds, sourceHubId)) {
+      throw new AppError(
+        "CONFLICT",
+        "Có xe không đủ điều kiện điều chuyển (đang được sử dụng, sạc, giữ chỗ hoặc gặp sự cố). Vui lòng chọn lại.",
+      );
+    }
+    if (!checkTargetHubCapacity(targetHubId, uniqueVehicleIds, eta)) {
+      throw new AppError("CONFLICT", "Hub đích không đủ sức chứa. Hãy giảm số xe, đổi thời điểm hoặc chọn Hub khác.");
+    }
+
+    // Kiểm tra lại điều kiện và ghi trong một thao tác nhất quán (UC12 bước 6).
+    return db.transaction(() =>
+      redistributionRepository.atomicCreateOrder(
+        requestId,
+        sourceHubId,
+        targetHubId,
+        uniqueVehicleIds,
+        eta,
+        operatorId,
+        new Date(),
+      ),
+    );
   },
 
   /** UC12 bước 5: xác nhận một xe đã rời Hub nguồn. */
@@ -33,7 +73,12 @@ export const redistributionService = {
     vehicleId: string,
     operatorId: string,
   ): Promise<RedistributionItem> {
-    throw notImplemented("RedistributionService.confirmDeparture");
+    const done = redistributionRepository.findProcessedRequest(requestId);
+    if (done) {
+      assertSameOperation(done, "CONFIRM_REDISTRIBUTION_DEPARTURE", operatorId);
+      return findRecordedItem(orderId, vehicleId, done.resultId);
+    }
+    return db.transaction(() => redistributionRepository.atomicMarkDeparted(requestId, orderId, vehicleId, new Date(), operatorId));
   },
 
   /** UC12 bước 6: xác nhận một xe đã tới Hub đích. */
@@ -43,37 +88,100 @@ export const redistributionService = {
     vehicleId: string,
     operatorId: string,
   ): Promise<RedistributionItem> {
-    throw notImplemented("RedistributionService.confirmArrival");
+    const done = redistributionRepository.findProcessedRequest(requestId);
+    if (done) {
+      assertSameOperation(done, "CONFIRM_REDISTRIBUTION_ARRIVAL", operatorId);
+      return findRecordedItem(orderId, vehicleId, done.resultId);
+    }
+    try {
+      return db.transaction(() => redistributionRepository.atomicMarkArrived(requestId, orderId, vehicleId, new Date(), operatorId));
+    } catch (err) {
+      if (err instanceof AppError) throw err;
+      // 9a: đã tiếp nhận xe nhưng cập nhật dữ liệu lỗi → đánh dấu chờ đối soát.
+      console.error("[redistribution] Cập nhật tiếp nhận xe lỗi:", err);
+      redistributionRepository.markReconciliationRequired(orderId, vehicleId, new Date());
+      throw new AppError("INTERNAL_ERROR", "Cập nhật dữ liệu tiếp nhận xe bị lỗi; xe được đánh dấu chờ đối soát.");
+    }
   },
 
   /** UC12 luồng thay thế: hủy các xe chưa xuất phát. */
   async cancelPendingItems(requestId: string, orderId: string, operatorId: string): Promise<RedistributionOrder> {
-    throw notImplemented("RedistributionService.cancelPendingItems");
+    const done = redistributionRepository.findProcessedRequest(requestId);
+    if (done) {
+      assertSameOperation(done, "CANCEL_REDISTRIBUTION_ITEMS", operatorId, orderId);
+      return redistributionRepository.findOrderWithItems(orderId);
+    }
+    return db.transaction(() => redistributionRepository.atomicCancelPendingItems(requestId, orderId, new Date(), operatorId));
   },
 
+  /** UC12 bước 10: đóng lệnh khi mọi xe đã được tiếp nhận hoặc phần chưa xuất phát đã hủy. */
   async closeOrder(requestId: string, orderId: string, operatorId: string): Promise<RedistributionOrder> {
-    throw notImplemented("RedistributionService.closeOrder");
+    const done = redistributionRepository.findProcessedRequest(requestId);
+    if (done) {
+      assertSameOperation(done, "CLOSE_REDISTRIBUTION_ORDER", operatorId, orderId);
+      return redistributionRepository.findOrderWithItems(orderId);
+    }
+    if (!checkOrderCompletion(orderId)) {
+      throw new AppError("CONFLICT", "Còn xe chưa xuất phát hoặc đang trên đường; chưa thể đóng lệnh.");
+    }
+    return db.transaction(() => redistributionRepository.atomicCloseOrder(requestId, orderId, new Date(), operatorId));
   },
 };
 
 // ---------- Bước nội bộ (method private "–" trong class diagram) ----------
 
-/** private (–) trong class diagram. */
+/** private (–) trong class diagram: hai Hub khác nhau và đều tồn tại (4a). */
 function checkSourceAndTargetHubs(sourceHubId: string, targetHubId: string): boolean {
-  throw notImplemented("RedistributionService.checkSourceAndTargetHubs");
+  return (
+    sourceHubId !== targetHubId &&
+    hubRepository.findById(sourceHubId) !== undefined &&
+    hubRepository.findById(targetHubId) !== undefined
+  );
 }
 
-/** private (–) trong class diagram. */
+/** private (–) trong class diagram: mọi xe đang ở Hub nguồn và AVAILABLE (4b). Việc xe bị khóa do lệnh khác được kiểm tra lại khi ghi. */
 function checkVehicleEligibility(vehicleIds: string[], sourceHubId: string): boolean {
-  throw notImplemented("RedistributionService.checkVehicleEligibility");
+  const available = new Set(
+    hubRepository
+      .listVehicles(sourceHubId)
+      .filter((v) => v.status === "AVAILABLE")
+      .map((v) => v.id),
+  );
+  return vehicleIds.length > 0 && vehicleIds.every((id) => available.has(id));
 }
 
-/** private (–) trong class diagram. */
+/** private (–) trong class diagram: Hub đích còn đủ chỗ cho số xe, đã trừ chỗ giữ cho các lệnh khác (4c). */
 function checkTargetHubCapacity(targetHubId: string, vehicleIds: string[], eta: Date): boolean {
-  throw notImplemented("RedistributionService.checkTargetHubCapacity");
+  // Sức chứa chỉ phụ thuộc Hub đích và thời điểm ETA nên dùng chính Hub đích làm Hub nguồn khi tra cứu.
+  const { availableCapacity } = redistributionRepository.findRedistributionOptions(targetHubId, targetHubId, [], eta);
+  return availableCapacity >= vehicleIds.length;
 }
 
-/** private (–) trong class diagram. */
+/** private (–) trong class diagram: không còn xe PENDING / IN_TRANSIT thì lệnh có thể đóng. */
 function checkOrderCompletion(orderId: string): boolean {
-  throw notImplemented("RedistributionService.checkOrderCompletion");
+  const order = redistributionRepository.findOrderWithItems(orderId);
+  return order.items.every((i) => i.status === "ARRIVED" || i.status === "CANCELLED");
+}
+
+// ---------- Hàm phụ (không có trong sơ đồ) ----------
+
+function assertValidRequest(sourceHubId: string, targetHubId: string, eta: Date): void {
+  if (Number.isNaN(eta.getTime()) || eta.getTime() <= Date.now()) {
+    throw new AppError("VALIDATION_ERROR", "Thời điểm dự kiến tiếp nhận phải ở tương lai.");
+  }
+  if (!checkSourceAndTargetHubs(sourceHubId, targetHubId)) {
+    throw new AppError("CONFLICT", "Hub nguồn và Hub đích phải khác nhau và đều tồn tại. Vui lòng chọn lại.");
+  }
+}
+
+function assertSameOperation(done: ProcessedRequest, operation: RequestOperation, operatorId: string, resultId?: string): void {
+  if (done.operation !== operation || done.actorId !== operatorId || (resultId && done.resultId !== resultId)) {
+    throw new AppError("CONFLICT", "Mã yêu cầu đã được dùng cho một thao tác khác.");
+  }
+}
+
+function findRecordedItem(orderId: string, vehicleId: string, itemId: string): RedistributionItem {
+  const item = redistributionRepository.findOrderWithItems(orderId).items.find((i) => i.id === itemId && i.vehicleId === vehicleId);
+  if (!item) throw new AppError("NOT_FOUND", "Không tìm thấy kết quả đã ghi nhận của yêu cầu.");
+  return item;
 }

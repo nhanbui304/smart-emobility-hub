@@ -15,9 +15,16 @@ import type {
 } from "../types/dto";
 
 const ALLOWED_PURPOSES = ["RENT_VEHICLE", "PARK", "CHARGE"] as const;
-const sessionSelections = new Map<string, { optionId: string; criteria: SearchCriteria; selectedAt: Date }>();
-const sessionCriteria = new Map<string, SearchCriteria>();
-const optionCriteriaMap = new Map<string, SearchCriteria>();
+const SEARCH_SESSION_TTL_MS = 15 * 60_000;
+
+interface SearchSession {
+  criteria: SearchCriteria;
+  offeredHubs: Map<string, string>;
+  expiresAt: number;
+  selection?: { optionId: string; selectedAt: Date };
+}
+
+const searchSessions = new Map<string, SearchSession>();
 
 export const searchService = {
   async loadSearchForm(): Promise<SearchFormConfig> {
@@ -33,7 +40,7 @@ export const searchService = {
     };
   },
 
-  async findSuitableOptions(criteria: SearchCriteria): Promise<SearchResult> {
+  async findSuitableOptions(criteria: SearchCriteria, sessionId: string): Promise<SearchResult> {
     await this.validateCriteria(criteria);
     const context = mobilityRepository.queryMobilityContext(criteria);
     if (!context.hubs || context.hubs.length === 0) {
@@ -51,11 +58,15 @@ export const searchService = {
 
     const options = filterSuitableOptions(criteria, context);
 
-    // Lưu tiêu chí tìm kiếm gần nhất và gắn theo từng optionId để confirmOptionSelection khôi phục chính xác
-    sessionCriteria.set("default", criteria);
-    for (const opt of options) {
-      optionCriteriaMap.set(opt.optionId, criteria);
+    const now = Date.now();
+    for (const [key, session] of searchSessions) {
+      if (session.expiresAt <= now) searchSessions.delete(key);
     }
+    searchSessions.set(sessionId, {
+      criteria,
+      offeredHubs: new Map(options.map((option) => [option.optionId, option.hubId])),
+      expiresAt: now + SEARCH_SESSION_TTL_MS,
+    });
 
     return {
       options,
@@ -69,17 +80,16 @@ export const searchService = {
       throw new AppError("VALIDATION_ERROR", "Thiếu thông tin phiên tìm kiếm hoặc phương án được chọn.");
     }
 
-    const lastCriteria =
-      optionCriteriaMap.get(optionId) ??
-      sessionCriteria.get(sessionId) ??
-      sessionCriteria.get("default") ?? {
-        purpose: "RENT_VEHICLE",
-        originHubId: "",
-        vehicleType: VEHICLE_TYPES[0],
-        minBattery: 0,
-      };
-    sessionCriteria.set(sessionId, lastCriteria);
+    const session = searchSessions.get(sessionId);
+    if (!session || session.expiresAt <= Date.now()) {
+      throw new AppError("CONFLICT", "Phiên tìm kiếm đã hết hiệu lực. Hãy tìm lại phương án.");
+    }
+    const offeredHubId = session.offeredHubs.get(optionId);
+    if (!offeredHubId) {
+      throw new AppError("VALIDATION_ERROR", "Phương án không thuộc kết quả tìm kiếm này.");
+    }
 
+    const lastCriteria = session.criteria;
     const isStillValid = await this.validateSelectedOption(optionId, lastCriteria);
     const context = mobilityRepository.queryMobilityContext(lastCriteria);
     const unverifiedFlags = [
@@ -87,9 +97,7 @@ export const searchService = {
       ...markUnverifiedResources(context),
     ];
     const refreshedOptions = filterSuitableOptions(lastCriteria, context);
-    for (const opt of refreshedOptions) {
-      optionCriteriaMap.set(opt.optionId, lastCriteria);
-    }
+    session.offeredHubs = new Map(refreshedOptions.map((option) => [option.optionId, option.hubId]));
 
     const updatedResult: SearchResult = {
       options: refreshedOptions,
@@ -97,7 +105,9 @@ export const searchService = {
       unverifiedFlags,
     };
 
-    if (!isStillValid) {
+    const selectedOption = refreshedOptions.find((option) => option.optionId === optionId);
+    if (!isStillValid || !selectedOption || selectedOption.hubId !== offeredHubId) {
+      session.selection = undefined;
       return {
         optionChanged: true,
         nextActions: [],
@@ -106,13 +116,7 @@ export const searchService = {
     }
 
     recordSessionSelection(sessionId, optionId);
-    const selectedOption = refreshedOptions.find((o) => o.optionId === optionId);
-    const targetHubId =
-      selectedOption?.hubId ??
-      (optionId.includes(":") ? optionId.split(":")[1] : undefined) ??
-      lastCriteria.originHubId;
-
-    const nextActions = buildNextActions(lastCriteria.purpose, targetHubId, optionId);
+    const nextActions = buildNextActions(lastCriteria.purpose, selectedOption.hubId, optionId);
     return {
       optionChanged: false,
       nextActions,
@@ -243,20 +247,8 @@ function filterSuitableOptions(criteria: SearchCriteria, ctx: MobilityContext): 
 }
 
 function recordSessionSelection(sessionId: string, optionId: string): void {
-  const existingCriteria =
-    optionCriteriaMap.get(optionId) ??
-    sessionCriteria.get(sessionId) ??
-    sessionCriteria.get("default") ?? {
-      purpose: "RENT_VEHICLE",
-      originHubId: "",
-      vehicleType: VEHICLE_TYPES[0],
-      minBattery: 0,
-    };
-  sessionSelections.set(sessionId, {
-    optionId,
-    criteria: existingCriteria,
-    selectedAt: new Date(),
-  });
+  const session = searchSessions.get(sessionId);
+  if (session) session.selection = { optionId, selectedAt: new Date() };
 }
 
 function buildNextActions(purpose: string, hubId: string, optionId: string): string[] {

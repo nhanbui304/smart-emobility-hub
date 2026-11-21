@@ -163,6 +163,63 @@ async function main() {
         }
       }
     }
+
+    // Chuyến đi mẫu để demo UC05 Trả xe khi chưa nhận xe qua UC04: student2 đang đi một xe của Ga Metro ĐHQG.
+    // (student1 không có chuyến đi, dùng để thử đặt xe / nhận xe.)
+    const student2 = db.select().from(s.users).where(eq(s.users.email, "student2@hub.local")).get()!;
+    const demoVehicle = db
+      .select()
+      .from(s.sharedVehicles)
+      .where(eq(s.sharedVehicles.status, "AVAILABLE"))
+      .orderBy(s.sharedVehicles.code)
+      .get()!;
+    const startedAt = new Date(now.getTime() - 20 * 60_000);
+    const demoReservation = db
+      .insert(s.vehicleReservations)
+      .values({
+        studentId: student2.id,
+        vehicleId: demoVehicle.id,
+        hubId: demoVehicle.hubId!,
+        status: "USED",
+        pickupDeadline: startedAt,
+      })
+      .returning()
+      .get();
+    db.insert(s.trips)
+      .values({
+        reservationId: demoReservation.id,
+        studentId: student2.id,
+        vehicleId: demoVehicle.id,
+        startedAt,
+        status: "ACTIVE",
+      })
+      .run();
+    db.update(s.sharedVehicles)
+      .set({ status: "IN_USE", hubId: null, slotId: null, batteryLevel: Math.max(demoVehicle.batteryLevel, 60) })
+      .where(eq(s.sharedVehicles.id, demoVehicle.id))
+      .run();
+
+    // Lịch mẫu UC09 thuộc tài khoản demo thực sự sở hữu xe.
+    const demoChargingStudent = db.select().from(s.users).where(eq(s.users.email, "student1@hub.local")).get()!;
+    const demoChargingVehicle = db.select().from(s.privateVehicles)
+      .where(eq(s.privateVehicles.ownerId, demoChargingStudent.id)).get()!;
+    const demoChargingPort = db.select().from(s.chargingPorts).where(eq(s.chargingPorts.status, "AVAILABLE")).all()
+      .find((port) => port.connectorType === demoChargingVehicle.connectorType)!;
+    const startTime = new Date(now);
+    startTime.setDate(startTime.getDate() + 1);
+    startTime.setHours(10, 0, 0, 0);
+    db.insert(s.chargingReservations).values({
+      id: "cr-demo-01",
+      studentId: demoChargingStudent.id,
+      privateVehicleId: demoChargingVehicle.id,
+      portId: demoChargingPort.id,
+      startTime,
+      endTime: new Date(startTime.getTime() + 90 * 60_000),
+      currentBattery: 35,
+      targetBattery: 90,
+      status: "CONFIRMED",
+      version: 1,
+    }).run();
   });
 
   const total = (
@@ -175,6 +232,7 @@ async function main() {
   console.log(
     "[seed] Tài khoản: operator@hub.local / operator123 · student1@hub.local, student2@hub.local / student123",
   );
+  console.log("[seed] student2 đang có 1 chuyến đi mẫu để demo trả xe (UC05).");
 }
 
 main()

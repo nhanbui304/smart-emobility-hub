@@ -1,8 +1,9 @@
 // Owner: Ngô Minh Triết – UC11 Handle Operational Incident
 // Một phần của «repository» OperationalRepository (Sub #3) – xem ../OperationalRepository.ts.
 // Chữ ký method khớp class diagram Submission #3 (docs/mtriet-submission3/Draw-io/UC11.drawio). Đổi chữ ký thì sửa cả sơ đồ.
-import { and, desc, eq, inArray, ne } from "drizzle-orm";
-import type { IncidentImpact, ResourceType } from "../../constants";
+import { and, desc, eq, gt, inArray, ne, or } from "drizzle-orm";
+import { systemConfig } from "../../config/systemConfig";
+import type { ConnectorType, IncidentImpact, RequestOperation, ResourceType, VehicleType } from "../../constants";
 import {
   chargingPorts,
   chargingRequests,
@@ -12,13 +13,11 @@ import {
   incidents,
   parkingAllocations,
   parkingSlots,
-  processedRequests,
+  redistributionItems,
   sharedVehicles,
   trips,
-  users,
   vehicleReservations,
   type Incident,
-  type ProcessedRequest,
 } from "../../db/schema";
 import { db } from "../../lib/db";
 import { AppError } from "../../lib/errors";
@@ -32,7 +31,9 @@ import type {
   ResolutionResult,
   VerificationContext,
 } from "../../types/dto";
-import { commonOps } from "./common";
+import { findBlockingVehicleReservation } from "../ReservationRepository";
+import { getChargingAvailability, isChargingPortAvailable } from "./chargingAvailability";
+import { previousResultId, recordProcessedRequest } from "./common";
 
 interface ResolvedResource {
   id: string;
@@ -40,6 +41,10 @@ interface ResolvedResource {
   status: string;
   hubId: string | null;
   slotId?: string | null;
+  connectorType?: ConnectorType;
+  hasCharger?: boolean;
+  vehicleType?: VehicleType;
+  batteryLevel?: number;
   label: string;
 }
 
@@ -51,29 +56,17 @@ export interface IncidentResourceOption {
   label: string;
 }
 
-function findProcessedRequestSafe(requestId: string): ProcessedRequest | undefined {
-  try {
-    return commonOps.findProcessedRequest(requestId);
-  } catch (err) {
-    if (err instanceof AppError && err.code === "NOT_IMPLEMENTED") {
-      return db
-        .select()
-        .from(processedRequests)
-        .where(eq(processedRequests.requestId, requestId))
-        .get();
-    }
-    throw err;
+function findRecordedIncidentId(
+  requestId: string,
+  operatorId: string,
+  operation: RequestOperation,
+  incidentId?: string,
+): string | undefined {
+  const previousId = previousResultId(requestId, operatorId, operation);
+  if (previousId && incidentId && previousId !== incidentId) {
+    throw new AppError("CONFLICT", "Mã yêu cầu đã được dùng cho sự cố khác.");
   }
-}
-
-function getOperatorActorId(): string {
-  const op =
-    db.select().from(users).where(eq(users.role, "OPERATOR")).get() ??
-    db.select().from(users).get();
-  if (!op) {
-    throw new AppError("INTERNAL_ERROR", "Không tìm thấy tài khoản Operator trong hệ thống.");
-  }
-  return op.id;
+  return previousId;
 }
 
 function resolveResource(resourceId: string): ResolvedResource | undefined {
@@ -86,6 +79,7 @@ function resolveResource(resourceId: string): ResolvedResource | undefined {
       status: port.status,
       hubId: slot?.hubId ?? null,
       slotId: port.slotId,
+      connectorType: port.connectorType,
       label: `Cổng sạc ${slot?.code ?? port.id.slice(0, 8)} (${port.connectorType})`,
     };
   }
@@ -98,6 +92,7 @@ function resolveResource(resourceId: string): ResolvedResource | undefined {
       status: slot.status,
       hubId: slot.hubId,
       slotId: slot.id,
+      hasCharger: slot.hasCharger,
       label: `Vị trí đỗ ${slot.code}`,
     };
   }
@@ -110,6 +105,8 @@ function resolveResource(resourceId: string): ResolvedResource | undefined {
       status: vehicle.status,
       hubId: vehicle.hubId,
       slotId: vehicle.slotId,
+      vehicleType: vehicle.type,
+      batteryLevel: vehicle.batteryLevel,
       label: `Xe dùng chung ${vehicle.code}`,
     };
   }
@@ -123,11 +120,11 @@ function resolveResource(resourceId: string): ResolvedResource | undefined {
  */
 function isResourceCurrentlyInUse(resource: ResolvedResource): boolean {
   if (resource.resourceType === "SHARED_VEHICLE") {
-    if (resource.status === "IN_USE") return true;
+    if (["IN_USE", "HANDING_OVER", "PENDING_VERIFICATION", "IN_TRANSIT", "CHARGING"].includes(resource.status)) return true;
     const activeTrip = db
       .select({ id: trips.id })
       .from(trips)
-      .where(and(eq(trips.vehicleId, resource.id), inArray(trips.status, ["ACTIVE", "RETURN_IN_PROGRESS"])))
+      .where(and(eq(trips.vehicleId, resource.id), inArray(trips.status, ["ACTIVE", "RETURN_IN_PROGRESS", "PENDING_RECONCILIATION"])))
       .get();
     return Boolean(activeTrip);
   }
@@ -170,23 +167,78 @@ function setResourceRestrictedStatus(resourceType: ResourceType, resourceId: str
   }
 }
 
-function restoreResourceOperationalStatus(resourceType: ResourceType, resourceId: string, now: Date): void {
-  if (resourceType === "CHARGING_PORT") {
+function restoreResourceOperationalStatus(resource: ResolvedResource, now: Date): boolean {
+  if (isResourceCurrentlyInUse(resource)) return false;
+  if (resource.resourceType === "CHARGING_PORT" && resource.status === "OUT_OF_SERVICE") {
     db.update(chargingPorts)
       .set({ status: "AVAILABLE", updatedAt: now })
-      .where(eq(chargingPorts.id, resourceId))
+      .where(eq(chargingPorts.id, resource.id))
       .run();
-  } else if (resourceType === "PARKING_SLOT") {
+    return true;
+  }
+
+  if (resource.resourceType === "PARKING_SLOT" && resource.status === "OUT_OF_SERVICE") {
     db.update(parkingSlots)
       .set({ status: "IN_SERVICE", updatedAt: now })
-      .where(eq(parkingSlots.id, resourceId))
+      .where(eq(parkingSlots.id, resource.id))
       .run();
-  } else if (resourceType === "SHARED_VEHICLE") {
-    db.update(sharedVehicles)
-      .set({ status: "AVAILABLE", lastUpdatedAt: now, updatedAt: now })
-      .where(eq(sharedVehicles.id, resourceId))
-      .run();
+    return true;
   }
+
+  if (resource.resourceType === "SHARED_VEHICLE" && resource.status === "UNDER_MAINTENANCE") {
+    const commitment = findBlockingVehicleReservation(resource.id)?.status;
+    const status = commitment === "RESERVED" || commitment === "HANDING_OVER" || commitment === "PENDING_VERIFICATION"
+      ? commitment
+      : "AVAILABLE";
+    if (status === "AVAILABLE" && (resource.batteryLevel ?? 0) < systemConfig.reservableBatteryThreshold) return false;
+    db.update(sharedVehicles)
+      .set({ status, lastUpdatedAt: now, updatedAt: now })
+      .where(eq(sharedVehicles.id, resource.id))
+      .run();
+    return status === "AVAILABLE";
+  }
+
+  return false;
+}
+
+function isAlternativeAvailable(target: ResolvedResource, restrictedIds: Set<string>, now: Date): boolean {
+  if (restrictedIds.has(target.id) || (target.slotId && restrictedIds.has(target.slotId))) return false;
+  if (isResourceCurrentlyInUse(target)) return false;
+
+  if (target.resourceType === "SHARED_VEHICLE") {
+    return target.status === "AVAILABLE"
+      && (target.batteryLevel ?? 0) >= systemConfig.reservableBatteryThreshold
+      && !findBlockingVehicleReservation(target.id)
+      && !db.select({ id: redistributionItems.id }).from(redistributionItems).where(and(
+        eq(redistributionItems.vehicleId, target.id),
+        inArray(redistributionItems.status, ["PENDING", "IN_TRANSIT"]),
+      )).get();
+  }
+
+  const slotId = target.slotId;
+  if (!slotId) return false;
+  const slot = db.select().from(parkingSlots).where(eq(parkingSlots.id, slotId)).get();
+  if (!slot || slot.status !== "IN_SERVICE") return false;
+  if (db.select({ id: sharedVehicles.id }).from(sharedVehicles).where(eq(sharedVehicles.slotId, slotId)).get()) return false;
+
+  if (target.resourceType === "CHARGING_PORT" || slot.hasCharger) {
+    const ports = db.select().from(chargingPorts).where(
+      target.resourceType === "CHARGING_PORT" ? eq(chargingPorts.id, target.id) : eq(chargingPorts.slotId, slotId),
+    ).all();
+    // Phương án sự cố không đặt khung giờ cụ thể, nên phải giữ mọi cam kết từ giờ trở đi.
+    const range = { startTime: now, endTime: new Date(8_640_000_000_000_000) };
+    const { occupiedPorts } = getChargingAvailability(slot.hubId, ports, range, now);
+    return ports.length > 0 && ports.every((port) => isChargingPortAvailable(port, slot, range, now, restrictedIds, occupiedPorts));
+  }
+
+  return !db.select({ id: parkingAllocations.id }).from(parkingAllocations).where(and(
+    eq(parkingAllocations.slotId, slotId),
+    or(
+      and(eq(parkingAllocations.status, "HELD"), gt(parkingAllocations.holdExpiresAt, now)),
+      and(eq(parkingAllocations.status, "CONFIRMED"), gt(parkingAllocations.endTime, now)),
+      eq(parkingAllocations.status, "IN_USE"),
+    ),
+  )).get();
 }
 
 export function listIncidentsAndResources(): {
@@ -303,17 +355,19 @@ export const incidentOps = {
     description: string,
     impactLevel: IncidentImpact,
     affectedScope: string,
+    operatorId: string,
   ): IncidentResult {
     return db.transaction(() => {
-      const existingReq = findProcessedRequestSafe(requestId);
-      if (existingReq) {
-        if (existingReq.operation !== "REPORT_INCIDENT") {
-          throw new AppError("CONFLICT", "Mã yêu cầu (requestId) đã được dùng cho một thao tác khác.");
+      const previousId = findRecordedIncidentId(requestId, operatorId, "REPORT_INCIDENT");
+      if (previousId) {
+        const previous = db.select().from(incidents).where(eq(incidents.id, previousId)).get();
+        if (previous?.resourceId !== resourceId) {
+          throw new AppError("CONFLICT", "Mã yêu cầu đã được dùng cho tài nguyên khác.");
         }
         return {
           success: true,
           message: "Sự cố đã được ghi nhận trước đó.",
-          incidentId: existingReq.resultId,
+          incidentId: previousId,
         };
       }
 
@@ -323,7 +377,6 @@ export const incidentOps = {
       }
 
       const now = new Date();
-      const operatorId = getOperatorActorId();
       const currentlyInUse = isResourceCurrentlyInUse(resource);
 
       const inserted = db
@@ -353,15 +406,7 @@ export const incidentOps = {
         setResourceRestrictedStatus(resource.resourceType, resource.id, now);
       }
 
-      db.insert(processedRequests)
-        .values({
-          requestId,
-          actorId: operatorId,
-          operation: "REPORT_INCIDENT",
-          resultId: inserted.id,
-          createdAt: now,
-        })
-        .run();
+      recordProcessedRequest(requestId, operatorId, "REPORT_INCIDENT", inserted.id);
 
       return {
         success: true,
@@ -462,7 +507,7 @@ export const incidentOps = {
         .where(
           and(
             eq(trips.vehicleId, resource.id),
-            inArray(trips.status, ["ACTIVE", "RETURN_IN_PROGRESS"]),
+            inArray(trips.status, ["ACTIVE", "RETURN_IN_PROGRESS", "PENDING_RECONCILIATION"]),
           ),
         )
         .all();
@@ -473,31 +518,36 @@ export const incidentOps = {
   },
 
   /** Kiểm tra các tài nguyên thay thế được liệt kê trong phương án xử lý (nếu có dạng REASSIGN:<resourceId>) có khả dụng không. */
-  queryAllocationAvailability(changes: string[]): boolean {
-    const openRestrictedIds = new Set(
-      db
-        .select({ resourceId: incidents.resourceId })
-        .from(incidents)
-        .where(inArray(incidents.status, ["OPEN", "IN_PROGRESS"]))
-        .all()
-        .map((i) => i.resourceId),
-    );
+  queryAllocationAvailability(changes: string[], sourceResourceId: string): boolean {
+    const alternativeIds = changes
+      .map((change) => change.trim())
+      .filter((change) => change.startsWith("REASSIGN:"))
+      .map((change) => change.slice("REASSIGN:".length).trim());
+    if (alternativeIds.length === 0) return true;
 
-    for (const change of changes) {
-      if (change.startsWith("REASSIGN:")) {
-        const targetId = change.slice("REASSIGN:".length).trim();
-        const target = resolveResource(targetId);
-        if (!target) return false;
-        if (openRestrictedIds.has(target.id)) return false;
-        if (target.status === "OUT_OF_SERVICE" || target.status === "UNDER_MAINTENANCE") return false;
-      }
-    }
-    return true;
+    const source = resolveResource(sourceResourceId);
+    if (!source) return false;
+    const restrictedIds = new Set(db.select({ id: incidents.resourceId }).from(incidents)
+      .where(inArray(incidents.status, ["OPEN", "IN_PROGRESS"]))
+      .all().map(({ id }) => id));
+    const now = new Date();
+    return alternativeIds.every((targetId) => {
+      const target = resolveResource(targetId);
+      return target !== undefined && targetId !== source.id
+        && target.resourceType === source.resourceType
+        && target.connectorType === source.connectorType
+        && target.vehicleType === source.vehicleType
+        && target.hasCharger === source.hasCharger
+        && isAlternativeAvailable(target, restrictedIds, now);
+    });
   },
 
   /** Kiểm tra quyền và tính hợp lệ khi áp dụng phương án xử lý sự cố. */
   checkChangePermission(plan: HandlingPlan, avail: boolean): boolean {
     if (!plan.actionType || plan.actionType.trim().length === 0) return false;
+    if (plan.actionType === "REASSIGN_ALTERNATIVE" && !plan.allocationChanges.some((change) => change.trim().startsWith("REASSIGN:"))) {
+      return false;
+    }
     return avail;
   },
 
@@ -508,17 +558,15 @@ export const incidentOps = {
     plan: HandlingPlan,
     consentPlan: ConsentPlan,
     expectedVersion: number,
+    operatorId: string,
   ): IncidentResult {
     return db.transaction(() => {
-      const existingReq = findProcessedRequestSafe(requestId);
-      if (existingReq) {
-        if (existingReq.operation !== "PROCESS_INCIDENT_HANDLING_PLAN") {
-          throw new AppError("CONFLICT", "Mã yêu cầu (requestId) đã được dùng cho một thao tác khác.");
-        }
+      const previousId = findRecordedIncidentId(requestId, operatorId, "PROCESS_INCIDENT_HANDLING_PLAN", incidentId);
+      if (previousId) {
         return {
           success: true,
           message: "Phương án xử lý sự cố đã được lưu trước đó.",
-          incidentId: existingReq.resultId,
+          incidentId: previousId,
         };
       }
 
@@ -534,6 +582,10 @@ export const incidentOps = {
           "VERSION_CONFLICT",
           `Sự cố đã được cập nhật trước đó (phiên bản hiện tại v${current.version}, bạn gửi v${expectedVersion}). Vui lòng tải lại.`,
         );
+      }
+
+      if (!this.checkChangePermission(plan, this.queryAllocationAvailability(plan.allocationChanges, current.resourceId))) {
+        throw new AppError("CONFLICT", "Phương án xử lý không hợp lệ hoặc tài nguyên thay thế chưa khả dụng.");
       }
 
       const now = new Date();
@@ -554,15 +606,7 @@ export const incidentOps = {
         throw new AppError("VERSION_CONFLICT", "Sự cố vừa bị thay đổi đồng thời. Vui lòng tải lại.");
       }
 
-      db.insert(processedRequests)
-        .values({
-          requestId,
-          actorId: getOperatorActorId(),
-          operation: "PROCESS_INCIDENT_HANDLING_PLAN",
-          resultId: updated.id,
-          createdAt: now,
-        })
-        .run();
+      recordProcessedRequest(requestId, operatorId, "PROCESS_INCIDENT_HANDLING_PLAN", updated.id);
 
       return {
         success: true,
@@ -573,17 +617,14 @@ export const incidentOps = {
   },
 
   /** UC11 Ext 7a: Sự cố chưa khắc phục hoàn tất → lưu ghi nhận tiến độ, giữ trạng thái IN_PROGRESS & tiếp tục hạn chế tài nguyên. */
-  saveIncidentProgress(requestId: string, incidentId: string, result: ResolutionResult): IncidentResult {
+  saveIncidentProgress(requestId: string, incidentId: string, result: ResolutionResult, operatorId: string): IncidentResult {
     return db.transaction(() => {
-      const existingReq = findProcessedRequestSafe(requestId);
-      if (existingReq) {
-        if (existingReq.operation !== "VERIFY_INCIDENT_RESOLUTION") {
-          throw new AppError("CONFLICT", "Mã yêu cầu (requestId) đã được dùng cho một thao tác khác.");
-        }
+      const previousId = findRecordedIncidentId(requestId, operatorId, "VERIFY_INCIDENT_RESOLUTION", incidentId);
+      if (previousId) {
         return {
           success: true,
           message: "Tiến độ khắc phục sự cố đã được ghi nhận trước đó.",
-          incidentId: existingReq.resultId,
+          incidentId: previousId,
         };
       }
 
@@ -608,15 +649,7 @@ export const incidentOps = {
         .returning()
         .get()!;
 
-      db.insert(processedRequests)
-        .values({
-          requestId,
-          actorId: getOperatorActorId(),
-          operation: "VERIFY_INCIDENT_RESOLUTION",
-          resultId: updated.id,
-          createdAt: now,
-        })
-        .run();
+      recordProcessedRequest(requestId, operatorId, "VERIFY_INCIDENT_RESOLUTION", updated.id);
 
       return {
         success: true,
@@ -660,23 +693,23 @@ export const incidentOps = {
   },
 
   /** UC11 bước 7 (còn sự cố khác trên cùng tài nguyên): Đóng sự cố này nhưng giữ nguyên hạn chế tài nguyên. */
-  closeIncidentKeepResourceRestricted(requestId: string, incidentId: string, auditEntry: string): IncidentResult {
+  closeIncidentKeepResourceRestricted(requestId: string, incidentId: string, auditEntry: string, operatorId: string): IncidentResult {
     return db.transaction(() => {
-      const existingReq = findProcessedRequestSafe(requestId);
-      if (existingReq) {
-        if (existingReq.operation !== "VERIFY_INCIDENT_RESOLUTION") {
-          throw new AppError("CONFLICT", "Mã yêu cầu (requestId) đã được dùng cho một thao tác khác.");
-        }
+      const previousId = findRecordedIncidentId(requestId, operatorId, "VERIFY_INCIDENT_RESOLUTION", incidentId);
+      if (previousId) {
         return {
           success: true,
           message: "Kết quả đóng sự cố đã được xử lý trước đó.",
-          incidentId: existingReq.resultId,
+          incidentId: previousId,
         };
       }
 
       const current = db.select().from(incidents).where(eq(incidents.id, incidentId)).get();
       if (!current) {
         throw new AppError("NOT_FOUND", "Không tìm thấy bản ghi sự cố.");
+      }
+      if (current.status === "CLOSED") {
+        throw new AppError("CONFLICT", "Sự cố đã được đóng.");
       }
 
       const now = new Date();
@@ -693,15 +726,7 @@ export const incidentOps = {
         .returning()
         .get()!;
 
-      db.insert(processedRequests)
-        .values({
-          requestId,
-          actorId: getOperatorActorId(),
-          operation: "VERIFY_INCIDENT_RESOLUTION",
-          resultId: updated.id,
-          createdAt: now,
-        })
-        .run();
+      recordProcessedRequest(requestId, operatorId, "VERIFY_INCIDENT_RESOLUTION", updated.id);
 
       return {
         success: true,
@@ -712,23 +737,23 @@ export const incidentOps = {
   },
 
   /** UC11 bước 7 (không còn sự cố nào khác): Đóng sự cố và khôi phục trạng thái phục vụ bình thường của tài nguyên. */
-  closeIncidentAndRestoreService(requestId: string, incidentId: string, auditEntry: string): IncidentResult {
+  closeIncidentAndRestoreService(requestId: string, incidentId: string, auditEntry: string, operatorId: string): IncidentResult {
     return db.transaction(() => {
-      const existingReq = findProcessedRequestSafe(requestId);
-      if (existingReq) {
-        if (existingReq.operation !== "VERIFY_INCIDENT_RESOLUTION") {
-          throw new AppError("CONFLICT", "Mã yêu cầu (requestId) đã được dùng cho một thao tác khác.");
-        }
+      const previousId = findRecordedIncidentId(requestId, operatorId, "VERIFY_INCIDENT_RESOLUTION", incidentId);
+      if (previousId) {
         return {
           success: true,
           message: "Kết quả khắc phục sự cố đã được xử lý trước đó.",
-          incidentId: existingReq.resultId,
+          incidentId: previousId,
         };
       }
 
       const current = db.select().from(incidents).where(eq(incidents.id, incidentId)).get();
       if (!current) {
         throw new AppError("NOT_FOUND", "Không tìm thấy bản ghi sự cố.");
+      }
+      if (current.status === "CLOSED") {
+        throw new AppError("CONFLICT", "Sự cố đã được đóng.");
       }
 
       const now = new Date();
@@ -746,23 +771,16 @@ export const incidentOps = {
         .get()!;
 
       const resource = resolveResource(current.resourceId);
-      if (!resource || !isResourceCurrentlyInUse(resource)) {
-        restoreResourceOperationalStatus(current.resourceType, current.resourceId, now);
-      }
+      const hasOtherRestrictions = this.checkOtherActiveIncidentsOrRestrictions(this.queryResourceAndRemainingImpacts(incidentId));
+      const restored = resource && !hasOtherRestrictions && restoreResourceOperationalStatus(resource, now);
 
-      db.insert(processedRequests)
-        .values({
-          requestId,
-          actorId: getOperatorActorId(),
-          operation: "VERIFY_INCIDENT_RESOLUTION",
-          resultId: updated.id,
-          createdAt: now,
-        })
-        .run();
+      recordProcessedRequest(requestId, operatorId, "VERIFY_INCIDENT_RESOLUTION", updated.id);
 
       return {
         success: true,
-        message: "Đã xác nhận khắc phục, đóng sự cố và khôi phục trạng thái phục vụ bình thường của tài nguyên.",
+        message: restored
+          ? "Đã xác nhận khắc phục, đóng sự cố và khôi phục trạng thái phục vụ của tài nguyên."
+          : "Đã đóng sự cố. Tài nguyên vẫn tuân theo các cam kết và hạn chế còn hiệu lực.",
         incidentId: updated.id,
       };
     });

@@ -47,6 +47,7 @@ export const incidentService = {
     description: string,
     impactLevel: IncidentImpact,
     affectedScope: string,
+    operatorId: string,
   ): Promise<IncidentResult> {
     if (!validateIncidentData(resourceId, description, impactLevel, affectedScope)) {
       throw new AppError(
@@ -61,6 +62,7 @@ export const incidentService = {
       description,
       impactLevel,
       affectedScope,
+      operatorId,
     );
   },
 
@@ -69,20 +71,24 @@ export const incidentService = {
     requestId: string,
     incidentId: string,
     plan: HandlingPlan,
+    operatorId: string,
   ): Promise<IncidentResult> {
+    const previous = operationalRepository.findProcessedRequest(requestId);
+    if (previous) {
+      if (
+        previous.actorId !== operatorId ||
+        previous.operation !== "PROCESS_INCIDENT_HANDLING_PLAN" ||
+        previous.resultId !== incidentId
+      ) {
+        throw new AppError("CONFLICT", "Mã yêu cầu đã được dùng cho một thao tác khác.");
+      }
+      return { success: true, message: "Phương án xử lý sự cố đã được lưu trước đó.", incidentId };
+    }
     const details = operationalRepository.findIncidentWithAffectedServices(incidentId);
     const affectedContext = operationalRepository.queryAffectedHoldsBookingsTripsAndSchedules(
       details.incident.resourceId,
       details.incident.affectedScope,
     );
-
-    const avail = operationalRepository.queryAllocationAvailability(plan.allocationChanges);
-    if (!operationalRepository.checkChangePermission(plan, avail)) {
-      throw new AppError(
-        "CONFLICT",
-        "Phương án xử lý không hợp lệ hoặc tài nguyên thay thế được chọn hiện không khả dụng.",
-      );
-    }
 
     const pendingChanges = identifyChangesToConfirmedCommitments(plan);
     const responseDeadline = new Date(
@@ -99,6 +105,7 @@ export const incidentService = {
       plan,
       consentPlan,
       details.incident.version,
+      operatorId,
     );
 
     // Thông báo cho sinh viên bị ảnh hưởng (bọc an toàn để chạy được cả khi NotificationService chưa merge main)
@@ -112,6 +119,7 @@ export const incidentService = {
     requestId: string,
     incidentId: string,
     result: ResolutionResult,
+    operatorId: string,
   ): Promise<IncidentResult> {
     const context = operationalRepository.queryResourceAndRemainingImpacts(incidentId);
 
@@ -120,7 +128,7 @@ export const incidentService = {
       if (!result.evidence || result.evidence.trim().length === 0) {
         throw new AppError("VALIDATION_ERROR", "Vui lòng nhập ghi chú tiến độ xử lý sự cố.");
       }
-      return operationalRepository.saveIncidentProgress(requestId, incidentId, result);
+      return operationalRepository.saveIncidentProgress(requestId, incidentId, result, operatorId);
     }
 
     // UC11 Ext 9a: Operator yêu cầu đóng sự cố (isResolved = true) nhưng chưa đủ căn cứ xác nhận khắc phục
@@ -139,10 +147,11 @@ export const incidentService = {
         requestId,
         incidentId,
         auditEntry,
+        operatorId,
       );
     }
 
-    return operationalRepository.closeIncidentAndRestoreService(requestId, incidentId, auditEntry);
+    return operationalRepository.closeIncidentAndRestoreService(requestId, incidentId, auditEntry, operatorId);
   },
 };
 
@@ -166,11 +175,7 @@ async function safelyNotifyIncidentParties(
     if (!allSent) {
       await safelyMarkNotificationPending(incidentId);
     }
-  } catch (err) {
-    // Trên nhánh độc lập của Triết, NotificationService vẫn là stub notImplemented → không đánh fail luồng UC11
-    if (err instanceof AppError && err.code === "NOT_IMPLEMENTED") {
-      return;
-    }
+  } catch {
     await safelyMarkNotificationPending(incidentId);
   }
 }
@@ -178,11 +183,7 @@ async function safelyNotifyIncidentParties(
 async function safelyMarkNotificationPending(incidentId: string): Promise<void> {
   try {
     await notificationService.markNotificationPending(incidentId);
-  } catch (err) {
-    if (err instanceof AppError && err.code === "NOT_IMPLEMENTED") {
-      operationalRepository.markIncidentNotificationPending(incidentId);
-      return;
-    }
+  } catch {
     operationalRepository.markIncidentNotificationPending(incidentId);
   }
 }

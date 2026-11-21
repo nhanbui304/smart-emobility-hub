@@ -15,7 +15,7 @@ Guidance for AI coding sessions. Team workflow and file ownership live in `CONTR
 
 ## Setup and commands
 
-Requires Node.js >= 20.19. Run commands from the repo root.
+Requires Node.js >= 22 (better-sqlite3 13 needs it; Node 24 LTS recommended). Run commands from the repo root.
 
 ```bash
 npm install        # root postinstall runs npm install in server/ and client/; creates server/.env

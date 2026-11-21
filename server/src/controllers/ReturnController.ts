@@ -37,4 +37,10 @@ export const returnController = {
     const { requestId } = req.body as z.infer<typeof abandonReturnBody>;
     sendOk(res, await returnService.abandonReturn(requestId, user.id, tripId));
   },
+
+  /** GET /api/trips/current – thêm ngoài sơ đồ: chuyến đi chưa kết thúc của sinh viên (trang Chuyến đi). */
+  async getCurrentTrip(req: Request, res: Response): Promise<void> {
+    const user = currentUser(req);
+    sendOk(res, (await returnService.getCurrentTrip(user.id)) ?? null);
+  },
 };

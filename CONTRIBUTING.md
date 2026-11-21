@@ -83,7 +83,7 @@ async confirmReservation(requestId: string, studentId: string, hubId: string, ve
 **Bước 3 – Frontend**: gọi hàm có sẵn trong `client/src/api/` (tên giống method của Controller), hiển thị lỗi bằng `<ErrorMessage>`. `requestId` sinh **một lần** cho mỗi lần bấm xác nhận; bấm lại do mất mạng thì gửi lại cùng mã.
 
 ```ts
-const requestId = crypto.randomUUID();
+const requestId = newRequestId(); // client/src/api/requestId.ts – chạy được cả khi mở app bằng IP trên điện thoại
 await reservationApi.confirmReservation(requestId, hubId, vehicleId);
 ```
 
@@ -98,7 +98,7 @@ await reservationApi.confirmReservation(requestId, hubId, vehicleId);
 5. **Không tự đặt chuỗi trạng thái.** Dùng danh sách trong `server/src/constants.ts`; cần trạng thái mới thì thêm vào đó và thêm nhãn trong `client/src/statusLabels.ts`.
 6. **Không viết số cứng** (30 phút, 20% pin...) trong service: dùng `config/systemConfig.ts`.
 7. **Lỗi nghiệp vụ dùng `AppError`** (`throw new AppError("CONFLICT", "...")`); không trả lỗi kiểu `res.status(400).send(...)`.
-8. **Thao tác ghi có `requestId` thì chống gửi lặp**: gặp lại `requestId` đã xử lý (`findProcessedRequest`) thì trả kết quả cũ; xử lý mới thì ghi một dòng `processed_requests` (operation lấy trong `REQUEST_OPERATIONS`) trong cùng transaction.
+8. **Thao tác ghi có `requestId` thì chống gửi lặp**: gặp lại `requestId` đã xử lý thì trả kết quả cũ; xử lý mới thì ghi một dòng `processed_requests` (operation lấy trong `REQUEST_OPERATIONS`) trong cùng transaction. Dùng sẵn `previousResultId` và `recordProcessedRequest` trong `repositories/operational/common.ts` (xem cách dùng ở `parkingOps.ts`). Phía client sinh mã bằng `newRequestId()`, không dùng `crypto.randomUUID()`.
 9. **Trạng thái hiển thị bằng `<StatusBadge>`** (luôn có chữ, không chỉ màu).
 10. **Mô phỏng (UC14) không đọc/ghi bảng vận hành**: `SimulationEngine` chỉ làm việc trên snapshot đã chụp (`simulation_snapshots`).
 11. **TypeScript dùng ở mức cơ bản**: khai báo kiểu cho tham số và dữ liệu là đủ; gặp lỗi kiểu khó thì hỏi nhóm trước khi dùng `any`.
@@ -162,4 +162,4 @@ git push -u origin feature/linh-uc02
 | Trang báo "Không kết nối được máy chủ" | Server chưa chạy hoặc lỗi: xem cửa sổ terminal `[server]` |
 | Lỗi thiếu bảng / thiếu cột sau khi pull | `npm run db:reset` |
 | Bị đá ra trang đăng nhập | Server vừa khởi động lại (phiên đăng nhập lưu trong bộ nhớ) hoặc đã 8 giờ: đăng nhập lại |
-| `npm install` lỗi trên Windows | Kiểm tra Node đúng bản 20.19+ / 22 LTS (`node -v`), xóa `node_modules` trong `server/` và `client/` rồi cài lại |
+| `npm install` lỗi trên Windows | Kiểm tra Node bản 22 trở lên, khuyên dùng 24 LTS (`node -v`), xóa `node_modules` trong `server/` và `client/` rồi cài lại |

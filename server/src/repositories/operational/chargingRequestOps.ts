@@ -1,7 +1,7 @@
 // Owner: Ngô Minh Triết – UC07 Submit Charging Request, Cancel Charging Request
 // Một phần của «repository» OperationalRepository (Sub #3) – xem ../OperationalRepository.ts.
 // Chữ ký method khớp class diagram Submission #3 (docs/mtriet-submission3/Draw-io/UC07.drawio). Đổi chữ ký thì sửa cả sơ đồ.
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, exists, gt, inArray, isNull, lte, notExists, or } from "drizzle-orm";
 import { systemConfig } from "../../config/systemConfig";
 import {
   chargingPorts,
@@ -10,7 +10,6 @@ import {
   chargingSessions,
   hubs,
   incidents,
-  parkingAllocations,
   parkingSlots,
   privateVehicles,
   sharedVehicles,
@@ -27,13 +26,10 @@ import type {
   ChargingRequestResult,
 } from "../../types/dto";
 
+import { getChargingAvailability, isChargingPortAvailable } from "./chargingAvailability";
+
 const ACTIVE_REQUEST_STATUSES = ["WAITING", "ALLOCATED", "CHARGING"] as const;
 const ACTIVE_RESERVATION_STATUSES = ["CONFIRMED", "CHARGING", "AWAITING_DISCONNECT"] as const;
-/** Hệ số giới hạn công suất cung cấp điện của Hub (đồng bộ với UC09 & UC13). */
-const HUB_POWER_SAFETY_FACTOR = 0.85;
-/** Thời gian tối thiểu cần trống trước lịch đặt tiếp theo để cấp sạc ngay (phút). */
-const IMMEDIATE_WINDOW_MINUTES = 60;
-
 /** Chống gửi lặp theo requestId cho thao tác gửi/hủy yêu cầu sạc (UC07). */
 const processedChargingOps = new Map<
   string,
@@ -66,7 +62,7 @@ export function recordPreparedChargingProposal(
 
 /** UC07 Ext 4d: Kiểm tra phương tiện có lịch sạc (charging_reservations) đang hiệu lực trùng thời điểm hiện tại hay không. */
 export function hasConflictingActiveChargingReservation(vehicleId: string, now: Date): boolean {
-  const windowEnd = new Date(now.getTime() + IMMEDIATE_WINDOW_MINUTES * 60_000);
+  const windowEnd = new Date(now.getTime() + systemConfig.immediateChargingWindowMinutes * 60_000);
   return db
     .select()
     .from(chargingReservations)
@@ -80,11 +76,29 @@ export function hasConflictingActiveChargingReservation(vehicleId: string, now: 
     .some((r) => rangesOverlap(r.startTime, r.endTime, now, windowEnd));
 }
 
-function getClaimWindowMinutes(): number {
-  const cfg = systemConfig as Record<string, number>;
-  return typeof cfg.chargingAllocationClaimMinutes === "number"
-    ? cfg.chargingAllocationClaimMinutes
-    : 15;
+function activeSessionForRequest() {
+  return db.select({ id: chargingSessions.id }).from(chargingSessions).where(and(
+    eq(chargingSessions.chargingRequestId, chargingRequests.id),
+    eq(chargingSessions.status, "ACTIVE"),
+  ));
+}
+
+function findUnfinishedChargingRequests(vehicleId: string, now: Date): ChargingRequest[] {
+  return db.select().from(chargingRequests).where(and(
+    eq(chargingRequests.vehicleId, vehicleId),
+    or(
+      inArray(chargingRequests.status, ["WAITING", "CHARGING"]),
+      and(
+        eq(chargingRequests.status, "ALLOCATED"),
+        or(isNull(chargingRequests.allocationDeadline), gt(chargingRequests.allocationDeadline, now)),
+      ),
+      exists(activeSessionForRequest()),
+    ),
+  )).all();
+}
+
+export function hasUnfinishedCharging(vehicleId: string, now: Date): boolean {
+  return findUnfinishedChargingRequests(vehicleId, now).length > 0;
 }
 
 function rangesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean {
@@ -107,6 +121,7 @@ function buildUsageGuide(
   deadline?: Date | null,
   queuePosition?: number,
 ): string {
+  if (status === "EXPIRED") return "Đã hết hạn nhận cổng sạc. Bạn có thể gửi yêu cầu mới.";
   if (status === "ALLOCATED" && slotCode) {
     const deadlineText = deadline
       ? deadline.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
@@ -136,6 +151,17 @@ export function getStudentChargingContext(studentId: string): {
 }
 
 export const chargingRequestOps = {
+  expireDueChargingRequests(now: Date): number {
+    return db.update(chargingRequests)
+      .set({ status: "EXPIRED", assignedPortId: null, updatedAt: now })
+      .where(and(
+        eq(chargingRequests.status, "ALLOCATED"),
+        lte(chargingRequests.allocationDeadline, now),
+        notExists(activeSessionForRequest()),
+      ))
+      .run().changes;
+  },
+
   /** Kiểm tra sinh viên có quyền gửi yêu cầu sạc cho xe (sở hữu xe cá nhân hoặc đang có chuyến đi ACTIVE với xe dùng chung). */
   findVehicleChargingRight(studentId: string, vehicleId: string): boolean {
     const ownedPrivate = db
@@ -192,7 +218,7 @@ export const chargingRequestOps = {
 
     const shared = db.select().from(sharedVehicles).where(eq(sharedVehicles.id, vehicleId)).get();
     if (shared) {
-      return shared.hubId === null || shared.hubId === hubId;
+      return shared.hubId === hubId;
     }
 
     return false;
@@ -200,17 +226,7 @@ export const chargingRequestOps = {
 
   /** Tìm các yêu cầu sạc đang hoạt động (WAITING / ALLOCATED / CHARGING) của cùng phương tiện. */
   findConflictingChargingRecords(studentId: string, vehicleId: string): ChargingRequest[] {
-    return db
-      .select()
-      .from(chargingRequests)
-      .where(
-        and(
-          eq(chargingRequests.vehicleId, vehicleId),
-          inArray(chargingRequests.status, [...ACTIVE_REQUEST_STATUSES]),
-        ),
-      )
-      .all()
-      .filter((r) => r.studentId === studentId || r.vehicleId === vehicleId);
+    return findUnfinishedChargingRequests(vehicleId, new Date());
   },
 
   /** Đánh giá khả năng cấp cổng sạc ngay lập tức hoặc đưa vào hàng đợi tại Hub. */
@@ -238,38 +254,9 @@ export const chargingRequestOps = {
             .from(chargingPorts)
             .where(inArray(chargingPorts.slotId, [...slotById.keys()]))
             .all();
-    const hubPortIds = hubPorts.map((p) => p.id);
-
-    const windowEnd = new Date(now.getTime() + IMMEDIATE_WINDOW_MINUTES * 60_000);
-
-    // Các phiên sạc đang chạy, lịch đã xác nhận sắp tới, và yêu cầu ALLOCATED còn hạn tại Hub
-    const activeSessionPortIds = new Set(
-      hubPortIds.length === 0
-        ? []
-        : db
-            .select({ portId: chargingSessions.portId })
-            .from(chargingSessions)
-            .where(and(inArray(chargingSessions.portId, hubPortIds), eq(chargingSessions.status, "ACTIVE")))
-            .all()
-            .map((s) => s.portId),
-    );
-
-    const overlappingReservationPortIds = new Set(
-      hubPortIds.length === 0
-        ? []
-        : db
-            .select()
-            .from(chargingReservations)
-            .where(
-              and(
-                inArray(chargingReservations.portId, hubPortIds),
-                inArray(chargingReservations.status, [...ACTIVE_RESERVATION_STATUSES]),
-              ),
-            )
-            .all()
-            .filter((r) => rangesOverlap(r.startTime, r.endTime, now, windowEnd))
-            .map((r) => r.portId),
-    );
+    const windowEnd = new Date(now.getTime() + systemConfig.immediateChargingWindowMinutes * 60_000);
+    const timeRange = { startTime: now, endTime: windowEnd };
+    const { occupiedPorts, activePowerKw, powerLimitKw } = getChargingAvailability(hubId, hubPorts, timeRange, now);
 
     const hubActiveRequests = db
       .select()
@@ -282,71 +269,13 @@ export const chargingRequestOps = {
       )
       .all();
 
-    const allocatedRequestPortIds = new Set(
-      hubActiveRequests
-        .filter(
-          (r) =>
-            r.assignedPortId &&
-            (r.status === "CHARGING" ||
-              (r.status === "ALLOCATED" && (!r.allocationDeadline || r.allocationDeadline > now))),
-        )
-        .map((r) => r.assignedPortId!),
-    );
-
-    const occupiedParkingSlotIds = new Set(
-      chargerSlots.length === 0
-        ? []
-        : db
-            .select()
-            .from(parkingAllocations)
-            .where(
-              and(
-                inArray(parkingAllocations.slotId, [...slotById.keys()]),
-                inArray(parkingAllocations.status, ["HELD", "CONFIRMED", "IN_USE"]),
-              ),
-            )
-            .all()
-            .filter(
-              (a) =>
-                (a.status !== "HELD" || (a.holdExpiresAt !== null && a.holdExpiresAt > now)) &&
-                (a.status === "IN_USE" || rangesOverlap(a.startTime, a.endTime, now, windowEnd)),
-            )
-            .map((a) => a.slotId),
-    );
-
-    // Tính ngân sách công suất hiện tại của Hub (hệ số 0.85 đồng bộ UC09 & UC13)
-    const activePorts = hubPorts.filter((p) => p.status !== "OUT_OF_SERVICE");
-    const totalActivePortPowerKw = activePorts.reduce((sum, p) => sum + p.maxPowerKw, 0);
-    const maxSinglePortKw = activePorts.reduce((max, p) => Math.max(max, p.maxPowerKw), 0);
-    const hubPowerLimitKw = Math.max(
-      maxSinglePortKw,
-      Math.round(totalActivePortPowerKw * HUB_POWER_SAFETY_FACTOR * 100) / 100,
-    );
-
-    const currentlyUsedPowerKw = hubPorts
-      .filter(
-        (p) =>
-          p.status === "IN_USE" ||
-          activeSessionPortIds.has(p.id) ||
-          overlappingReservationPortIds.has(p.id) ||
-          allocatedRequestPortIds.has(p.id),
-      )
-      .reduce((sum, p) => sum + p.maxPowerKw, 0);
-
-    // Nếu cả Hub đang có sự cố mở thì không cấp mới
     if (!restrictedIds.has(hubId)) {
       const candidatePort = hubPorts.find((port) => {
         if (requiredConnector && port.connectorType !== requiredConnector) return false;
         const slot = slotById.get(port.slotId);
-        if (!slot || slot.status !== "IN_SERVICE") return false;
-        if (port.status !== "AVAILABLE") return false;
-        if (restrictedIds.has(port.id) || restrictedIds.has(slot.id)) return false;
-        if (activeSessionPortIds.has(port.id)) return false;
-        if (overlappingReservationPortIds.has(port.id)) return false;
-        if (allocatedRequestPortIds.has(port.id)) return false;
-        if (occupiedParkingSlotIds.has(slot.id)) return false;
-        if (currentlyUsedPowerKw + port.maxPowerKw > hubPowerLimitKw) return false;
-        return true;
+        return slot
+          && isChargingPortAvailable(port, slot, timeRange, now, restrictedIds, occupiedPorts)
+          && activePowerKw + port.maxPowerKw <= powerLimitKw;
       });
 
       if (candidatePort) {
@@ -354,7 +283,7 @@ export const chargingRequestOps = {
           canAllocateNow: true,
           proposedPortId: candidatePort.id,
           estimatedWaitMinutes: 0,
-          allocationDeadline: new Date(now.getTime() + getClaimWindowMinutes() * 60_000),
+          allocationDeadline: new Date(now.getTime() + systemConfig.chargingAllocationClaimMinutes * 60_000),
         };
       }
     }
@@ -382,6 +311,7 @@ export const chargingRequestOps = {
     now: Date,
   ): ChargingRequestResult {
     return db.transaction(() => {
+      this.expireDueChargingRequests(now);
       // 1. Chống gửi lặp cùng requestId
       const existingOp = processedChargingOps.get(requestId);
       if (existingOp) {
@@ -411,9 +341,9 @@ export const chargingRequestOps = {
         throw new AppError("FORBIDDEN", "Bạn không có quyền gửi yêu cầu sạc cho phương tiện này.");
       }
       if (!this.checkVehicleAtHubAndCompatible(hubId, vehicleId)) {
-        throw new AppError("CONFLICT", "Hub không có cổng sạc hoạt động tương thích với phương tiện của bạn.");
+        throw new AppError("CONFLICT", "Không xác minh được xe đang ở Hub đã chọn hoặc Hub không có cổng sạc tương thích.");
       }
-      const conflicts = this.findConflictingChargingRecords(studentId, vehicleId);
+      const conflicts = findUnfinishedChargingRequests(vehicleId, now);
       if (conflicts.length > 0 || hasConflictingActiveChargingReservation(vehicleId, now)) {
         throw new AppError(
           "CONFLICT",
@@ -430,7 +360,7 @@ export const chargingRequestOps = {
       const prevPrepared = preparedAllocationCache.get(cacheKey);
       const isFreshPrepared =
         prevPrepared !== undefined &&
-        now.getTime() - prevPrepared.preparedAt.getTime() <= getClaimWindowMinutes() * 60_000;
+        now.getTime() - prevPrepared.preparedAt.getTime() <= systemConfig.chargingAllocationClaimMinutes * 60_000;
       if (isFreshPrepared && prevPrepared.canAllocateNow && !proposal.canAllocateNow) {
         preparedAllocationCache.set(cacheKey, { canAllocateNow: false, preparedAt: now });
         throw new AppError(
@@ -543,7 +473,8 @@ export const chargingRequestOps = {
         .from(chargingSessions)
         .where(and(eq(chargingSessions.chargingRequestId, req.id), eq(chargingSessions.status, "ACTIVE")))
         .get();
-      if (activeSession || (req.status !== "WAITING" && req.status !== "ALLOCATED")) {
+      const expired = req.status === "ALLOCATED" && req.allocationDeadline && req.allocationDeadline <= now;
+      if (activeSession || expired || (req.status !== "WAITING" && req.status !== "ALLOCATED")) {
         throw new AppError(
           "CONFLICT",
           "Yêu cầu sạc đã bắt đầu sạc, đã hoàn tất hoặc đã hết hạn nên không thể hủy.",

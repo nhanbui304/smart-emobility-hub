@@ -10,7 +10,8 @@ Bài tập lớn môn Công nghệ phần mềm (CO3001) – HK261 – Nhóm 17.
 
 ## Chạy dự án
 
-Yêu cầu: **Node.js 20.19+** (khuyên dùng Node 22 LTS). Không cần cài database: dữ liệu lưu trong một file SQLite.
+Yêu cầu: **Node.js 22 trở lên** (khuyên dùng Node 24 LTS). Không cần cài database: dữ liệu lưu trong một file SQLite.
+`better-sqlite3` 13 có sẵn bản biên dịch (Node-API) cho Windows, macOS, Linux nên không cần cài công cụ build C++.
 
 ```bash
 npm install        # cài cho cả server/ và client/; tự tạo server/.env
@@ -101,6 +102,13 @@ smart-emobility-hub/
 - Xem trạng thái Hub (`GET /api/hubs`, `GET /api/hubs/:id`) – luồng mẫu đủ 4 tầng.
 - Bộ giả lập xe chạy mỗi giây; trang Giám sát mạng lưới và Trang chủ tự cập nhật mỗi 3 giây.
 - Phân quyền Student/Operator ở cả backend (`requireRole`) và frontend (chuyển hướng).
+- UC06 Đặt chỗ đỗ, Hủy đặt chỗ, mục 2.3.1 (tự giải phóng lượt giữ quá hạn): trang **Xe của tôi**.
+- UC05 Trả xe: trang **Chuyến đi**. Dữ liệu mẫu có sẵn chuyến đi của `student2@hub.local` để thử trả xe.
+
+**Demo nhánh lỗi** (sửa `server/.env` rồi chạy lại server):
+
+- `SIMULATOR_DEVICE_RESULT=FAILED` hoặc `UNKNOWN`: lệnh mở/khóa xe thất bại hoặc chưa rõ kết quả (UC04, UC05). Mặc định `RANDOM` (90% thành công).
+- `PARKING_HOLD_MINUTES=1`: lượt giữ chỗ đỗ hết hạn sau 1 phút (TC-2.3.1-01).
 
 **Khung sẵn, chờ hiện thực**
 

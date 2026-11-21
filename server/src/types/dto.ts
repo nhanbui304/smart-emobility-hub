@@ -130,6 +130,7 @@ export interface ChargingContext {
 export interface ChargingDemand {
   demandId: string;
   vehicleId: string;
+  connectorType?: ConnectorType;
   chargingNeed: ChargingNeed;
 }
 
@@ -251,7 +252,7 @@ export interface MobilityOption {
 
 export interface MyReservationsResult {
   vehicleReservations: VehicleReservation[];
-  parkingAllocations: ParkingAllocation[];
+  parkingAllocations: (ParkingAllocation & { slotCode: string; hubName: string })[];
   chargingReservations: ChargingReservation[];
 }
 
@@ -321,7 +322,7 @@ export interface PickUpResult {
 }
 
 export interface PlanAdjustment {
-  demandId: string;
+  demandId?: string;
   portId: string;
   positionId: string;
   timeRange: TimeRange;
@@ -329,6 +330,7 @@ export interface PlanAdjustment {
 }
 
 export interface PlanAllocation {
+  demandId?: string;
   portId: string;
   positionId: string;
   timeRange: TimeRange;
@@ -586,4 +588,16 @@ export interface VehiclePosition {
 export interface VerificationContext {
   resourceStatus: string;
   remainingImpacts: string[];
+}
+
+// ---------- Thêm ngoài sơ đồ (xem docs/submission-3/ANH_XA_CLASS_DIAGRAM_CODE.md) ----------
+
+/** Chuyến đi chưa kết thúc của sinh viên, cho trang Chuyến đi (GET /api/trips/current). */
+export interface CurrentTripInfo {
+  trip: Trip;
+  vehicleCode: string;
+  vehicleType: VehicleType;
+  batteryLevel: number;
+  returnHubName?: string;
+  returnSlotCode?: string;
 }

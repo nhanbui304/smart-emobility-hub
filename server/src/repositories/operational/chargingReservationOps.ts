@@ -5,16 +5,12 @@ import { and, eq, inArray } from "drizzle-orm";
 import { systemConfig } from "../../config/systemConfig";
 import {
   chargingPorts,
-  chargingRequests,
   chargingReservations,
-  chargingSessions,
   hubs,
   incidents,
-  parkingAllocations,
   parkingSlots,
   privateVehicles,
   processedRequests,
-  type ChargingPort,
   type ChargingReservation,
   type ParkingSlot,
   type ProcessedRequest,
@@ -28,12 +24,11 @@ import type {
   CreateResult,
   SlotQueryResult,
 } from "../../types/dto";
+import { getChargingAvailability, isChargingPortAvailable } from "./chargingAvailability";
+import { hasUnfinishedCharging } from "./chargingRequestOps";
 import { commonOps } from "./common";
 
 const ACTIVE_RESERVATION_STATUSES = ["CONFIRMED", "CHARGING", "AWAITING_DISCONNECT"] as const;
-/** Hệ số giới hạn công suất cung cấp điện của Hub (đồng bộ với UC09 & UC13). */
-const HUB_POWER_SAFETY_FACTOR = 0.85;
-
 export interface StoredSlotOptionEntry {
   option: ChargingSlotOption;
   studentId: string;
@@ -86,129 +81,15 @@ function getRestrictedResourceIds(): Set<string> {
   return new Set(openIncidents.map((i) => i.resourceId));
 }
 
-function computeHubPowerBudget(
-  hubPorts: ChargingPort[],
-  timeRange: TimeRange,
-  excludeReservationId?: string,
-): { activePowerKw: number; powerLimitKw: number } {
-  const allHubPortIds = hubPorts.map((p) => p.id);
-  const activePowerKw =
-    allHubPortIds.length === 0
-      ? 0
-      : db
-          .select()
-          .from(chargingReservations)
-          .where(
-            and(
-              inArray(chargingReservations.portId, allHubPortIds),
-              inArray(chargingReservations.status, [...ACTIVE_RESERVATION_STATUSES]),
-            ),
-          )
-          .all()
-          .filter(
-            (r) =>
-              r.id !== excludeReservationId &&
-              rangesOverlap(r.startTime, r.endTime, timeRange.startTime, timeRange.endTime),
-          )
-          .reduce((sum, r) => {
-            const p = hubPorts.find((hp) => hp.id === r.portId);
-            return sum + (p?.maxPowerKw ?? 0);
-          }, 0);
-
-  const activePorts = hubPorts.filter((p) => p.status !== "OUT_OF_SERVICE");
-  const totalActivePortPowerKw = activePorts.reduce((sum, p) => sum + p.maxPowerKw, 0);
-  const maxSinglePortKw = activePorts.reduce((max, p) => Math.max(max, p.maxPowerKw), 0);
-  const powerLimitKw = Math.max(
-    maxSinglePortKw,
-    Math.round(totalActivePortPowerKw * HUB_POWER_SAFETY_FACTOR * 100) / 100,
-  );
-
-  return { activePowerKw, powerLimitKw };
-}
-
-function isPortAvailableForWindow(
-  port: ChargingPort,
-  slot: ParkingSlot,
-  timeRange: TimeRange,
-  now: Date,
-  restrictedIds: Set<string>,
-  excludeReservationId?: string,
-): boolean {
-  if (slot.status !== "IN_SERVICE") return false;
-  if (port.status === "OUT_OF_SERVICE") return false;
-  if (restrictedIds.has(port.id) || restrictedIds.has(slot.id) || restrictedIds.has(slot.hubId)) {
-    return false;
-  }
-
-  const portReservations = db
-    .select()
-    .from(chargingReservations)
-    .where(
-      and(
-        eq(chargingReservations.portId, port.id),
-        inArray(chargingReservations.status, [...ACTIVE_RESERVATION_STATUSES]),
-      ),
-    )
-    .all();
-  for (const r of portReservations) {
-    if (excludeReservationId && r.id === excludeReservationId) continue;
-    if (rangesOverlap(r.startTime, r.endTime, timeRange.startTime, timeRange.endTime)) {
-      return false;
-    }
-  }
-
-  const slotAllocations = db
-    .select()
-    .from(parkingAllocations)
-    .where(
-      and(
-        eq(parkingAllocations.slotId, slot.id),
-        inArray(parkingAllocations.status, ["HELD", "CONFIRMED", "IN_USE"]),
-      ),
-    )
-    .all();
-  for (const alloc of slotAllocations) {
-    if (alloc.status === "HELD" && alloc.holdExpiresAt && alloc.holdExpiresAt.getTime() <= now.getTime()) {
-      continue;
-    }
-    if (rangesOverlap(alloc.startTime, alloc.endTime, timeRange.startTime, timeRange.endTime)) {
-      return false;
-    }
-  }
-
-  if (timeRange.startTime.getTime() <= now.getTime()) {
-    const activeSession = db
-      .select({ id: chargingSessions.id })
-      .from(chargingSessions)
-      .where(and(eq(chargingSessions.portId, port.id), eq(chargingSessions.status, "ACTIVE")))
-      .get();
-    if (activeSession) return false;
-  }
-
-  return true;
-}
-
-/** UC08 Ext 4d: Kiểm tra xe cá nhân có yêu cầu sạc ngay (charging_requests) đang hoạt động trùng khung giờ sát hiện tại hay không. */
+/** UC08 Ext 4d: không đặt thêm lịch khi xe vẫn có yêu cầu sạc trong khoảng sạc ngay. */
 export function hasConflictingImmediateChargingRequest(
   vehicleId: string,
   timeRange: TimeRange,
   now: Date,
 ): boolean {
-  const immediateEnd = new Date(now.getTime() + 60 * 60_000);
-  if (!rangesOverlap(timeRange.startTime, timeRange.endTime, now, immediateEnd)) {
-    return false;
-  }
-  const activeReq = db
-    .select({ id: chargingRequests.id })
-    .from(chargingRequests)
-    .where(
-      and(
-        eq(chargingRequests.vehicleId, vehicleId),
-        inArray(chargingRequests.status, ["WAITING", "ALLOCATED", "CHARGING"]),
-      ),
-    )
-    .get();
-  return Boolean(activeReq);
+  const immediateEnd = new Date(now.getTime() + systemConfig.immediateChargingWindowMinutes * 60_000);
+  return rangesOverlap(timeRange.startTime, timeRange.endTime, now, immediateEnd)
+    && hasUnfinishedCharging(vehicleId, now);
 }
 
 export function getStoredSlotOptionEntry(
@@ -282,13 +163,13 @@ export function findAlternativeHubSuggestions(
       .from(chargingPorts)
       .where(inArray(chargingPorts.slotId, [...slotById.keys()]))
       .all();
-    const { activePowerKw, powerLimitKw } = computeHubPowerBudget(hubPorts, timeRange);
+    const { occupiedPorts, activePowerKw, powerLimitKw } = getChargingAvailability(hub.id, hubPorts, timeRange, now);
 
     const count = hubPorts.filter((port) => {
       if (port.connectorType !== vehicle.connectorType) return false;
       const slot = slotById.get(port.slotId);
       if (!slot) return false;
-      if (!isPortAvailableForWindow(port, slot, timeRange, now, restrictedIds)) return false;
+      if (!isChargingPortAvailable(port, slot, timeRange, now, restrictedIds, occupiedPorts)) return false;
       return activePowerKw + port.maxPowerKw <= powerLimitKw;
     }).length;
 
@@ -433,7 +314,7 @@ export const chargingReservationOps = {
       .all();
 
     const restrictedIds = getRestrictedResourceIds();
-    const { activePowerKw, powerLimitKw } = computeHubPowerBudget(hubPorts, timeRange, excludeReservationId);
+    const { occupiedPorts, activePowerKw, powerLimitKw } = getChargingAvailability(hubId, hubPorts, timeRange, now, excludeReservationId);
 
     const options: ChargingSlotOption[] = [];
     const availableSlots: ParkingSlot[] = [];
@@ -443,7 +324,7 @@ export const chargingReservationOps = {
       if (port.connectorType !== vehicle.connectorType) continue;
       const slot = slotById.get(port.slotId);
       if (!slot) continue;
-      if (!isPortAvailableForWindow(port, slot, timeRange, now, restrictedIds, excludeReservationId)) {
+      if (!isChargingPortAvailable(port, slot, timeRange, now, restrictedIds, occupiedPorts)) {
         continue;
       }
       if (activePowerKw + port.maxPowerKw > powerLimitKw) {
@@ -573,10 +454,10 @@ export const chargingReservationOps = {
               .from(chargingPorts)
               .where(inArray(chargingPorts.slotId, hubSlots.map((s) => s.id)))
               .all();
-      const { activePowerKw, powerLimitKw } = computeHubPowerBudget(hubPorts, timeRange);
+      const { occupiedPorts, activePowerKw, powerLimitKw } = getChargingAvailability(hubId, hubPorts, timeRange, now);
 
       const portAvailable =
-        isPortAvailableForWindow(targetPort, targetSlot, timeRange, now, restrictedIds) &&
+        isChargingPortAvailable(targetPort, targetSlot, timeRange, now, restrictedIds, occupiedPorts) &&
         activePowerKw + targetPort.maxPowerKw <= powerLimitKw;
       if (!portAvailable) {
         throw new AppError(

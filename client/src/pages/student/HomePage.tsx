@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { hubApi } from "../../api/hubs";
+import { newRequestId } from "../../api/requestId";
 import { searchApi } from "../../api/search";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
@@ -32,19 +33,10 @@ const VEHICLE_TYPE_LABELS: Record<VehicleType, string> = {
   E_MOTORBIKE: "Xe máy điện",
 };
 
-function generateClientUuid(): string {
-  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
-  const b = crypto.getRandomValues(new Uint8Array(16));
-  b[6] = (b[6]! & 0x0f) | 0x40;
-  b[8] = (b[8]! & 0x3f) | 0x80;
-  const hex = Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-}
-
 export function HomePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const sessionIdRef = useRef<string>(generateClientUuid());
+  const sessionIdRef = useRef<string | null>(null);
   const { data: hubs, loading, error, reload } = useAsync(() => hubApi.list(), [], { refreshEveryMs: 3000 });
 
   const [purpose, setPurpose] = useState<(typeof PURPOSES)[number]["value"]>("RENT_VEHICLE");
@@ -91,17 +83,21 @@ export function HomePage() {
   }, [hubs]);
 
   async function submitSearch(criteria: SearchCriteria) {
+    const sessionId = newRequestId();
+    sessionIdRef.current = sessionId;
+    setSearchResult(null);
     setSearchError(null);
     setSelectionResult(null);
     setSelectedOptionId(null);
+    setConfirmingOptionId(null);
     setSearching(true);
     try {
-      const res = await searchApi.searchMobilityOptions(criteria);
-      setSearchResult(res);
+      const res = await searchApi.searchMobilityOptions(criteria, sessionId);
+      if (sessionIdRef.current === sessionId) setSearchResult(res);
     } catch (err) {
-      setSearchError(err);
+      if (sessionIdRef.current === sessionId) setSearchError(err);
     } finally {
-      setSearching(false);
+      if (sessionIdRef.current === sessionId) setSearching(false);
     }
   }
 
@@ -115,6 +111,9 @@ export function HomePage() {
   }
 
   function reviseCriteria() {
+    sessionIdRef.current = null;
+    setSearching(false);
+    setConfirmingOptionId(null);
     setSearchResult(null);
     setSelectionResult(null);
     setSelectedOptionId(null);
@@ -122,10 +121,15 @@ export function HomePage() {
   }
 
   async function selectMobilityOption(option: MobilityOption) {
+    const sessionId = sessionIdRef.current;
+    if (!sessionId || searching || confirmingOptionId) return;
     setSearchError(null);
+    setSelectionResult(null);
+    setSelectedOptionId(null);
     setConfirmingOptionId(option.optionId);
     try {
-      const res = await searchApi.confirmOptionSelection(sessionIdRef.current, option.optionId);
+      const res = await searchApi.confirmOptionSelection(sessionId, option.optionId);
+      if (sessionIdRef.current !== sessionId) return;
       setSelectionResult(res);
       setSearchResult(res.updatedResult);
       if (!res.optionChanged) {
@@ -134,9 +138,9 @@ export function HomePage() {
         setSelectedOptionId(null);
       }
     } catch (err) {
-      setSearchError(err);
+      if (sessionIdRef.current === sessionId) setSearchError(err);
     } finally {
-      setConfirmingOptionId(null);
+      if (sessionIdRef.current === sessionId) setConfirmingOptionId(null);
     }
   }
   return (
@@ -299,6 +303,7 @@ export function HomePage() {
                       <Button
                         className="px-3 py-1.5 text-xs"
                         loading={confirmingOptionId === opt.optionId}
+                        disabled={confirmingOptionId !== null}
                         onClick={() => void selectMobilityOption(opt)}
                       >
                         {isSelected ? "Đã chọn" : "Chọn phương án"}
