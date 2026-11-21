@@ -94,25 +94,27 @@ smart-emobility-hub/
     └── pages/              # auth/, student/, operator/
 ```
 
-## Trạng thái hiện tại
+## Trạng thái hoàn thiện (MVP -- 14/14 Use Cases)
 
-**Đã chạy thật**
+Toàn bộ **14/14 Use Cases** và các tác vụ nền mục 2.3 đã được hiện thực đầy đủ theo kiến trúc 4 tầng (`Route → Controller → Service → Repository → SQLite`) từ Submission #3:
 
-- Đăng ký, đăng nhập, đăng xuất, đổi giao diện sáng/tối/theo hệ thống (lưu trên server).
-- Xem trạng thái Hub (`GET /api/hubs`, `GET /api/hubs/:id`) – luồng mẫu đủ 4 tầng.
-- Bộ giả lập xe chạy mỗi giây; trang Giám sát mạng lưới và Trang chủ tự cập nhật mỗi 3 giây.
-- Phân quyền Student/Operator ở cả backend (`requireRole`) và frontend (chuyển hướng).
-- UC06 Đặt chỗ đỗ, Hủy đặt chỗ, mục 2.3.1 (tự giải phóng lượt giữ quá hạn): trang **Xe của tôi**.
-- UC05 Trả xe: trang **Chuyến đi**. Dữ liệu mẫu có sẵn chuyến đi của `student2@hub.local` để thử trả xe.
+- **Xác thực & Giao diện:** Đăng ký, đăng nhập, đăng xuất, phân quyền Student/Operator (`requireRole`), đổi chế độ Sáng/Tối/Theo hệ thống (lưu trên server), bản đồ thực tế ĐHQG-HCM (`Leaflet + OpenStreetMap`) đồng bộ dữ liệu tự động mỗi 3 giây.
+- **Luồng Sinh viên (UC01 -- UC09):**
+  - **UC01:** Tìm phương án phù hợp theo loại xe và mức pin tối thiểu.
+  - **UC02 / UC03:** Chọn xe dùng chung (kèm biển số, mã đội xe, mức pin) và đặt/hủy đặt xe.
+  - **UC04 / UC05:** Mở khóa nhận xe và trả xe về Hub có sức chứa trống (kèm xử lý nhánh lỗi thiết bị giả lập).
+  - **UC06:** Đặt/hủy chỗ đỗ xe cá nhân chống tranh chấp sức chứa (transaction + idempotency `requestId`).
+  - **UC07:** Yêu cầu sạc ngay tại Hub hoặc tự động xếp hàng đợi kèm thời gian chờ ước tính.
+  - **UC08 / UC09:** Đặt lịch sạc trước theo khung giờ, xem/đổi/hủy lịch sạc (khóa phiên bản `version`).
+- **Luồng Nhân viên vận hành (UC10 -- UC14):**
+  - **UC10:** Giám sát mạng lưới 5 Hub theo thời gian thực, 4 chỉ số KPI và cảnh báo quá tải/thiếu xe theo ngưỡng.
+  - **UC11:** Ghi nhận và cập nhật vòng đời xử lý sự cố thiết bị/xe (`version` optimistic locking).
+  - **UC12:** Điều chuyển xe giữa các Hub nguồn/đích kèm kiểm tra sức chứa tiếp nhận.
+  - **UC13:** Quản lý và tối ưu lịch sạc thông minh.
+  - **UC14:** Mô phỏng tình huống What-if trên bản chụp độc lập (snapshot) so sánh KPI cơ sở và kịch bản.
+- **Tác vụ nền (Mục 2.3):** Tự động giải phóng lượt giữ chỗ đỗ quá hạn (2.3.1), lượt đặt xe quá hạn (2.3.2), cập nhật cảnh báo Hub và bộ giả lập thiết bị xe mỗi giây.
 
-**Demo nhánh lỗi** (sửa `server/.env` rồi chạy lại server):
+**Kiểm tra nhánh lỗi thiết bị / hết hạn giữ chỗ** (sửa `server/.env` rồi khởi động lại server):
 
-- `SIMULATOR_DEVICE_RESULT=FAILED` hoặc `UNKNOWN`: lệnh mở/khóa xe thất bại hoặc chưa rõ kết quả (UC04, UC05). Mặc định `RANDOM` (90% thành công).
-- `PARKING_HOLD_MINUTES=1`: lượt giữ chỗ đỗ hết hạn sau 1 phút (TC-2.3.1-01).
-
-**Khung sẵn, chờ hiện thực**
-
-Khung code (route, controller, service, repository, kiểu dữ liệu, hàm gọi API phía client) khớp class diagram
-Submission #3 cho UC01–UC14 và mục 2.3. Mọi route đã gắn quyền và kiểm tra dữ liệu. Gọi vào sẽ nhận
-`{ ok: false, error: { code: "NOT_IMPLEMENTED" } }` (HTTP 501) cho tới khi người phụ trách viết logic.
-Tìm việc của mình: tìm `Owner: <tên bạn>` trong project.
+- `SIMULATOR_DEVICE_RESULT=FAILED` hoặc `UNKNOWN`: giả lập lệnh mở/khóa xe thất bại hoặc không rõ phản hồi (UC04, UC05). Mặc định `RANDOM` (90% thành công).
+- `PARKING_HOLD_MINUTES=1`: rút ngắn thời gian giữ chỗ đỗ xuống 1 phút để kiểm thử tự động giải phóng quá hạn (TC-2.3.1-01).
