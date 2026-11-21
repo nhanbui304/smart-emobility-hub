@@ -51,7 +51,7 @@ export function ReserveVehiclePage() {
 }
  */
 import { useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { hubApi } from "../../api/hubs";
 import { ApiError } from "../../api/client";
 import { reservationApi } from "../../api/reservation";
@@ -71,8 +71,14 @@ const timeOf = (iso: string) => new Date(iso).toLocaleTimeString("vi-VN", { hour
 
 export function ReserveVehiclePage() {
   const { hubId = "" } = useParams();
+  const [searchParams] = useSearchParams();
+  const suggestedVehicleId = searchParams.get("vehicleId");
   const { data: hub } = useAsync(() => hubApi.detail(hubId), [hubId]);
   const vehicles = useAsync(() => reservationApi.getReservableVehicles(hubId), [hubId], { refreshEveryMs: 3000 });
+
+  const available = vehicles.data ?? [];
+  const suggested = available.find((vehicle) => vehicle.id === suggestedVehicleId);
+  const orderedVehicles = suggested ? [suggested, ...available.filter((vehicle) => vehicle.id !== suggested.id)] : available;
 
   const [preview, setPreview] = useState<ReservationPreview | null>(null);
   const [result, setResult] = useState<VehicleReservation | null>(null);
@@ -189,7 +195,7 @@ export function ReserveVehiclePage() {
             <EmptyState title="Hub này hiện không còn xe có thể đặt" description="Hãy chọn Hub khác ở Trang chủ." />
           )}
           <ul className="grid gap-3 md:grid-cols-2">
-            {vehicles.data?.map((v) => (
+            {orderedVehicles.map((v) => (
               <li key={v.id}>
                 <Card className="flex items-center justify-between gap-3 p-4">
                   <div className="flex items-center gap-3">

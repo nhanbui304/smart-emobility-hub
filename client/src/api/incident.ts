@@ -1,10 +1,21 @@
 // Owner: Ngô Minh Triết – UC11 Handle Operational Incident
 // Gọi API của IncidentController. Tên hàm và tham số khớp class diagram Submission #3.
 // requestId: sinh bằng crypto.randomUUID() MỘT lần cho mỗi lần bấm xác nhận; thử lại thì gửi lại cùng mã.
-import type { HandlingPlan, IncidentContext, IncidentDetails, IncidentImpact, IncidentResult, ResolutionResult } from "../types";
+import type { HandlingPlan, Incident, IncidentContext, IncidentDetails, IncidentImpact, IncidentResult, ResolutionResult, ResourceType } from "../types";
 import { api } from "./client";
 
+export interface IncidentResourceOption {
+  id: string;
+  resourceType: ResourceType;
+  status: string;
+  hubName: string;
+  label: string;
+}
+
 export const incidentApi = {
+  /** GET /api/incidents */
+  listOverview: () =>
+    api.get<{ incidents: Incident[]; resources: IncidentResourceOption[] }>("/incidents"),
   /** GET /api/incidents/resources/:resourceId */
   openIncidentManagement: (resourceId: string) =>
     api.get<IncidentContext>(`/incidents/resources/${resourceId}`),

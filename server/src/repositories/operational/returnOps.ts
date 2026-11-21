@@ -22,6 +22,7 @@ import type {
   ReturnHandoverContext,
   ReturnSlotPlan,
 } from "../../types/dto";
+import { hasUnfinishedCharging } from "./chargingRequestOps";
 import { previousResultId, recordProcessedRequest } from "./common";
 import { findUsableBooking, hasCapacityForNewAllocation, isSlotFree, listFreeSlots, listServingSlots } from "./parkingOps";
 
@@ -70,6 +71,7 @@ export const returnOps = {
       throw new AppError("CONFLICT", "Chuyến đi không ở trạng thái có thể trả xe.");
     }
 
+    checkChargingResolved(trip.vehicleId, now);
     const current = findReturnAllocation(trip);
     if (current) {
       if (trip.returnHubId === hubId) {
@@ -153,6 +155,7 @@ export const returnOps = {
       });
     }
     const now = new Date();
+    checkChargingResolved(vehicleId, now);
     const { slot } = checkHandoverSlot(getTrip(tripId), vehicleId, slotId, now);
     db.update(sharedVehicles)
       .set({ status: "HANDING_OVER", hubId: slot.hubId, slotId, lastUpdatedAt: now })
@@ -200,6 +203,7 @@ export const returnOps = {
     const trip = getTrip(tripId);
     if (previousResultId(requestId, trip.studentId, "CONFIRM_RETURN") || trip.status === "ENDED") return trip;
 
+    checkChargingResolved(vehicleId, returnedAt);
     const { slot, allocation } = checkHandoverSlot(trip, vehicleId, slotId, returnedAt);
     if ((bookingId && bookingId !== allocation.id) || getVehicle(vehicleId).slotId !== slotId) {
       throw new AppError("CONFLICT", "Vị trí xe đã thay đổi trong lúc bàn giao.");
@@ -334,6 +338,12 @@ function findReturnAllocation(trip: Trip): ParkingAllocation | undefined {
 }
 
 /** Kiểm tra trước lệnh khóa và trước khi chốt bàn giao vì thiết bị được gọi ngoài giao dịch. */
+function checkChargingResolved(vehicleId: string, now: Date): void {
+  if (hasUnfinishedCharging(vehicleId, now)) {
+    throw new AppError("CONFLICT", "Hãy hủy yêu cầu sạc chưa thực hiện hoặc kết thúc phiên sạc và rút sạc trước khi trả xe.");
+  }
+}
+
 function checkHandoverSlot(trip: Trip, vehicleId: string, slotId: string, now: Date) {
   const allocation = findReturnAllocation(trip);
   const slot = db.select().from(parkingSlots).where(eq(parkingSlots.id, slotId)).get();

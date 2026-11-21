@@ -23,6 +23,12 @@ export const submitChargingRequestBody = z.object({
 export const cancelChargingRequestBody = z.object({ requestId: requestIdField });
 
 export const chargingRequestController = {
+  /** GET /api/charging-requests/my-context (hỗ trợ UI lấy danh sách xe cá nhân & yêu cầu sạc của sinh viên) */
+  async getMyContext(req: Request, res: Response): Promise<void> {
+    const user = currentUser(req);
+    sendOk(res, await chargingRequestService.getMyContext(user.id));
+  },
+
   /** POST /api/charging-requests/prepare */
   async prepareChargingRequest(req: Request, res: Response): Promise<void> {
     const user = currentUser(req);

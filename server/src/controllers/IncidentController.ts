@@ -6,6 +6,7 @@ import { z } from "zod";
 import { INCIDENT_IMPACTS } from "../constants";
 import { sendOk } from "../lib/response";
 import { requestIdField } from "../lib/schemas";
+import { currentUser } from "../middleware/auth";
 import { parseOrThrow } from "../middleware/validate";
 import { incidentService } from "../services/IncidentService";
 
@@ -26,6 +27,11 @@ export const submitResolutionResultBody = z.object({
 });
 
 export const incidentController = {
+  /** GET /api/incidents (hỗ trợ UI Operator lấy danh sách sự cố và tài nguyên của các Hub) */
+  async listOverview(_req: Request, res: Response): Promise<void> {
+    sendOk(res, await incidentService.listOverview());
+  },
+
   /** GET /api/incidents/resources/:resourceId */
   async openIncidentManagement(req: Request, res: Response): Promise<void> {
     const { resourceId } = parseOrThrow(z.object({ resourceId: z.string().min(1) }), req.params);
@@ -41,20 +47,20 @@ export const incidentController = {
   /** POST /api/incidents */
   async submitIncident(req: Request, res: Response): Promise<void> {
     const { requestId, resourceId, description, impactLevel, affectedScope } = req.body as z.infer<typeof submitIncidentBody>;
-    sendOk(res, await incidentService.reportIncident(requestId, resourceId, description, impactLevel, affectedScope));
+    sendOk(res, await incidentService.reportIncident(requestId, resourceId, description, impactLevel, affectedScope, currentUser(req).id));
   },
 
   /** POST /api/incidents/:incidentId/handling-plan */
   async submitHandlingPlan(req: Request, res: Response): Promise<void> {
     const { incidentId } = parseOrThrow(z.object({ incidentId: z.string().min(1) }), req.params);
     const { requestId, plan } = req.body as z.infer<typeof submitHandlingPlanBody>;
-    sendOk(res, await incidentService.processHandlingPlan(requestId, incidentId, plan));
+    sendOk(res, await incidentService.processHandlingPlan(requestId, incidentId, plan, currentUser(req).id));
   },
 
   /** POST /api/incidents/:incidentId/resolution */
   async submitResolutionResult(req: Request, res: Response): Promise<void> {
     const { incidentId } = parseOrThrow(z.object({ incidentId: z.string().min(1) }), req.params);
     const { requestId, result } = req.body as z.infer<typeof submitResolutionResultBody>;
-    sendOk(res, await incidentService.verifyResolution(requestId, incidentId, result));
+    sendOk(res, await incidentService.verifyResolution(requestId, incidentId, result, currentUser(req).id));
   },
 };

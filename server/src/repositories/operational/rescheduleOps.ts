@@ -9,7 +9,6 @@ import {
   chargingSessions,
   hubs,
   incidents,
-  parkingAllocations,
   parkingSlots,
   privateVehicles,
   processedRequests,
@@ -29,13 +28,12 @@ import type {
   RescheduleResult,
   SlotQueryResult,
 } from "../../types/dto";
+import { getChargingAvailability, isChargingPortAvailable } from "./chargingAvailability";
+import { hasConflictingImmediateChargingRequest } from "./chargingReservationOps";
 import { commonOps } from "./common";
 
 /** Các trạng thái lịch sạc vẫn đang giữ cổng/vị trí sạc (không tính CANCELLED / COMPLETED / EXPIRED). */
 const ACTIVE_RESERVATION_STATUSES = ["CONFIRMED", "CHARGING", "AWAITING_DISCONNECT"] as const;
-
-/** Hệ số giới hạn công suất cung cấp điện của Hub (đồng bộ với UC13 chargingScheduleOps). */
-const HUB_POWER_SAFETY_FACTOR = 0.85;
 
 /** Phương án đổi lịch lưu tạm trong bộ nhớ để bước confirmReschedule tra theo optionId. */
 interface CachedRescheduleOption {
@@ -76,74 +74,6 @@ function getRestrictedResourceIds(): Set<string> {
   return new Set(openIncidents.map((inc) => inc.resourceId));
 }
 
-/** Kiểm tra một cổng sạc cụ thể có khả dụng cho khung giờ [startTime, endTime] hay không (bỏ qua excludeReservationId). */
-function isPortAvailableForWindow(
-  port: ChargingPort,
-  slot: ParkingSlot,
-  timeRange: TimeRange,
-  now: Date,
-  excludeReservationId: string,
-  restrictedIds: Set<string>,
-): boolean {
-  // 1. Trạng thái phục vụ và hạn chế sự cố (UC11 bước 4)
-  if (slot.status !== "IN_SERVICE") return false;
-  if (port.status === "OUT_OF_SERVICE") return false;
-  if (restrictedIds.has(port.id) || restrictedIds.has(slot.id) || restrictedIds.has(slot.hubId)) {
-    return false;
-  }
-
-  // 2. Không chồng lấn với các lịch sạc đang hiệu lực khác trên cùng cổng (trừ chính lịch đang sửa)
-  const portReservations = db
-    .select()
-    .from(chargingReservations)
-    .where(
-      and(
-        eq(chargingReservations.portId, port.id),
-        inArray(chargingReservations.status, [...ACTIVE_RESERVATION_STATUSES]),
-      ),
-    )
-    .all();
-  for (const r of portReservations) {
-    if (r.id === excludeReservationId) continue;
-    if (rangesOverlap(r.startTime, r.endTime, timeRange.startTime, timeRange.endTime)) {
-      return false;
-    }
-  }
-
-  // 3. Không chồng lấn với lượt giữ tạm (còn hạn) hoặc đặt chỗ đỗ trên cùng vị trí đỗ (mục 2.3.1)
-  const slotAllocations = db
-    .select()
-    .from(parkingAllocations)
-    .where(
-      and(
-        eq(parkingAllocations.slotId, slot.id),
-        inArray(parkingAllocations.status, ["HELD", "CONFIRMED", "IN_USE"]),
-      ),
-    )
-    .all();
-  for (const alloc of slotAllocations) {
-    if (alloc.status === "HELD" && alloc.holdExpiresAt && alloc.holdExpiresAt.getTime() <= now.getTime()) {
-      // Lượt giữ tạm đã quá hạn không chặn chỗ (BTL1 §2.3.1 mục 5)
-      continue;
-    }
-    if (rangesOverlap(alloc.startTime, alloc.endTime, timeRange.startTime, timeRange.endTime)) {
-      return false;
-    }
-  }
-
-  // 4. Nếu khung giờ bắt đầu ngay hiện tại, không chồng lấn phiên sạc ACTIVE đang chạy
-  if (timeRange.startTime.getTime() <= now.getTime()) {
-    const activeSession = db
-      .select()
-      .from(chargingSessions)
-      .where(and(eq(chargingSessions.portId, port.id), eq(chargingSessions.status, "ACTIVE")))
-      .get();
-    if (activeSession) return false;
-  }
-
-  return true;
-}
-
 /** Kiểm tra xe cá nhân có lịch sạc khác còn hiệu lực bị chồng lấn với khung giờ mới hay không (bỏ qua excludeReservationId). */
 function hasVehicleScheduleConflict(
   vehicleId: string,
@@ -169,50 +99,6 @@ function hasVehicleScheduleConflict(
 }
 
 /**
- * Tính tổng công suất đang phân bổ tại Hub trong khung giờ [startTime, endTime] (bỏ qua excludeReservationId)
- * và giới hạn công suất cung cấp điện của Hub theo systemConfig.hubPowerSafetyFactor (đồng bộ với UC13).
- */
-function computeHubPowerBudget(
-  hubPorts: ChargingPort[],
-  timeRange: TimeRange,
-  excludeReservationId: string,
-): { activePowerKw: number; powerLimitKw: number } {
-  const allHubPortIds = hubPorts.map((p) => p.id);
-  const activePowerKw =
-    allHubPortIds.length === 0
-      ? 0
-      : db
-        .select()
-        .from(chargingReservations)
-        .where(
-          and(
-            inArray(chargingReservations.portId, allHubPortIds),
-            inArray(chargingReservations.status, [...ACTIVE_RESERVATION_STATUSES]),
-          ),
-        )
-        .all()
-        .filter(
-          (r) =>
-            r.id !== excludeReservationId &&
-            rangesOverlap(r.startTime, r.endTime, timeRange.startTime, timeRange.endTime),
-        )
-        .reduce((sum, r) => {
-          const p = hubPorts.find((hp) => hp.id === r.portId);
-          return sum + (p?.maxPowerKw ?? 0);
-        }, 0);
-
-  const activePorts = hubPorts.filter((p) => p.status !== "OUT_OF_SERVICE");
-  const totalActivePortPowerKw = activePorts.reduce((sum, p) => sum + p.maxPowerKw, 0);
-  const maxSinglePortKw = activePorts.reduce((max, p) => Math.max(max, p.maxPowerKw), 0);
-  const powerLimitKw = Math.max(
-    maxSinglePortKw,
-    Math.round(totalActivePortPowerKw * HUB_POWER_SAFETY_FACTOR * 100) / 100,
-  );
-
-  return { activePowerKw, powerLimitKw };
-}
-
-/**
  * UC09 bước 7 – Tìm các phương án cổng sạc khả dụng tại Hub cho việc đổi lịch.
  * Tương đương `queryAvailableChargingSlots(..., excludeReservationId)` trong UC09.drawio.
  * Tách thành helper nội bộ của module UC09 để không xung đột với `chargingReservationOps.ts` (UC08 – Ngô Minh Triết).
@@ -233,7 +119,8 @@ export function queryAvailableChargingSlotsForReschedule(
     return { options: [], verified: true, slots: [] };
   }
 
-  if (hasVehicleScheduleConflict(vehicleId, timeRange, excludeReservationId)) {
+  if (hasVehicleScheduleConflict(vehicleId, timeRange, excludeReservationId)
+    || hasConflictingImmediateChargingRequest(vehicleId, timeRange, now)) {
     return { options: [], verified: true, slots: [] };
   }
 
@@ -254,7 +141,7 @@ export function queryAvailableChargingSlotsForReschedule(
     .all();
 
   const restrictedIds = getRestrictedResourceIds();
-  const { activePowerKw, powerLimitKw } = computeHubPowerBudget(hubPorts, timeRange, excludeReservationId);
+  const { occupiedPorts, activePowerKw, powerLimitKw } = getChargingAvailability(hubId, hubPorts, timeRange, now, excludeReservationId);
 
   const options: ChargingSlotOption[] = [];
   const availableSlots: ParkingSlot[] = [];
@@ -264,7 +151,7 @@ export function queryAvailableChargingSlotsForReschedule(
     if (port.connectorType !== vehicle.connectorType) continue;
     const slot = slotById.get(port.slotId);
     if (!slot) continue;
-    if (!isPortAvailableForWindow(port, slot, timeRange, now, excludeReservationId, restrictedIds)) {
+    if (!isChargingPortAvailable(port, slot, timeRange, now, restrictedIds, occupiedPorts)) {
       continue;
     }
     if (activePowerKw + port.maxPowerKw > powerLimitKw) {
@@ -482,7 +369,7 @@ export const rescheduleOps = {
         : undefined;
       const restrictedIds = getRestrictedResourceIds();
 
-      let withinHubPowerLimit = false;
+      let portAvailable = false;
       if (targetPort && targetSlot) {
         const hubChargerSlots = db
           .select()
@@ -497,16 +384,19 @@ export const rescheduleOps = {
               .from(chargingPorts)
               .where(inArray(chargingPorts.slotId, hubChargerSlots.map((s) => s.id)))
               .all();
-        const { activePowerKw, powerLimitKw } = computeHubPowerBudget(hubPorts, newTimeRange, reservationId);
-        withinHubPowerLimit = activePowerKw + targetPort.maxPowerKw <= powerLimitKw;
+        const { occupiedPorts, activePowerKw, powerLimitKw } = getChargingAvailability(
+          targetSlot.hubId, hubPorts, newTimeRange, now, reservationId,
+        );
+        portAvailable = isChargingPortAvailable(targetPort, targetSlot, newTimeRange, now, restrictedIds, occupiedPorts)
+          && activePowerKw + targetPort.maxPowerKw <= powerLimitKw;
       }
 
       const stillAvailable =
         Boolean(targetPort && targetSlot) &&
         newTimeRange.startTime.getTime() > now.getTime() &&
         !hasVehicleScheduleConflict(reservation.privateVehicleId, newTimeRange, reservationId) &&
-        withinHubPowerLimit &&
-        isPortAvailableForWindow(targetPort!, targetSlot!, newTimeRange, now, reservationId, restrictedIds);
+        !hasConflictingImmediateChargingRequest(reservation.privateVehicleId, newTimeRange, now) &&
+        portAvailable;
 
       if (!stillAvailable) {
         // Cập nhật danh sách phương án mới nhất để UI hiển thị cho sinh viên chọn lại (BTL1 Ext 10a, TC-UC09-01)

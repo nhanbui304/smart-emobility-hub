@@ -1,15 +1,20 @@
 // Owner: Bùi Quang Nhân (UC06), Ngô Minh Triết (UC08), Nguyễn Hoàng Nhân (UC09)
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "../../components/PageHeader";
 import { ManageChargingSchedulePanel } from "./ManageChargingSchedulePanel";
+import { ScheduleChargingPanel } from "./ScheduleChargingPanel";
 import { ParkingReservationSection } from "./parking/ParkingReservationSection";
 
 export function MyVehiclePage() {
+  const [latestReservationId, setLatestReservationId] = useState<string>();
+
   return (
     <div className="space-y-6">
       <PageHeader title="Xe của tôi" subtitle="Quản lý chỗ đỗ và lịch sạc cho phương tiện cá nhân tại các Hub ĐHQG-HCM" />
       <ParkingReservationSection />
-      <ManageChargingSchedulePanel />
+      <ScheduleChargingPanel onCreated={setLatestReservationId} />
+      <ManageChargingSchedulePanel key={latestReservationId} />
       <Link
         to="/student/charging-request"
         className="flex items-center justify-between rounded-2xl border border-neutral-200/80 bg-white p-4 transition hover:border-brand dark:border-white/10 dark:bg-panel-dark dark:hover:border-lime"

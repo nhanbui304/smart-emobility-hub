@@ -12,6 +12,7 @@ import { Spinner } from "../../components/Spinner";
 import { useAuth } from "../../context/AuthContext";
 import { useAsync } from "../../hooks/useAsync";
 import type { HubStatus } from "../../types";
+import { MobilitySearchPanel } from "./MobilitySearchPanel";
 import {
   estimateRangeKm,
   googleMapsDirectionsUrl,
@@ -312,7 +313,7 @@ export function HomePage() {
                     )}
                     {mode === "PARK" && (
                       <Link
-                        to="/student/my-vehicle"
+                        to={`/student/my-vehicle?hubId=${selectedHub.id}`}
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-lime transition hover:bg-brand-light dark:bg-lime dark:text-brand-dark dark:hover:bg-lime-dark"
                       >
                         Đặt chỗ đỗ cho xe cá nhân →
@@ -320,7 +321,7 @@ export function HomePage() {
                     )}
                     {mode === "CHARGE" && (
                       <Link
-                        to="/student/my-vehicle"
+                        to={`/student/my-vehicle?hubId=${selectedHub.id}`}
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-lime transition hover:bg-brand-light dark:bg-lime dark:text-brand-dark dark:hover:bg-lime-dark"
                       >
                         Quản lý &amp; Đặt lịch sạc →
@@ -341,6 +342,10 @@ export function HomePage() {
           </div>
         )}
       </section>
+
+      {selectedHub && hubs && (
+        <MobilitySearchPanel key={`${mode}:${selectedHub.id}`} purpose={mode} origin={selectedHub} hubs={hubs} />
+      )}
 
       {/* Dải chọn nhanh tất cả các Hub */}
       {hubs && hubs.length > 0 && (

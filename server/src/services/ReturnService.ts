@@ -7,6 +7,7 @@ import { db } from "../lib/db";
 import { AppError } from "../lib/errors";
 import { hubRepository } from "../repositories/HubRepository";
 import { operationalRepository } from "../repositories/OperationalRepository";
+import { hasUnfinishedCharging } from "../repositories/operational/chargingRequestOps";
 import { findCurrentTrip, findReturnAllocationById } from "../repositories/operational/returnOps";
 import { vehicleSimulator } from "../simulator/VehicleSimulator";
 import type {
@@ -59,6 +60,9 @@ export const returnService = {
     if (trip.status === "ENDED") throw new AppError("CONFLICT", "Chuyến đi đã kết thúc, xe đã được trả.");
     if (trip.status === "PENDING_RECONCILIATION") {
       throw new AppError("CONFLICT", "Lượt trả xe đang chờ Operator đối soát. Vui lòng liên hệ Operator.");
+    }
+    if (hasUnfinishedCharging(trip.vehicleId, new Date())) {
+      throw new AppError("CONFLICT", "Hãy hủy yêu cầu sạc chưa thực hiện hoặc kết thúc phiên sạc và rút sạc trước khi trả xe.");
     }
     const handover = operationalRepository.findReturnHandoverContext(tripId, studentId);
     if (handover?.hubId === hubId) {

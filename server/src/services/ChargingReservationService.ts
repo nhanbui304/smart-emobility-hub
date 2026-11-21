@@ -1,9 +1,15 @@
 // Owner: Ngô Minh Triết – UC08 (findChargingSlots, confirmChargingReservation, validateChargingRequest); Nguyễn Hoàng Nhân – UC09 (các method còn lại)
 // Chữ ký method khớp class diagram Submission #3 (docs/hoangnhan_submission3/UC09.drawio). Đổi chữ ký thì sửa cả sơ đồ.
 import type { ChargingReservation } from "../db/schema";
-import { AppError, notImplemented } from "../lib/errors";
+import { AppError } from "../lib/errors";
 import type { TimeRange } from "../lib/schemas";
 import { operationalRepository } from "../repositories/OperationalRepository";
+import {
+  findAlternativeHubSuggestions,
+  findProcessedReservationCreateResult,
+  getStoredSlotOptionEntry,
+  hasConflictingImmediateChargingRequest,
+} from "../repositories/operational/chargingReservationOps";
 import {
   checkVehicleAndHubCompatibility,
   getPortAndHubInfo,
@@ -284,7 +290,63 @@ export const chargingReservationService = {
     timeRange: TimeRange,
     chargingNeed: ChargingNeed,
   ): Promise<SlotQueryResult> {
-    throw notImplemented("ChargingReservationService.findChargingSlots");
+    if (!validateChargingRequest(date, timeRange, chargingNeed)) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "Thông tin đặt lịch sạc không hợp lệ (khung giờ phải ở tương lai, giờ kết thúc sau giờ bắt đầu và pin mục tiêu lớn hơn pin hiện tại).",
+      );
+    }
+
+    if (!operationalRepository.findVehicleChargingRight(studentId, vehicleId)) {
+      throw new AppError("FORBIDDEN", "Bạn không có quyền đặt lịch sạc cho phương tiện này.");
+    }
+
+    if (!operationalRepository.queryHubChargingSupport(hubId, vehicleId)) {
+      throw new AppError(
+        "CONFLICT",
+        "Hub đã chọn không có cổng sạc hoạt động tương thích với đầu cắm của xe cá nhân.",
+      );
+    }
+
+    const now = new Date();
+    const conflicts = operationalRepository.findConflictingRequestsOrSchedules(
+      studentId,
+      vehicleId,
+      date,
+      timeRange,
+    );
+    if (conflicts.length > 0 || hasConflictingImmediateChargingRequest(vehicleId, timeRange, now)) {
+      throw new AppError(
+        "CONFLICT",
+        "Xe của bạn đã có yêu cầu sạc hoặc lịch sạc khác trùng khung giờ này. Vui lòng chọn khung giờ khác.",
+      );
+    }
+
+    const result = operationalRepository.queryAvailableChargingSlots(
+      hubId,
+      vehicleId,
+      date,
+      timeRange,
+      chargingNeed,
+      now,
+    );
+
+    if (result.options.length === 0) {
+      const suggestedHubs = findAlternativeHubSuggestions(hubId, vehicleId, timeRange, now);
+      const durationMs = timeRange.endTime.getTime() - timeRange.startTime.getTime();
+      const shiftedStart = new Date(timeRange.endTime.getTime());
+      const shiftedEnd = new Date(shiftedStart.getTime() + durationMs);
+      throw new AppError(
+        "CONFLICT",
+        "Không có cổng sạc trống phù hợp tại Hub và khung giờ đã chọn. Vui lòng tham khảo gợi ý Hub hoặc khung giờ khác.",
+        {
+          suggestedHubs,
+          suggestedTimeRange: { startTime: shiftedStart, endTime: shiftedEnd },
+        },
+      );
+    }
+
+    return result;
   },
 
   /**
@@ -292,7 +354,29 @@ export const chargingReservationService = {
    * trong một thao tác (atomicCreateReservation). Gửi lặp cùng requestId → trả lịch đã tạo (Ext 8d).
    */
   async confirmChargingReservation(requestId: string, studentId: string, slotOptionId: string): Promise<CreateResult> {
-    throw notImplemented("ChargingReservationService.confirmChargingReservation");
+    const existingResult = findProcessedReservationCreateResult(requestId, studentId);
+    if (existingResult) {
+      return existingResult;
+    }
+
+    const option = operationalRepository.findSlotOption(slotOptionId, studentId);
+    const entry = getStoredSlotOptionEntry(slotOptionId, studentId);
+    if (!option || !entry) {
+      throw new AppError(
+        "CONFLICT",
+        "Phương án khung giờ sạc không tồn tại hoặc đã hết hiệu lực. Vui lòng tìm kiếm lại.",
+      );
+    }
+
+    return operationalRepository.atomicCreateReservation(
+      requestId,
+      studentId,
+      entry.vehicleId,
+      option.hubId,
+      option.portId,
+      { startTime: option.startTime, endTime: option.endTime },
+      entry.chargingNeed,
+    );
   },
 };
 
@@ -354,7 +438,20 @@ function checkCancellable(reservation: ChargingReservation, now: Date): boolean 
   return true;
 }
 
-/** private (–) trong class diagram UC08 (Owner: Ngô Minh Triết). */
+/** private (–) trong class diagram UC08: kiểm tra ngày, khung giờ tương lai và nhu cầu pin hợp lệ. */
 function validateChargingRequest(date: Date, timeRange: TimeRange, chargingNeed: ChargingNeed): boolean {
-  throw notImplemented("ChargingReservationService.validateChargingRequest");
+  const now = new Date();
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return false;
+  if (!(timeRange.startTime instanceof Date) || !(timeRange.endTime instanceof Date)) return false;
+  if (Number.isNaN(timeRange.startTime.getTime()) || Number.isNaN(timeRange.endTime.getTime())) return false;
+  if (timeRange.startTime.getTime() <= now.getTime()) return false;
+  if (timeRange.endTime.getTime() <= timeRange.startTime.getTime()) return false;
+
+  return (
+    Number.isInteger(chargingNeed.currentBattery) &&
+    Number.isInteger(chargingNeed.targetBattery) &&
+    chargingNeed.currentBattery >= 0 &&
+    chargingNeed.targetBattery <= 100 &&
+    chargingNeed.targetBattery > chargingNeed.currentBattery
+  );
 }

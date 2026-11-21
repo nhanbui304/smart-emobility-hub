@@ -23,6 +23,8 @@ export const systemConfig = {
   lowBatteryChargingPriority: 25,
   /** UC07/UC13: thời gian nhận cổng sạc kể từ khi bắt đầu khung được cấp. */
   chargingAllocationClaimMinutes: 15,
+  /** UC07: khoảng sạc ngay dự kiến để kiểm tra lịch và công suất chồng lấn. */
+  immediateChargingWindowMinutes: 60,
   /** UC10: cảnh báo thiếu xe khi số xe khả dụng của Hub <= ngưỡng này. */
   lowVehicleThreshold: 2,
   /** UC10: cảnh báo sắp đầy khi số chỗ trống của Hub <= ngưỡng này. */
