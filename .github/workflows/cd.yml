@@ -1,0 +1,107 @@
+name: CD (Staging & Release Package)
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  RELEASE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+  RELEASE_REF: ${{ github.event_name == 'workflow_run' && format('refs/heads/{0}', github.event.workflow_run.head_branch) || github.ref }}
+
+jobs:
+  package-and-docker:
+    name: Build Release Artifact & Verify Docker Image
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.conclusion == 'success')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+            client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify tags and manually selected revisions
+        if: github.event_name != 'workflow_run'
+        run: |
+          npm run typecheck
+          npm run lint
+          npm run test:coverage
+          npm audit --prefix server --omit=dev --audit-level=high
+          npm audit --prefix client --omit=dev --audit-level=high
+
+      - name: Build production frontend
+        run: npm run build
+
+      - name: Package deployment bundle
+        run: |
+          mkdir -p release-bundle
+          git archive HEAD -- .dockerignore Dockerfile README.md CONTRIBUTING.md docs package.json package-lock.json eslint.config.mjs client server \
+            | tar -xf - -C release-bundle
+          cp -r client/dist release-bundle/client/dist
+
+      - name: Verify Docker image from deployment bundle
+        run: |
+          docker build -t "smart-emobility-hub:$RELEASE_SHA" release-bundle
+          SESSION_SECRET="$(openssl rand -hex 32)"
+          export SESSION_SECRET
+          container="$(docker run -d -p 127.0.0.1::3000 -e SESSION_SECRET "smart-emobility-hub:$RELEASE_SHA")"
+          trap 'docker rm -f "$container" >/dev/null' EXIT
+          address="$(docker port "$container" 3000/tcp)"
+          curl -fsS --max-time 3 --retry 15 --retry-connrefused --retry-delay 1 "http://$address/api/health" | jq -e '.data.status == "up"'
+          curl -fsS "http://$address/student/trips" | grep -F 'id="root"'
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-emobility-hub-release-${{ env.RELEASE_SHA }}
+          path: release-bundle/
+          retention-days: 14
+          include-hidden-files: true
+
+  deploy-staging:
+    name: Deploy to Staging (optional webhook)
+    needs: package-and-docker
+    runs-on: ubuntu-latest
+    environment: staging
+    # Cấu hình trên GitHub UI (Settings → Secrets and variables → Actions):
+    #   - STAGING_DEPLOY_WEBHOOK: URL deploy hook (Render / Railway / VPS)
+    #   - STAGING_DEPLOY_TOKEN:   Bearer token xác thực deploy hook (nếu có)
+    steps:
+      - name: Trigger staging deployment webhook
+        env:
+          STAGING_DEPLOY_WEBHOOK: ${{ secrets.STAGING_DEPLOY_WEBHOOK }}
+          STAGING_DEPLOY_TOKEN: ${{ secrets.STAGING_DEPLOY_TOKEN }}
+        run: |
+          if [ -z "$STAGING_DEPLOY_WEBHOOK" ]; then
+            echo "STAGING_DEPLOY_WEBHOOK secret is not configured. Skipping remote staging deploy."
+            exit 0
+          fi
+          curl -fsSL -X POST "$STAGING_DEPLOY_WEBHOOK" \
+            -H "Authorization: Bearer $STAGING_DEPLOY_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "$(jq -nc --arg ref "$RELEASE_REF" --arg sha "$RELEASE_SHA" '{ref: $ref, sha: $sha}')"

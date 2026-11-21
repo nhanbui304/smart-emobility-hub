@@ -1,9 +1,13 @@
 /** Tạo Express app: middleware chung → routes → xử lý lỗi. */
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import express from "express";
 import session from "express-session";
 import { env } from "./config/env";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
 import { apiRoutes } from "./routes";
+
+const clientDist = fileURLToPath(new URL("../../client/dist/", import.meta.url));
 
 export function createApp() {
   const app = express();
@@ -27,6 +31,15 @@ export function createApp() {
   app.use("/api", apiRoutes);
 
   app.use("/api", notFoundHandler);
+
+  if (env.isProduction) {
+    app.use(express.static(clientDist));
+    app.get("/{*path}", (req, res, next) => {
+      if (!req.accepts("html")) return next();
+      res.sendFile(join(clientDist, "index.html"));
+    });
+  }
+
   app.use(errorHandler);
   return app;
 }

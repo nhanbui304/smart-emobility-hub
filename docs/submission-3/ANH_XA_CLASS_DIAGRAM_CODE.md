@@ -1,6 +1,6 @@
 # Ánh xạ class diagram Submission #3 → code
 
-Ngày 18/11 khung code đã được sửa để khớp class diagram đã nộp ở Submission #3 (các file `.drawio` trong `docs/`, bỏ qua `class-diagram-template.drawio`). Thân các method vẫn là `notImplemented`; người phụ trách tự viết logic.
+Ngày 18/11 khung code đã được sửa để khớp class diagram đã nộp ở Submission #3 (các file `.drawio` trong `docs/`, bỏ qua `class-diagram-template.drawio`). Bản MVP đã triển khai nghiệp vụ trên khung này.
 
 ## 1. Quy ước khớp sơ đồ
 
@@ -17,7 +17,7 @@ Ngày 18/11 khung code đã được sửa để khớp class diagram đã nộp
 | «enumeration» | Mảng + kiểu trong `server/src/constants.ts` (ví dụ `INCIDENT_IMPACTS` / `IncidentImpact`) |
 | `DateTime` | `Date` ở server; chuỗi ISO ở client |
 | `X [0..1]` | Tham số/thuộc tính tùy chọn (`?`) hoặc `X \| undefined` |
-| `requestId` + `ProcessedRequest` | Client sinh `requestId`; server ghi bảng `processed_requests` (enum `RequestOperation` đủ 16 giá trị) |
+| `requestId` + `ProcessedRequest` | Client sinh `requestId`; server ghi bảng `processed_requests` (enum `RequestOperation` có 22 giá trị) |
 | Hàm gọi API phía client | `client/src/api/<tên>.ts`, mỗi file ứng với một Controller, tên hàm và tham số giống method của Controller |
 
 ## 2. File con của OperationalRepository
@@ -74,7 +74,7 @@ Ghi chú hiện thực UC05, UC06:
 - Đổi tên repository: `SearchRepository` → `MobilityRepository`; `ParkingRepository`, `ReturnRepository`, `ChargingRequestRepository`, `ChargingReservationRepository`, `ChargingPlanRepository`, `IncidentRepository` → gộp vào `OperationalRepository`.
 - Đổi tên method Controller theo sơ đồ (ví dụ `hold` → `holdSlot`, `start` → `runSimulation`) và thêm method còn thiếu (`getActiveHold`, `closeOrder`, `prepareChargingRequest`, cụm hủy đặt xe UC03...).
 - Mọi thao tác ghi nhận thêm `requestId`.
-- Enum: `IncidentStatus` dùng `CLOSED` (thay `RESOLVED`); `ImpactLevel` → `IncidentImpact`; `ChargingRequestStatus` thêm `EXPIRED`; thêm `ScenarioType`, `VehicleTechStatus`, `DeviceCommandResult`; `RequestOperation` đủ 16 giá trị.
+- Enum: `IncidentStatus` dùng `CLOSED` (thay `RESOLVED`); `ImpactLevel` → `IncidentImpact`; `ChargingRequestStatus` thêm `EXPIRED`; thêm `ScenarioType`, `VehicleTechStatus`, `DeviceCommandResult`; `RequestOperation` có 22 giá trị.
 - Bảng: `charging_requests` (`vehicleId`, `assignedPortId`, `currentBattery`, `allocationDeadline`), `incidents` (thêm `affectedScope`, `reportedBy`, `priorityHandling`, `consentPlan`, `notificationPending`, `resolutionNote`, `resolvedAt`), `alerts` (thêm `evaluationWindow`), `charging_plans` → `charging_schedule_versions`, `simulation_snapshots` (`timeRange`, `operationalState`), `simulation_runs` (bỏ `operatorId`, `dataLimitation`).
 - Client: `vehicleApi`, `parkingApi`, `chargingApi`, `operationsApi` được thay bằng một file API cho mỗi Controller (`reservationApi`, `parkingApi`, `simulationApi`...).
 

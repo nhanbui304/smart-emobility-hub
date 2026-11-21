@@ -3,6 +3,10 @@ import "dotenv/config";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { dirname } from "node:path";
 
+if (process.env.NODE_ENV === "production") {
+  throw new Error("db:reset chỉ dùng cho môi trường phát triển.");
+}
+
 const dbPath = process.env.DATABASE_URL ?? "./data/dev.db";
 for (const suffix of ["", "-journal", "-wal", "-shm"]) {
   const file = dbPath + suffix;

@@ -1,0 +1,13 @@
+.git
+.github
+node_modules
+server/node_modules
+client/node_modules
+server/data
+server/.env
+server/coverage
+server/test-results
+client/dist
+docs
+*.zip
+*.log

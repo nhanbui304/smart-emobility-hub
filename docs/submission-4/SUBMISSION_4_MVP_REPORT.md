@@ -14,7 +14,7 @@
 
 Bản MVP hiện thực đầy đủ **14/14 Use Cases** trên kiến trúc 4 tầng (`Route → Controller → Service → Repository → SQLite`) đúng với Class Diagram, Sequence Diagram và Deployment Diagram đã thiết kế ở Submission 3:
 
-- **Backend:** Node.js 22+, Express 5, TypeScript, Drizzle ORM, SQLite (`better-sqlite3`), cơ chế **idempotency (`requestId`)** chống gửi lặp, **transaction** chống tranh chấp sức chứa giữa đặt xe / trả xe / đặt chỗ đỗ / điều chuyển, và **optimistic locking (`version`)** cho lịch sạc & sự cố.
+- **Backend:** Node.js 24 LTS, Express 5, TypeScript, Drizzle ORM, SQLite (`better-sqlite3`), cơ chế **idempotency (`requestId`)** chống gửi lặp, **transaction** chống tranh chấp sức chứa giữa đặt xe / trả xe / đặt chỗ đỗ / điều chuyển, và **optimistic locking (`version`)** cho lịch sạc & sự cố.
 - **Frontend:** React 18, Vite, Tailwind CSS, React Router 7, Axios, **Leaflet + OpenStreetMap** (bản đồ thực tế Khu đô thị ĐHQG-HCM, tự động thích ứng Light/Dark Mode), cập nhật trạng thái bằng **REST API + Polling 3 giây**.
 - **Cải tiến giao diện so với wireframe Submission 2:**
   - Nâng cấp Trang chủ Sinh viên & Giám sát Operator theo hướng **Map-First** gắn đúng tọa độ thực tế 5 Mobility Hub tại ĐHQG-HCM (*Ga Metro ĐHQG, ĐH Bách Khoa, Thư viện Trung tâm, ĐH KHTN, KTX Khu B*).
@@ -25,8 +25,6 @@ Bản MVP hiện thực đầy đủ **14/14 Use Cases** trên kiến trúc 4 t�
 ---
 
 ## 2. Chuỗi ảnh màn hình chạy thực tế (MVP Walkthrough)
-
-> *Hướng dẫn ghép ảnh: đặt 11 ảnh chụp vào thư mục `docs/submission-4/screenshots/` đúng tên file bên dưới để xuất PDF trực tiếp.*
 
 ### 2.1. Xác thực tài khoản
 ![Màn hình Đăng nhập](screenshots/01_login.png)
@@ -44,6 +42,10 @@ Bản MVP hiện thực đầy đủ **14/14 Use Cases** trên kiến trúc 4 t�
 
 ![Nhận xe & Chuyến đi UC03 UC04 UC05](screenshots/05_student_uc04_booked_vehicle.png)
 - **Hình 4.5 — Chuyến đi: Mở khóa nhận xe & Trả xe (UC03, UC04, UC05):** Hiển thị nổi bật biển số xe đã đặt, đồng hồ đếm ngược 15 phút, cho phép hủy đặt xe (UC03), mở khóa bắt đầu chuyến đi (UC04) và chọn Hub đích để phân bổ ô đỗ + khóa xe kết thúc chuyến (UC05).
+
+![Chuyến đi đang diễn ra sau khi mở khóa xe (UC04)](screenshots/12_student_uc04_pickup_success.png)
+
+![Xác nhận trả xe thành công và chuyến đi kết thúc (UC05)](screenshots/13_student_uc05_return_success.png)
 
 ### 2.3. Luồng Sinh viên — Xe cá nhân: Đặt chỗ đỗ & Sạc xe (UC06 → UC09)
 ![Xe của tôi UC06 UC08 UC09](screenshots/06_student_uc06_uc08_uc09_my_vehicle.png)

@@ -6,6 +6,7 @@
  */
 import bcrypt from "bcryptjs";
 import { count, eq } from "drizzle-orm";
+import { env } from "../config/env";
 import { closeDb, db } from "../lib/db";
 import * as s from "./schema";
 
@@ -35,6 +36,9 @@ const CHARGERS_PER_HUB = 4;
 const VEHICLES_PER_HUB = 10;
 
 async function main() {
+  if (env.isProduction) {
+    throw new Error("Chỉ được nạp dữ liệu demo trong môi trường phát triển.");
+  }
   const now = new Date();
   const [operatorHash, studentHash] = await Promise.all([
     bcrypt.hash("operator123", 10),

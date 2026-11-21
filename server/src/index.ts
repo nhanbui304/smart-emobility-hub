@@ -6,7 +6,8 @@ import { vehicleSimulator } from "./simulator/VehicleSimulator";
 
 const app = createApp();
 
-app.listen(env.port, () => {
+app.listen(env.port, (error) => {
+  if (error) throw error;
   console.log(`[server] API chạy tại http://localhost:${env.port}/api`);
   if (env.simulatorEnabled) vehicleSimulator.start();
   startSchedulers();

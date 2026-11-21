@@ -1,0 +1,83 @@
+# ==============================================================================
+# CODEOWNERS — Smart E-Mobility Hub (CO3001 – HK261 – Lớp L03 – Nhóm 17)
+# ==============================================================================
+# Chủ sở hữu theo tài khoản của thành viên trong lịch sử repo:
+#   @nhanbui304  → Bùi Quang Nhân  (2412399) – Team Captain / Khung chung, Auth, UC05, UC06, 2.3.1
+#   @quoclinhl4logic   → Lê Quốc Linh    (2411875) – UC02, UC03, UC04, UC12, 2.3.2, Hubs, MyReservations
+#   @HnhanBk415  → Nguyễn Hoàng Nhân (2412415) – UC09, UC10, UC13, UC14, 2.3.3
+#   @ngominhtriet-ship-it  → Ngô Minh Triết  (2313562) – UC01, UC07, UC08, UC11
+# ==============================================================================
+
+# Mặc định: Team Captain rà soát cấu hình chung, CI/CD và tài liệu gốc
+*                                                                   @nhanbui304
+/.github/                                                           @nhanbui304
+/docs/                                                              @nhanbui304
+
+# --- Bùi Quang Nhân (Khung chung, Auth, UC05, UC06, 2.3.1) ---
+/server/src/lib/                                                    @nhanbui304
+/server/src/middleware/                                             @nhanbui304
+/server/src/db/                                                     @nhanbui304
+/server/src/config/                                                 @nhanbui304
+/server/src/constants.ts                                            @nhanbui304
+/server/src/simulator/VehicleSimulator.ts                           @nhanbui304
+/server/src/services/AuthService.ts                                 @nhanbui304
+/server/src/services/ParkingService.ts                              @nhanbui304
+/server/src/services/ReturnService.ts                               @nhanbui304
+/server/src/repositories/UserRepository.ts                          @nhanbui304
+/server/src/repositories/operational/common.ts                      @nhanbui304
+/server/src/repositories/operational/parkingOps.ts                  @nhanbui304
+/server/src/repositories/operational/returnOps.ts                   @nhanbui304
+/server/src/schedulers/HoldExpiryScheduler.ts                       @nhanbui304
+/client/src/context/                                                @nhanbui304
+/client/src/layouts/                                                @nhanbui304
+/client/src/components/                                             @nhanbui304
+/client/src/pages/auth/                                             @nhanbui304
+/client/src/pages/student/SettingsPage.tsx                                  @nhanbui304
+
+# --- Lê Quốc Linh (UC02, UC03, UC04, UC12, 2.3.2, Hubs, MyReservations) ---
+/server/src/services/ReservationService.ts                          @quoclinhl4logic
+/server/src/services/PickUpService.ts                               @quoclinhl4logic
+/server/src/services/RedistributionService.ts                       @quoclinhl4logic
+/server/src/services/HubService.ts                                  @quoclinhl4logic
+/server/src/services/MyReservationsService.ts                       @quoclinhl4logic
+/server/src/repositories/ReservationRepository.ts                   @quoclinhl4logic
+/server/src/repositories/PickUpRepository.ts                        @quoclinhl4logic
+/server/src/repositories/RedistributionRepository.ts                @quoclinhl4logic
+/server/src/repositories/MyReservationsRepository.ts                @quoclinhl4logic
+/server/src/repositories/HubRepository.ts                           @quoclinhl4logic
+/server/src/schedulers/ReservationExpiryScheduler.ts                @quoclinhl4logic
+/client/src/pages/student/ReserveVehiclePage.tsx                    @quoclinhl4logic
+/client/src/pages/student/MyReservationsPage.tsx                    @quoclinhl4logic
+/client/src/pages/operator/RedistributionPage.tsx                   @quoclinhl4logic
+
+# --- Nguyễn Hoàng Nhân (UC09, UC10, UC13, UC14, 2.3.3) ---
+/server/src/services/MonitoringService.ts                           @HnhanBk415
+/server/src/services/SmartChargingService.ts                        @HnhanBk415
+/server/src/services/SimulationService.ts                           @HnhanBk415
+/server/src/services/NotificationService.ts                         @HnhanBk415
+/server/src/repositories/AlertRepository.ts                         @HnhanBk415
+/server/src/repositories/SimulationRunRepository.ts                 @HnhanBk415
+/server/src/repositories/operational/rescheduleOps.ts               @HnhanBk415
+/server/src/repositories/operational/chargingScheduleOps.ts         @HnhanBk415
+/server/src/repositories/operational/simulationOps.ts               @HnhanBk415
+/server/src/schedulers/HubAlertScheduler.ts                         @HnhanBk415
+/server/src/simulator/SimulationEngine.ts                           @HnhanBk415
+/client/src/pages/operator/MonitoringPage.tsx                       @HnhanBk415
+/client/src/pages/operator/SimulationPage.tsx                       @HnhanBk415
+
+# --- Ngô Minh Triết (UC01, UC07, UC08, UC11) ---
+/server/src/services/SearchService.ts                               @ngominhtriet-ship-it
+/server/src/services/ChargingRequestService.ts                      @ngominhtriet-ship-it
+/server/src/services/IncidentService.ts                             @ngominhtriet-ship-it
+/server/src/repositories/MobilityRepository.ts                      @ngominhtriet-ship-it
+/server/src/repositories/operational/chargingRequestOps.ts          @ngominhtriet-ship-it
+/server/src/repositories/operational/chargingReservationOps.ts      @ngominhtriet-ship-it
+/server/src/repositories/operational/incidentOps.ts                 @ngominhtriet-ship-it
+/client/src/pages/student/ChargingRequestPage.tsx                   @ngominhtriet-ship-it
+
+# --- File dùng chung giữa các thành viên ---
+/server/src/services/ChargingReservationService.ts                  @ngominhtriet-ship-it @HnhanBk415
+/client/src/pages/student/HomePage.tsx                              @quoclinhl4logic @ngominhtriet-ship-it
+/client/src/pages/student/ActiveTripPage.tsx                        @quoclinhl4logic @nhanbui304
+/client/src/pages/student/MyVehiclePage.tsx                         @nhanbui304 @ngominhtriet-ship-it @HnhanBk415
+/client/src/pages/operator/ChargingIncidentPage.tsx                 @HnhanBk415 @ngominhtriet-ship-it

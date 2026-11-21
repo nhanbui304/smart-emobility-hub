@@ -1,25 +1,27 @@
 # Smart E-Mobility Hub
 
+[![CI](https://github.com/nhanbui304/smart-emobility-hub/actions/workflows/ci.yml/badge.svg)](https://github.com/nhanbui304/smart-emobility-hub/actions/workflows/ci.yml)
+
 Hệ thống điều phối xe điện dùng chung, chỗ đỗ và trạm sạc trong khu đô thị ĐHQG-HCM.
 Bài tập lớn môn Công nghệ phần mềm (CO3001) – HK261 – Nhóm 17.
 
 - **Student** (giao diện mobile): tìm Hub, đặt/nhận/trả xe, đặt chỗ đỗ, đặt lịch sạc.
 - **Operator** (giao diện desktop): giám sát mạng lưới, xử lý sự cố, điều chuyển xe, lịch sạc, mô phỏng What-if.
 
-> Phân công, quy trình làm một use case và quy tắc code: xem **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+> **Tài liệu dự án:** [**docs/README.md**](docs/README.md) · [SRS](docs/SRS.md) · [SDD](docs/SDD.md) · [STD](docs/STD.md) · [User’s Manual](docs/USER_MANUAL.md) · [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Chạy dự án
 
-Yêu cầu: **Node.js 22 trở lên** (khuyên dùng Node 24 LTS). Không cần cài database: dữ liệu lưu trong một file SQLite.
+Yêu cầu **Node.js 24 LTS** và kết nối npm registry để tải thư viện. Dữ liệu lưu trong một file SQLite cục bộ.
 `better-sqlite3` 13 có sẵn bản biên dịch (Node-API) cho Windows, macOS, Linux nên không cần cài công cụ build C++.
 
 ```bash
-npm install        # cài cho cả server/ và client/; tự tạo server/.env
+npm ci             # cài theo ba lockfile và tạo server/.env nếu thiếu
 npm run db:reset   # tạo database + dữ liệu mẫu
 npm run dev        # chạy server (cổng 3000) và client (cổng 5173)
 ```
 
-Mở <http://localhost:5173>.
+Mở <http://localhost:5173> hoặc địa chỉ Local mà Vite in ra nếu cổng 5173 bận. Cổng 3000 phải trống để proxy API vào đúng server.
 
 Giao diện Student tự đổi theo màn hình: điện thoại hiển thị như app (thanh tab dưới đáy), máy tính hiển thị như web
 (menu ngang trên cùng). Giao diện Operator dành cho máy tính.
@@ -35,7 +37,7 @@ Giao diện Student tự đổi theo màn hình: điện thoại hiển thị nh
 | Student | `student1@hub.local` | `student123` |
 | Student | `student2@hub.local` | `student123` |
 
-Trang đăng nhập có sẵn nút điền nhanh tài khoản demo.
+Trang đăng nhập ở chế độ dev có nút điền nhanh tài khoản demo.
 
 ### Các lệnh khác
 
@@ -45,7 +47,17 @@ Trang đăng nhập có sẵn nút điền nhanh tài khoản demo.
 | `npm run db:reset` | Xóa database, tạo lại bảng theo schema, nạp dữ liệu mẫu |
 | `npm run db:seed` | Chỉ nạp lại dữ liệu mẫu (giữ nguyên bảng) |
 | `npm run typecheck` | Kiểm tra lỗi TypeScript cả server và client |
+| `npm run lint` | Kiểm tra chất lượng mã nguồn với ESLint (server + client) |
+| `npm run build` | Build bản production cho frontend (`client/dist`) |
+| `npm test` | Chạy bộ test tự động Vitest trên SQLite test cô lập |
+| `npm run test:coverage` | Chạy test và xuất báo cáo coverage (`server/coverage/`) |
 | `npm run db:studio --prefix server` | Xem/sửa dữ liệu trên trình duyệt |
+
+## Chạy bản production
+
+Chạy `npm run build` để tạo `client/dist`. Tạo thư mục chứa DB triển khai, đặt `DATABASE_URL` trỏ vào file SQLite trong thư mục đó, rồi chạy `npm run db:push --prefix server` để tạo schema. Đặt `NODE_ENV=production` và cấp `SESSION_SECRET` ngẫu nhiên ít nhất 32 ký tự trước khi chạy `npm run start --prefix server`. Express phục vụ giao diện và API trên cùng cổng.
+
+Dockerfile tạo schema lúc khởi động. Cấp `SESSION_SECRET` qua biến môi trường và gắn volume tại `/app/server/data` để giữ DB qua các lần thay container. Các lệnh `db:reset` và `db:seed` chỉ dùng cho bản demo dev.
 
 ## Công nghệ
 
@@ -67,7 +79,7 @@ Trạng thái xe được thay đổi bởi bộ giả lập chạy trong server
 smart-emobility-hub/
 ├── package.json            # lệnh chạy chung (dev, db:reset, typecheck)
 ├── server/
-│   ├── .env.example        # biến môi trường (npm install tự copy thành .env)
+│   ├── .env.example        # biến môi trường (npm ci tự copy thành .env)
 │   └── src/
 │       ├── index.ts        # khởi động API + bộ giả lập + tác vụ định kỳ
 │       ├── app.ts          # Express: session → routes → xử lý lỗi

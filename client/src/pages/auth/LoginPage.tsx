@@ -7,10 +7,10 @@ import { homePathFor } from "../../components/RoleRoute";
 import { useAuth } from "../../context/AuthContext";
 import { AuthShell } from "./AuthShell";
 
-const DEMO_ACCOUNTS = [
+const DEMO_ACCOUNTS = import.meta.env.DEV ? [
   { label: "Sinh viên", email: "student1@hub.local", password: "student123" },
   { label: "Vận hành", email: "operator@hub.local", password: "operator123" },
-];
+] : [];
 
 export function LoginPage() {
   const { user, login } = useAuth();
@@ -82,24 +82,26 @@ export function LoginPage() {
         </Link>
       </p>
 
-      <div className="mt-8 rounded-xl border border-neutral-200 p-3 text-xs dark:border-white/10">
-        <p className="mb-2 font-semibold text-neutral-600 dark:text-neutral-300">Tài khoản demo</p>
-        <div className="flex gap-2">
-          {DEMO_ACCOUNTS.map((a) => (
-            <button
-              key={a.email}
-              type="button"
-              onClick={() => {
-                setEmail(a.email);
-                setPassword(a.password);
-              }}
-              className="flex-1 rounded-lg bg-neutral-100 px-2 py-2 font-medium hover:bg-neutral-200 dark:bg-white/5 dark:hover:bg-white/10"
-            >
-              {a.label}
-            </button>
-          ))}
+      {import.meta.env.DEV && (
+        <div className="mt-8 rounded-xl border border-neutral-200 p-3 text-xs dark:border-white/10">
+          <p className="mb-2 font-semibold text-neutral-600 dark:text-neutral-300">Tài khoản demo</p>
+          <div className="flex gap-2">
+            {DEMO_ACCOUNTS.map((a) => (
+              <button
+                key={a.email}
+                type="button"
+                onClick={() => {
+                  setEmail(a.email);
+                  setPassword(a.password);
+                }}
+                className="flex-1 rounded-lg bg-neutral-100 px-2 py-2 font-medium hover:bg-neutral-200 dark:bg-white/5 dark:hover:bg-white/10"
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </AuthShell>
   );
 }

@@ -3,14 +3,26 @@
   "private": true,
   "version": "0.1.0",
   "description": "Smart E-Mobility Hub – BTL Công nghệ phần mềm (CO3001), Nhóm 17",
+  "engines": {
+    "node": "^22.13.0 || ^24.0.0 || >=26.0.0"
+  },
   "scripts": {
-    "postinstall": "npm install --prefix server && npm install --prefix client",
+    "postinstall": "npm ci --prefix server --ignore-scripts && npm ci --prefix client && node server/scripts/ensure-env.mjs",
     "dev": "concurrently -k -n server,client -c green,cyan \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "db:reset": "npm run db:reset --prefix server",
     "db:seed": "npm run db:seed --prefix server",
-    "typecheck": "npm run typecheck --prefix server && npm run typecheck --prefix client"
+    "typecheck": "npm run typecheck --prefix server && npm run typecheck --prefix client",
+    "lint": "eslint server/src client/src",
+    "build": "npm run build --prefix client",
+    "test": "npm test --prefix server",
+    "test:coverage": "npm run test:coverage --prefix server"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "@eslint/js": "^10.0.1",
+    "concurrently": "^9.2.1",
+    "eslint": "^10.15.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "typescript-eslint": "^8.73.0"
   }
 }
