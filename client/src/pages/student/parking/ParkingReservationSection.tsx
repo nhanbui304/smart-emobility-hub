@@ -1,6 +1,7 @@
 // Owner: Bùi Quang Nhân – UC06 Reserve Parking Space, Cancel Parking Reservation, mục 2.3.1
 // Chọn Hub, xe, khung giờ → xem vị trí trống → giữ tạm (đếm ngược) → xác nhận đặt chỗ / bỏ giữ → hủy đặt chỗ.
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { authApi } from "../../../api/auth";
 import { ApiError } from "../../../api/client";
 import { hubApi } from "../../../api/hubs";
@@ -43,6 +44,8 @@ export function ParkingReservationSection() {
 }
 
 function ParkingReservations() {
+  const [searchParams] = useSearchParams();
+  const suggestedHubId = searchParams.get("hubId");
   const vehicles = useAsync(() => authApi.myVehicles(), []);
   const hubs = useAsync(() => hubApi.list(), []);
   // Lượt giữ còn hạn được lấy từ server nên tải lại trang vẫn thấy, và không được gia hạn (Ext 7b)
@@ -73,8 +76,10 @@ function ParkingReservations() {
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!hubId && hubs.data?.[0]) setHubId(hubs.data[0].id);
-  }, [hubs.data, hubId]);
+    if (!hubId && hubs.data?.[0]) {
+      setHubId(hubs.data.find((hub) => hub.id === suggestedHubId)?.id ?? hubs.data[0].id);
+    }
+  }, [hubs.data, hubId, suggestedHubId]);
   useEffect(() => {
     if (!vehicleId && vehicles.data?.[0]) setVehicleId(vehicles.data[0].id);
   }, [vehicles.data, vehicleId]);

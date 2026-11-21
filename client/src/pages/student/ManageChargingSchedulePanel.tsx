@@ -11,6 +11,7 @@ import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { StatusBadge } from "../../components/StatusBadge";
 import { useAuth } from "../../context/AuthContext";
+import { connectorTypeLabel, friendlyPortLabel, vehicleTypeLabel } from "../../utils/display";
 import type {
   CancellationCheck,
   CancellationResult,
@@ -65,10 +66,11 @@ export function ManageChargingSchedulePanel() {
 
   // Bước 1–3: danh sách lịch sạc thuộc tài khoản đang đăng nhập.
   const [myReservations, setMyReservations] = useState<ChargingReservation[]>([]);
+  const [showCodeSearch, setShowCodeSearch] = useState<boolean>(false);
   const quickItems = useMemo(() => {
-    return myReservations.map((r) => ({
+    return myReservations.map((r, idx) => ({
       id: r.id,
-      label: `Lịch ${r.id.slice(0, 8)} (${formatDateTimeVi(r.startTime)})`,
+      label: `Lịch #${idx + 1} · ${formatDateTimeVi(r.startTime)}`,
     }));
   }, [myReservations]);
 
@@ -398,46 +400,64 @@ export function ManageChargingSchedulePanel() {
         {detail && <StatusBadge status={detail.status} />}
       </div>
 
-      {/* Bước 1: Chọn lịch sạc cần quản lý */}
-      <div className="space-y-2 rounded-xl bg-neutral-50 p-3 dark:bg-white/5">
-        <label className="block text-xs font-medium text-neutral-600 dark:text-neutral-300">
-          Chọn lịch sạc hoặc nhập mã lịch
-        </label>
-        {quickItems.length === 0 && <p className="text-xs text-neutral-500">Chưa có lịch sạc trong danh sách.</p>}
-        <div className="flex flex-wrap gap-2">
-          {quickItems.map((q) => (
-            <button
-              key={q.id}
-              type="button"
-              onClick={() => void selectReservation(q.id)}
-              className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition ${
-                activeReservationId === q.id
-                  ? "border-brand bg-brand text-white dark:border-lime dark:bg-lime dark:text-brand-dark"
-                  : "border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-white/15 dark:bg-transparent dark:text-neutral-200 dark:hover:bg-white/10"
-              }`}
-            >
-              {q.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={reservationIdInput}
-            onChange={(e) => setReservationIdInput(e.target.value)}
-            placeholder="Nhập mã lịch sạc"
-            className="flex-1 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand dark:border-white/15 dark:bg-neutral-900 dark:focus:border-lime"
-          />
-          <Button
+      {/* Bước 1: Chọn lịch sạc của bạn (ẩn ô nhập mã kỹ thuật trừ khi cần tra cứu) */}
+      <div className="space-y-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
+            Lịch sạc của bạn
+          </span>
+          <button
             type="button"
-            variant="dark"
-            loading={busy && mode === "VIEW"}
-            onClick={() => void selectReservation(reservationIdInput)}
-            className="px-4 py-2 text-xs"
+            onClick={() => setShowCodeSearch((v) => !v)}
+            className="text-xs font-medium text-neutral-500 underline-offset-2 hover:text-brand hover:underline dark:text-neutral-400 dark:hover:text-lime"
           >
-            Xem lịch
-          </Button>
+            {showCodeSearch ? "Ẩn ô tra cứu mã" : "Tra cứu bằng mã khác"}
+          </button>
         </div>
+
+        {quickItems.length === 0 ? (
+          <p className="rounded-xl bg-surface px-3.5 py-3 text-xs text-neutral-500 dark:bg-white/5 dark:text-neutral-400">
+            Bạn chưa có lịch sạc nào sắp tới.
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {quickItems.map((q) => (
+              <button
+                key={q.id}
+                type="button"
+                onClick={() => void selectReservation(q.id)}
+                className={`cursor-pointer rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+                  activeReservationId === q.id
+                    ? "border-brand bg-brand text-lime dark:border-lime dark:bg-lime dark:text-brand-dark"
+                    : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-white/10 dark:bg-transparent dark:text-neutral-200 dark:hover:bg-white/10"
+                }`}
+              >
+                {q.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {showCodeSearch && (
+          <div className="flex gap-2 pt-1">
+            <input
+              type="text"
+              value={reservationIdInput}
+              onChange={(e) => setReservationIdInput(e.target.value)}
+              placeholder="Nhập mã lịch sạc cần tra cứu"
+              className="flex-1 rounded-xl border border-neutral-300 bg-white px-3 py-2 text-xs outline-none focus:border-brand dark:border-white/15 dark:bg-neutral-900 dark:focus:border-lime"
+            />
+            <Button
+              type="button"
+              variant="dark"
+              loading={busy && mode === "VIEW"}
+              onClick={() => void selectReservation(reservationIdInput)}
+              className="px-4 py-2 text-xs"
+            >
+              Xem lịch
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Thông báo lỗi / thông tin */}
@@ -455,65 +475,65 @@ export function ManageChargingSchedulePanel() {
         </div>
       )}
 
-      {/* Bước 3: Chi tiết lịch sạc hiện tại */}
+      {/* Bước 3: Chi tiết lịch sạc hiện tại (thân thiện, không lộ UUID kỹ thuật) */}
       {detail && (
-        <div className="space-y-3 rounded-xl border border-neutral-200 p-3.5 dark:border-white/10">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200 pb-2.5 dark:border-white/10">
+        <div className="space-y-4 rounded-2xl border border-neutral-200/80 p-4 dark:border-white/10">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-100 pb-3 dark:border-white/10">
             <div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                Mã lịch: <span className="font-mono font-semibold text-neutral-800 dark:text-neutral-100">{activeReservationId}</span>
-              </p>
-              <p className="text-sm font-bold">
-                {hubNameById.get(detail.hubId) ?? detail.hubId}
-              </p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">Địa điểm sạc</p>
+              <p className="text-base font-bold">{hubNameById.get(detail.hubId) ?? "Mobility Hub"}</p>
             </div>
             <StatusBadge status={detail.status} />
           </div>
 
-          <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
-            <div className="rounded-lg bg-neutral-50 p-2.5 dark:bg-white/5">
-              <p className="text-neutral-500 dark:text-neutral-400">Phương tiện cá nhân</p>
-              <p className="mt-0.5 font-semibold">
-                {detail.vehicle.plate} · {detail.vehicle.type === "E_MOTORBIKE" ? "Xe máy điện" : "Xe đạp điện"}
-              </p>
-              <p className="text-[11px] text-neutral-500">Đầu sạc: {detail.vehicle.connectorType}</p>
-            </div>
-            <div className="rounded-lg bg-neutral-50 p-2.5 dark:bg-white/5">
-              <p className="text-neutral-500 dark:text-neutral-400">Cổng sạc được phân bổ</p>
-              <p className="mt-0.5 font-mono font-semibold">{detail.portId.slice(0, 12)}…</p>
-              <p className="text-[11px] text-neutral-500">
-                Thao tác được phép: {detail.allowedActions.join(", ")}
-              </p>
-            </div>
-            <div className="rounded-lg bg-neutral-50 p-2.5 sm:col-span-2 dark:bg-white/5">
+          <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-3">
+            <div className="rounded-xl bg-surface p-3 dark:bg-white/5">
               <p className="text-neutral-500 dark:text-neutral-400">Khung giờ sạc</p>
-              <p className="mt-0.5 font-semibold">
+              <p className="mt-1 font-semibold">
                 {formatDateTimeVi(detail.timeRange.startTime)} → {formatDateTimeVi(detail.timeRange.endTime)}
+              </p>
+            </div>
+            <div className="rounded-xl bg-surface p-3 dark:bg-white/5">
+              <p className="text-neutral-500 dark:text-neutral-400">Cổng sạc được phân bổ</p>
+              <p className="mt-1 font-semibold">{friendlyPortLabel(detail.portId)}</p>
+              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                {connectorTypeLabel(detail.vehicle.connectorType)}
+              </p>
+            </div>
+            <div className="rounded-xl bg-surface p-3 dark:bg-white/5">
+              <p className="text-neutral-500 dark:text-neutral-400">Phương tiện cá nhân</p>
+              <p className="mt-1 font-mono font-bold">{detail.vehicle.plate}</p>
+              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                {vehicleTypeLabel(detail.vehicle.type)}
               </p>
             </div>
           </div>
 
-          {/* Nút thao tác chính (chỉ hiện khi đang ở chế độ VIEW) */}
+          {/* Nút thao tác cân đối (chỉ hiện khi đang ở chế độ VIEW) */}
           {mode === "VIEW" && (
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Button
-                type="button"
-                variant="primary"
-                disabled={!canReschedule || busy}
-                onClick={() => void chooseReschedule(activeReservationId)}
-                className="flex-1 py-2.5 text-xs"
-              >
-                Đổi lịch sạc
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                disabled={!canCancel || busy}
-                onClick={() => void chooseCancel(activeReservationId)}
-                className="flex-1 py-2.5 text-xs"
-              >
-                Hủy lịch sạc
-              </Button>
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                Bạn có thể đổi khung giờ hoặc hủy lịch miễn phí trước giờ sạc.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={!canCancel || busy}
+                  onClick={() => void chooseCancel(activeReservationId)}
+                  className="cursor-pointer rounded-xl border border-red-200 bg-white px-4 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/30 dark:bg-transparent dark:text-red-400 dark:hover:bg-red-500/10"
+                >
+                  Hủy lịch sạc
+                </button>
+                <Button
+                  type="button"
+                  variant="dark"
+                  disabled={!canReschedule || busy}
+                  onClick={() => void chooseReschedule(activeReservationId)}
+                  className="px-5 py-2 text-xs"
+                >
+                  Đổi khung giờ
+                </Button>
+              </div>
             </div>
           )}
 
@@ -532,8 +552,8 @@ export function ManageChargingSchedulePanel() {
             Lịch sạc đã được cập nhật
           </p>
           <p>
-            <strong>Hub mới:</strong> {hubNameById.get(updatedResult.hubId) ?? updatedResult.hubId} ·{" "}
-            <strong>Cổng:</strong> <span className="font-mono">{updatedResult.portId.slice(0, 12)}…</span>
+            <strong>Hub mới:</strong> {hubNameById.get(updatedResult.hubId) ?? "Mobility Hub"} ·{" "}
+            <strong>Vị trí:</strong> {friendlyPortLabel(updatedResult.portId)}
           </p>
           <p>
             <strong>Khung giờ mới:</strong> {formatDateTimeVi(updatedResult.timeRange.startTime)} →{" "}
@@ -546,10 +566,9 @@ export function ManageChargingSchedulePanel() {
       {/* Kết quả sau khi hủy lịch thành công (Ext 4b.1) */}
       {cancellationResult && (
         <div className="space-y-1 rounded-xl border border-neutral-300 bg-neutral-100 p-3.5 text-xs dark:border-white/15 dark:bg-white/5">
-          <p className="font-bold">Đã hủy lịch sạc</p>
+          <p className="font-bold">Đã hủy lịch sạc thành công</p>
           <p>
-            Mã lịch <span className="font-mono font-semibold">{cancellationResult.reservationId}</span> đã chuyển sang trạng thái{" "}
-            <StatusBadge status={cancellationResult.status} />.
+            Trạng thái hiện tại: <StatusBadge status={cancellationResult.status} />. Cổng sạc đã được giải phóng.
           </p>
         </div>
       )}
@@ -653,15 +672,14 @@ export function ManageChargingSchedulePanel() {
             <div className="space-y-2 pt-2">
               <p className="text-xs font-semibold">Chọn cổng sạc khả dụng:</p>
               <div className="space-y-2">
-                {options.map((opt) => (
+                {options.map((opt, idx) => (
                   <div
                     key={opt.slotOptionId}
                     className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-neutral-200 bg-white p-3 text-xs dark:border-white/10 dark:bg-panel-dark"
                   >
                     <div>
                       <p className="font-semibold">
-                        {hubNameById.get(opt.hubId) ?? opt.hubId} · Cổng{" "}
-                        <span className="font-mono">{opt.portId.slice(0, 10)}…</span>
+                        {hubNameById.get(opt.hubId) ?? "Mobility Hub"} · {friendlyPortLabel(opt.portId, idx)}
                       </p>
                       <p className="text-neutral-500">
                         {formatDateTimeVi(opt.startTime)} → {formatDateTimeVi(opt.endTime)} · Công suất tối đa{" "}
@@ -694,17 +712,17 @@ export function ManageChargingSchedulePanel() {
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div className="rounded-lg border border-neutral-200 bg-white p-2.5 dark:border-white/10 dark:bg-panel-dark">
               <p className="font-semibold text-neutral-500">Lịch hiện tại (sẽ giải phóng)</p>
-              <p className="mt-1 font-bold">{hubNameById.get(detail.hubId) ?? detail.hubId}</p>
-              <p className="font-mono text-[11px]">Cổng: {detail.portId.slice(0, 12)}…</p>
+              <p className="mt-1 font-bold">{hubNameById.get(detail.hubId) ?? "Mobility Hub"}</p>
+              <p className="text-[11px] font-medium">{friendlyPortLabel(detail.portId)}</p>
               <p className="mt-0.5">
                 {formatDateTimeVi(detail.timeRange.startTime)} → {formatDateTimeVi(detail.timeRange.endTime)}
               </p>
             </div>
             <div className="rounded-lg border border-emerald-300 bg-emerald-50/70 p-2.5 dark:border-emerald-500/40 dark:bg-emerald-500/10">
               <p className="font-semibold text-emerald-700 dark:text-emerald-300">Lịch dự kiến mới</p>
-              <p className="mt-1 font-bold">{hubNameById.get(selectedOption.hubId) ?? selectedOption.hubId}</p>
-              <p className="font-mono text-[11px]">
-                Cổng: {selectedOption.portId.slice(0, 12)}… ({selectedOption.maxPowerKw} kW)
+              <p className="mt-1 font-bold">{hubNameById.get(selectedOption.hubId) ?? "Mobility Hub"}</p>
+              <p className="text-[11px] font-medium">
+                {friendlyPortLabel(selectedOption.portId)} ({selectedOption.maxPowerKw} kW)
               </p>
               <p className="mt-0.5">
                 {formatDateTimeVi(selectedOption.startTime)} → {formatDateTimeVi(selectedOption.endTime)}

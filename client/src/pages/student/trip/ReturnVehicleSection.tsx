@@ -11,6 +11,7 @@ import { ErrorMessage } from "../../../components/ErrorMessage";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { useAsync } from "../../../hooks/useAsync";
 import type { CurrentTripInfo, ReturnResult } from "../../../types";
+import { sharedVehiclePlate } from "../../../utils/display";
 
 const timeFormat = new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
 
@@ -194,7 +195,12 @@ export function ReturnVehicleSection() {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm text-white/70">Chuyến đi hiện tại</p>
-              <p className="text-2xl font-bold">{info.vehicleCode}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2.5">
+                <span className="rounded-lg bg-white px-2.5 py-1 font-mono text-sm font-extrabold text-neutral-900">
+                  {sharedVehiclePlate(info.vehicleCode)}
+                </span>
+                <p className="text-xl font-bold">{info.vehicleCode}</p>
+              </div>
               <p className="text-sm text-white/80">
                 {info.vehicleType === "E_BIKE" ? "Xe đạp điện" : "Xe máy điện"} · Pin {info.batteryLevel}% · Bắt đầu{" "}
                 {timeFormat.format(new Date(info.trip.startedAt))}

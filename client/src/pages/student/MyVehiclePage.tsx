@@ -1,26 +1,33 @@
 // Owner: Bùi Quang Nhân (UC06), Ngô Minh Triết (UC08), Nguyễn Hoàng Nhân (UC09)
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "../../components/PageHeader";
-import { StubNotice } from "../../components/StubNotice";
 import { ManageChargingSchedulePanel } from "./ManageChargingSchedulePanel";
+import { ScheduleChargingPanel } from "./ScheduleChargingPanel";
 import { ParkingReservationSection } from "./parking/ParkingReservationSection";
 
 export function MyVehiclePage() {
+  const [latestReservationId, setLatestReservationId] = useState<string>();
+
   return (
-    <div className="space-y-4">
-      <PageHeader title="Xe của tôi" subtitle="Đặt chỗ đỗ và lịch sạc cho xe cá nhân" />
+    <div className="space-y-6">
+      <PageHeader title="Xe của tôi" subtitle="Quản lý chỗ đỗ và lịch sạc cho phương tiện cá nhân tại các Hub ĐHQG-HCM" />
       <ParkingReservationSection />
-      <ManageChargingSchedulePanel />
-      <StubNotice
-        owner="Ngô Minh Triết"
-        useCases="UC08"
-        todo={["Đặt lịch sạc: chargingReservationApi.findChargingSlots → confirmChargingReservation (UC08)"]}
-      />
+      <ScheduleChargingPanel onCreated={setLatestReservationId} />
+      <ManageChargingSchedulePanel key={latestReservationId} />
       <Link
         to="/student/charging-request"
-        className="block rounded-xl2 border border-neutral-200 bg-white p-4 text-sm font-semibold dark:border-white/10 dark:bg-panel-dark"
+        className="flex items-center justify-between rounded-2xl border border-neutral-200/80 bg-white p-4 transition hover:border-brand dark:border-white/10 dark:bg-panel-dark dark:hover:border-lime"
       >
-        Sạc ngay tại Hub (UC07) →
+        <div>
+          <p className="text-sm font-bold">Cần sạc gấp ngay tại Hub?</p>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            Gửi yêu cầu sạc trực tiếp và nhận phân bổ cổng sạc trống gần nhất.
+          </p>
+        </div>
+        <span className="shrink-0 rounded-xl bg-surface px-3.5 py-2 text-xs font-semibold text-brand dark:bg-white/10 dark:text-lime">
+          Sạc ngay →
+        </span>
       </Link>
     </div>
   );

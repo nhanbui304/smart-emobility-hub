@@ -45,8 +45,10 @@ Lý do tách: `OperationalRepository` có 51 method của 4 người; để chun
 | `OperatorHubDetail` | `extends HubDetail` | Như sơ đồ UC10 |
 | `RedistributionController.getRedistributionOptions(sourceHubId, targetHubId, eta)` gọi Service có thêm `vehicleIds` | Controller truyền `[]` (xét mọi xe ở Hub nguồn) | Sơ đồ Controller không có `vehicleIds` |
 | `ReservationController.getMyReservations()` | Gọi `myReservationsService.getMyReservations` rồi lấy `vehicleReservations` | `ReservationService` không có method này |
+| `SearchController.searchMobilityOptions(criteria)` và `SearchService.findSuitableOptions(criteria)` | Yêu cầu tìm kiếm gửi thêm `sessionId`. Controller chuyển mã đã gắn với tài khoản và phiên đăng nhập vào Service. | Khi chọn phương án, kiểm tra lại bằng đúng bộ tiêu chí và danh sách kết quả của lượt tìm kiếm |
 | `SimulationController.prepareOperationalHandoff(recommendationId)` | Controller gọi `SimulationService.prepareOperationalHandoff` | Tuân thủ luồng Controller → Service → Repository |
 | `applyChargingSchedule`, `atomicApplyChargingSchedule` | Nhận thêm `operatorId` từ phiên đăng nhập. `PlanAllocation.demandId` có ở dòng phân bổ cho nhu cầu sạc. | Kiểm tra và ghi nhận gửi lặp theo Operator, ghép đúng nhu cầu với cổng khi bản nháp có cả cam kết hiện có |
+| Các thao tác ghi của UC11 và `queryAllocationAvailability` | Truyền thêm `operatorId` từ phiên đăng nhập cho thao tác ghi và mã tài nguyên gặp sự cố khi kiểm tra phương án. | Ghi nhận đúng người thao tác, chống gửi lặp và kiểm tra tài nguyên thay thế cùng loại |
 | `SimulationController.publishRunFinished(runId)` | Method không có route | Không dùng WebSocket; giao diện gọi lại `getRunResult` mỗi 3 giây |
 | `VehicleSimulator` có `requestUnlock`, `readVehiclePosition`, `sendLockCommand` | Thêm `start`, `tick` | Phần chạy nền của bộ giả lập, không thuộc nghiệp vụ |
 | Entity `SimulationSnapshot.snapshotId`, `SimulationRun.runId`, `ChargingScheduleVersion.scheduleVersionId` | Cột `id` | Mọi bảng dùng khóa `id` |

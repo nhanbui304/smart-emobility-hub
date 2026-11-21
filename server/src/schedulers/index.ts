@@ -4,6 +4,7 @@
  */
 import { systemConfig } from "../config/systemConfig";
 import { AppError } from "../lib/errors";
+import { operationalRepository } from "../repositories/OperationalRepository";
 import { holdExpiryScheduler } from "./HoldExpiryScheduler";
 import { hubAlertScheduler } from "./HubAlertScheduler";
 import { reservationExpiryScheduler } from "./ReservationExpiryScheduler";
@@ -14,6 +15,7 @@ const jobs = [
     name: "ReservationExpiryScheduler.expireDueReservations",
     run: (now: Date) => reservationExpiryScheduler.expireDueReservations(now),
   },
+  { name: "expireDueChargingRequests", run: (now: Date) => operationalRepository.expireDueChargingRequests(now) },
   { name: "HubAlertScheduler.evaluateHubAlerts", run: (now: Date) => hubAlertScheduler.evaluateHubAlerts(now) },
 ];
 

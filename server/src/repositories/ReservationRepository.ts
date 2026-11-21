@@ -1,6 +1,6 @@
 // Owner: Lê Quốc Linh – UC02, UC03, mục 2.3.2
 // Chữ ký method khớp class diagram Submission #3 (docs/**/*.drawio). Đổi chữ ký thì sửa cả sơ đồ.
-import { and, asc, eq, gte, inArray } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, notExists } from "drizzle-orm";
 import type { VehicleReservationStatus } from "../constants";
 import {
   hubs,
@@ -16,9 +16,17 @@ import {
 import { db } from "../lib/db";
 import { AppError } from "../lib/errors";
 import type { ReservationContext } from "../types/dto";
+import { hubRepository } from "./HubRepository";
 
 /** Đặt xe còn hiệu lực: chưa dùng, chưa hủy, chưa hết hạn. */
 const ACTIVE_RESERVATION_STATUSES: VehicleReservationStatus[] = ["RESERVED", "HANDING_OVER", "PENDING_VERIFICATION"];
+
+/** Scheduler là nơi chuyển RESERVED quá hạn sang EXPIRED và giải phóng xe. */
+export function findBlockingVehicleReservation(vehicleId: string): VehicleReservation | undefined {
+  return db.select().from(vehicleReservations)
+    .where(and(eq(vehicleReservations.vehicleId, vehicleId), inArray(vehicleReservations.status, ACTIVE_RESERVATION_STATUSES)))
+    .get();
+}
 
 /** Xe đang bị khóa đặt vì nằm trong lệnh điều chuyển chưa xuất phát (UC12) → không cho sinh viên đặt. */
 function vehicleIdsLockedByRedistribution(): Set<string> {
@@ -32,11 +40,11 @@ function vehicleIdsLockedByRedistribution(): Set<string> {
 
 export const reservationRepository = {
   /**
-   * Xe có thể đặt tại Hub: đang AVAILABLE, đủ ngưỡng pin đặt xe, không bị khóa bởi lệnh điều chuyển.
-   * `now` là mốc đánh giá, giữ theo sơ đồ (hiện chưa có điều kiện phụ thuộc thời gian).
+   * Xe có thể đặt tại Hub: đang AVAILABLE, đủ pin và không còn cam kết hoặc hạn chế vận hành.
    */
   queryReservableVehicles(hubId: string, reservableBatteryThreshold: number, now: Date): SharedVehicle[] {
     const locked = vehicleIdsLockedByRedistribution();
+    const underIncident = new Set(hubRepository.listVehicleIdsWithOpenIncidents());
     return db
       .select()
       .from(sharedVehicles)
@@ -45,11 +53,15 @@ export const reservationRepository = {
           eq(sharedVehicles.hubId, hubId),
           eq(sharedVehicles.status, "AVAILABLE"),
           gte(sharedVehicles.batteryLevel, reservableBatteryThreshold),
+          notExists(db.select({ id: vehicleReservations.id }).from(vehicleReservations).where(and(
+            eq(vehicleReservations.vehicleId, sharedVehicles.id),
+            inArray(vehicleReservations.status, ACTIVE_RESERVATION_STATUSES),
+          ))),
         ),
       )
       .orderBy(asc(sharedVehicles.code))
       .all()
-      .filter((v) => !locked.has(v.id));
+      .filter((v) => !locked.has(v.id) && !underIncident.has(v.id));
   },
 
   findById(reservationId: string): VehicleReservation | undefined {
@@ -88,7 +100,9 @@ export const reservationRepository = {
       !vehicle ||
       vehicle.hubId !== hubId ||
       vehicle.status !== "AVAILABLE" ||
-      vehicleIdsLockedByRedistribution().has(vehicleId)
+      vehicleIdsLockedByRedistribution().has(vehicleId) ||
+      hubRepository.listVehicleIdsWithOpenIncidents().includes(vehicleId) ||
+      findBlockingVehicleReservation(vehicleId) !== undefined
     ) {
       throw new AppError("CONFLICT", "Xe vừa được người khác đặt hoặc không còn khả dụng, vui lòng chọn xe khác.");
     }

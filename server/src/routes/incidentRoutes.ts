@@ -7,6 +7,7 @@ import { validateBody } from "../middleware/validate";
 export const incidentRoutes = Router();
 incidentRoutes.use(requireAuth, requireRole("OPERATOR"));
 
+incidentRoutes.get("/", incidentController.listOverview);
 incidentRoutes.get("/resources/:resourceId", incidentController.openIncidentManagement);
 incidentRoutes.get("/:incidentId", incidentController.openExistingIncident);
 incidentRoutes.post("/", validateBody(submitIncidentBody), incidentController.submitIncident);

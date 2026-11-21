@@ -51,7 +51,7 @@ export function ReserveVehiclePage() {
 }
  */
 import { useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { hubApi } from "../../api/hubs";
 import { ApiError } from "../../api/client";
 import { reservationApi } from "../../api/reservation";
@@ -63,15 +63,22 @@ import { PageHeader } from "../../components/PageHeader";
 import { Spinner } from "../../components/Spinner";
 import { useAsync } from "../../hooks/useAsync";
 import type { ReservationPreview, SharedVehicle, VehicleReservation } from "../../types";
+import { estimateRangeKm, sharedVehiclePlate, vehicleTypeLabel } from "../../utils/display";
 import { newRequestId } from "../../utils/requestId";
 
-const typeLabel = (t: SharedVehicle["type"]) => (t === "E_BIKE" ? "Xe đạp điện" : "Xe máy điện");
+const typeLabel = (t: SharedVehicle["type"]) => vehicleTypeLabel(t);
 const timeOf = (iso: string) => new Date(iso).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
 
 export function ReserveVehiclePage() {
   const { hubId = "" } = useParams();
+  const [searchParams] = useSearchParams();
+  const suggestedVehicleId = searchParams.get("vehicleId");
   const { data: hub } = useAsync(() => hubApi.detail(hubId), [hubId]);
   const vehicles = useAsync(() => reservationApi.getReservableVehicles(hubId), [hubId], { refreshEveryMs: 3000 });
+
+  const available = vehicles.data ?? [];
+  const suggested = available.find((vehicle) => vehicle.id === suggestedVehicleId);
+  const orderedVehicles = suggested ? [suggested, ...available.filter((vehicle) => vehicle.id !== suggested.id)] : available;
 
   const [preview, setPreview] = useState<ReservationPreview | null>(null);
   const [result, setResult] = useState<VehicleReservation | null>(null);
@@ -119,18 +126,30 @@ export function ReserveVehiclePage() {
   }
 
   if (result) {
+    const bookedVeh = vehicles.data?.find((v) => v.id === result.vehicleId);
     return (
       <div className="space-y-4">
         <PageHeader title="Đặt xe thành công" subtitle={hub?.name} />
-        <Card tone="highlight" className="space-y-1">
-          <p className="text-sm text-white/70">Mã đặt xe</p>
-          <p className="break-all text-sm font-mono">{result.id}</p>
-          <p className="pt-2 text-sm text-white/70">Hạn nhận xe</p>
-          <p className="text-2xl font-bold">{timeOf(result.pickupDeadline)}</p>
-          <p className="text-sm text-white/70">Hãy đến {hub?.name} nhận xe trước thời hạn này.</p>
+        <Card tone="highlight" className="space-y-3 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-white/70">Hạn nhận xe tại {hub?.name}</p>
+              <p className="mt-1 text-3xl font-extrabold text-lime">{timeOf(result.pickupDeadline)}</p>
+            </div>
+            {bookedVeh && (
+              <div className="rounded-xl bg-white px-4 py-2 text-center text-neutral-900">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-500">Biển số xe</p>
+                <p className="font-mono text-sm font-extrabold">{sharedVehiclePlate(bookedVeh.code)}</p>
+                <p className="text-[11px] font-semibold text-brand">{bookedVeh.code}</p>
+              </div>
+            )}
+          </div>
+          <p className="text-sm text-white/80">
+            Hãy đến đúng Hub, đối chiếu biển số trên thân xe và bấm <strong>Mở khóa nhận xe</strong> trước thời hạn trên.
+          </p>
         </Card>
         <Link to="/student/trips">
-          <Button fullWidth>Đến trang Chuyến đi để nhận xe</Button>
+          <Button fullWidth>Đến trang Chuyến đi để xem xe &amp; mở khóa</Button>
         </Link>
       </div>
     );
@@ -175,17 +194,24 @@ export function ReserveVehiclePage() {
           {vehicles.data?.length === 0 && (
             <EmptyState title="Hub này hiện không còn xe có thể đặt" description="Hãy chọn Hub khác ở Trang chủ." />
           )}
-          <ul className="space-y-2">
-            {vehicles.data?.map((v) => (
+          <ul className="grid gap-3 md:grid-cols-2">
+            {orderedVehicles.map((v) => (
               <li key={v.id}>
                 <Card className="flex items-center justify-between gap-3 p-4">
-                  <div>
-                    <p className="font-semibold">{v.code}</p>
-                    <p className="text-xs text-neutral-500">
-                      {typeLabel(v.type)} · Pin {v.batteryLevel}%
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-xl border border-neutral-300 bg-surface px-3 py-1.5 text-center dark:border-white/15 dark:bg-white/5">
+                      <p className="font-mono text-xs font-extrabold">{sharedVehiclePlate(v.code)}</p>
+                      <p className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">{v.code}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold">{typeLabel(v.type)}</p>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                        Pin <strong className="text-emerald-700 dark:text-lime">{v.batteryLevel}%</strong> · ~
+                        {estimateRangeKm(v.batteryLevel, v.type)} km
+                      </p>
+                    </div>
                   </div>
-                  <Button disabled={busy} onClick={() => void onSelect(v.id)}>
+                  <Button disabled={busy} onClick={() => void onSelect(v.id)} className="shrink-0 px-4 py-2 text-xs">
                     Chọn xe
                   </Button>
                 </Card>
