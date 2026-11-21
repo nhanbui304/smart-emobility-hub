@@ -16,6 +16,7 @@ import type {
   HubStatus,
   PrivateVehicle,
 } from "../../types";
+import { connectorTypeLabel, friendlyPortLabel } from "../../utils/display";
 
 function toLocalDateTimeInput(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -198,7 +199,7 @@ export function ScheduleChargingPanel({ onCreated }: { onCreated?: (reservationI
             {vehicles.length === 0 && <option value="">Chưa có xe cá nhân</option>}
             {vehicles.map((v) => (
               <option key={v.id} value={v.id}>
-                {v.plate} ({v.connectorType})
+                {v.plate} ({connectorTypeLabel(v.connectorType)})
               </option>
             ))}
           </select>
@@ -270,7 +271,7 @@ export function ScheduleChargingPanel({ onCreated }: { onCreated?: (reservationI
       {options.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-semibold">Cổng sạc khả dụng:</p>
-          {options.map((opt) => {
+          {options.map((opt, idx) => {
             const isPicked = selectedOption?.slotOptionId === opt.slotOptionId;
             return (
               <div
@@ -283,8 +284,7 @@ export function ScheduleChargingPanel({ onCreated }: { onCreated?: (reservationI
               >
                 <div>
                   <p className="font-semibold">
-                    {hubNameById.get(opt.hubId) ?? opt.hubId} · Cổng{" "}
-                    <span className="font-mono">{opt.portId.slice(0, 10)}…</span>
+                    {hubNameById.get(opt.hubId) ?? "Mobility Hub"} · {friendlyPortLabel(opt.portId, idx)}
                   </p>
                   <p className="text-neutral-500">
                     {formatDateTimeVi(opt.startTime)} → {formatDateTimeVi(opt.endTime)} · Tối đa {opt.maxPowerKw} kW
@@ -341,7 +341,6 @@ export function ScheduleChargingPanel({ onCreated }: { onCreated?: (reservationI
             <p className="font-bold text-emerald-800 dark:text-emerald-300">Lịch sạc đã được tạo</p>
             <StatusBadge status={created.status} />
           </div>
-          <p className="font-mono text-[11px]">Mã lịch: {created.reservationId}</p>
           <p>{created.usageGuide}</p>
         </div>
       )}

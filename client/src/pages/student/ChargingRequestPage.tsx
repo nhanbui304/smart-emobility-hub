@@ -16,6 +16,7 @@ import type {
   HubStatus,
   PrivateVehicle,
 } from "../../types";
+import { connectorTypeLabel, friendlyPortLabel } from "../../utils/display";
 
 function formatDateTimeVi(iso?: string | null): string {
   if (!iso) return "—";
@@ -194,7 +195,7 @@ export function ChargingRequestPage() {
               {vehicles.length === 0 && <option value="">Chưa có phương tiện cá nhân</option>}
               {vehicles.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {v.plate} ({v.connectorType})
+                  {v.plate} ({connectorTypeLabel(v.connectorType)})
                 </option>
               ))}
             </select>
@@ -269,7 +270,10 @@ export function ChargingRequestPage() {
                   Có cổng sạc trống sẵn sàng phân bổ ngay
                 </p>
                 <p>
-                  Cổng dự kiến: <span className="font-mono font-semibold">{proposal.proposedPortId?.slice(0, 12)}…</span>
+                  Cổng dự kiến:{" "}
+                  <span className="font-semibold">
+                    {proposal.proposedPortId ? friendlyPortLabel(proposal.proposedPortId) : "Sẽ phân bổ khi đến Hub"}
+                  </span>
                 </p>
                 {proposal.allocationDeadline && (
                   <p>Hạn bắt đầu cắm sạc: {formatDateTimeVi(proposal.allocationDeadline)}</p>
@@ -292,9 +296,6 @@ export function ChargingRequestPage() {
               <p className="font-bold text-emerald-800 dark:text-emerald-300">Yêu cầu sạc đã được ghi nhận</p>
               <StatusBadge status={submitResult.status} />
             </div>
-            <p className="font-mono text-[11px] text-neutral-600 dark:text-neutral-300">
-              Mã yêu cầu: {submitResult.chargingRequestId}
-            </p>
             <p>{submitResult.usageGuide}</p>
           </div>
         )}
@@ -325,8 +326,8 @@ export function ChargingRequestPage() {
                       <StatusBadge status={req.status} />
                     </div>
                     <p className="text-neutral-500 dark:text-neutral-400">
-                      Xe: {vehicle?.plate ?? req.vehicleId.slice(0, 10)} · Pin: {req.currentBattery}% → {req.targetBattery}%
-                      {req.assignedPortId ? ` · Cổng: ${req.assignedPortId.slice(0, 10)}…` : ""}
+                      Xe: {vehicle?.plate ?? "Xe cá nhân"} · Pin: {req.currentBattery}% → {req.targetBattery}%
+                      {req.assignedPortId ? ` · ${friendlyPortLabel(req.assignedPortId)}` : ""}
                     </p>
                     {req.allocationDeadline && (
                       <p className="text-[11px] text-amber-700 dark:text-amber-300">
