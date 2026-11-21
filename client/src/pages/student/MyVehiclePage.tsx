@@ -12,11 +12,18 @@ export function MyVehiclePage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Xe của tôi" subtitle="Quản lý chỗ đỗ và lịch sạc cho phương tiện cá nhân tại các Hub ĐHQG-HCM" />
-      <ParkingReservationSection />
-      <ScheduleChargingPanel onCreated={setLatestReservationId} />
-      <ManageChargingSchedulePanel key={latestReservationId} />
+      <div data-tour="st-parking">
+        <ParkingReservationSection />
+      </div>
+      <div data-tour="st-charge-schedule">
+        <ScheduleChargingPanel onCreated={setLatestReservationId} />
+      </div>
+      <div data-tour="st-charge-manage">
+        <ManageChargingSchedulePanel key={latestReservationId} />
+      </div>
       <Link
         to="/student/charging-request"
+        data-tour="st-charge-now-link"
         className="flex items-center justify-between rounded-2xl border border-neutral-200/80 bg-white p-4 transition hover:border-brand dark:border-white/10 dark:bg-panel-dark dark:hover:border-lime"
       >
         <div>

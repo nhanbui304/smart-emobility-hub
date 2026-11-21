@@ -1,10 +1,4 @@
 // Owner: Nguyễn Hoàng Nhân – UC13 Manage Smart Charging Schedule
-// Giao diện ChargingScheduleView khớp class diagram Submission #3 (docs/hoangnhan_submission3/UC13.drawio):
-// - selectHubAndTimeRange(hubId, timeRange) -> chargingScheduleApi.loadChargingContext
-// - selectPriorityRule(ruleId) -> chargingScheduleApi.generateProposedSchedule
-// - adjustPlan(planDraftId, changes) & requestPlanValidation(planDraftId) -> chargingScheduleApi.validatePlan
-// - confirmSchedule(planDraftId) -> chargingScheduleApi.applyChargingSchedule (kèm requestId & baseVersion)
-// - cancelApply(planDraftId) -> hủy áp dụng (Ext 7a)
 import { useEffect, useState } from "react";
 import { chargingScheduleApi } from "../../api/chargingSchedule";
 import { ApiError } from "../../api/client";
@@ -27,43 +21,40 @@ import type {
 } from "../../types";
 
 const PRIORITY_RULES = [
-  {
-    id: "LOW_BATTERY_FIRST",
-    label: "Ưu tiên xe pin thấp (< 25% xét trước)",
-    description: "Phân bổ cổng sạc trước cho các xe có mức pin dưới ngưỡng ưu tiên, sắp xếp tăng dần theo % pin.",
-  },
-  {
-    id: "SOONEST_USE_FIRST",
-    label: "Ưu tiên xe sắp cần sử dụng / gửi yêu cầu trước (FIFO)",
-    description: "Ưu tiên các yêu cầu sạc đã ghi nhận thời điểm trước, sau đó xét đến mức pin.",
-  },
-  {
-    id: "MAX_NEED_FIRST",
-    label: "Ưu tiên nhu cầu thiếu hụt năng lượng lớn nhất",
-    description: "Sắp xếp theo độ chênh lệch (Mục tiêu pin % - Pin hiện tại %) từ cao xuống thấp.",
-  },
+  { id: "LOW_BATTERY_FIRST", label: "Pin thấp trước (< 25%)", sub: "Ưu tiên xe gần cạn pin" },
+  { id: "SOONEST_USE_FIRST", label: "Đến trước sạc trước (FIFO)", sub: "Theo thứ tự gửi yêu cầu" },
+  { id: "MAX_NEED_FIRST", label: "Thiếu pin nhiều nhất", sub: "Ưu tiên xe cần nạp nhiều %" },
 ] as const;
 
-function getDefaultTimeRange(): { startLocal: string; endLocal: string } {
+type TimePreset = "2H" | "PEAK" | "CUSTOM";
+
+function toLocalInput(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function getPresetRange(preset: Exclude<TimePreset, "CUSTOM">): { startLocal: string; endLocal: string } {
   const now = new Date();
+  if (preset === "PEAK") {
+    const start = new Date(now);
+    start.setHours(17, 0, 0, 0);
+    if (start.getTime() <= now.getTime()) start.setDate(start.getDate() + 1);
+    const end = new Date(start.getTime() + 120 * 60_000);
+    return { startLocal: toLocalInput(start), endLocal: toLocalInput(end) };
+  }
   const start = new Date(now.getTime() + 5 * 60_000);
   const end = new Date(now.getTime() + 125 * 60_000);
-  const toLocalInput = (d: Date) => {
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  };
   return { startLocal: toLocalInput(start), endLocal: toLocalInput(end) };
 }
 
 export function SmartChargingPanel() {
   const { data: hubs, loading: hubsLoading } = useAsync(() => hubApi.list(), []);
   const [selectedHubId, setSelectedHubId] = useState<string>("");
-  const [{ startLocal, endLocal }, setTimeInput] = useState(getDefaultTimeRange);
+  const [timePreset, setTimePreset] = useState<TimePreset>("2H");
+  const [{ startLocal, endLocal }, setTimeInput] = useState(() => getPresetRange("2H"));
   const [ruleId, setRuleId] = useState<string>("LOW_BATTERY_FIRST");
 
   const [context, setContext] = useState<ChargingContext | null>(null);
-  const [contextLoading, setContextLoading] = useState<boolean>(false);
-
   const [draft, setDraft] = useState<PlanDraft | null>(null);
   const [editableAllocations, setEditableAllocations] = useState<PlanAllocation[]>([]);
   const [proposalLoading, setProposalLoading] = useState<boolean>(false);
@@ -89,30 +80,14 @@ export function SmartChargingPanel() {
     endTime: new Date(endLocal).toISOString(),
   });
 
-  // ChargingScheduleView.selectHubAndTimeRange (UC13 bước 1–2)
-  const selectHubAndTimeRange = async (hubIdArg?: string) => {
-    const targetHubId = hubIdArg ?? selectedHubId;
-    if (!targetHubId) return;
-
-    setError(null);
-    setVersionConflictNotice(null);
-    setContextLoading(true);
-    try {
-      const tr = buildTimeRange();
-      const ctx = await chargingScheduleApi.loadChargingContext(targetHubId, tr);
-      setContext(ctx);
-      setDraft(null);
-      setEditableAllocations([]);
-      setValidatedPlan(null);
-      setAppliedResult(null);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setContextLoading(false);
+  const applyPreset = (preset: TimePreset) => {
+    setTimePreset(preset);
+    if (preset !== "CUSTOM") {
+      setTimeInput(getPresetRange(preset));
     }
   };
 
-  // ChargingScheduleView.selectPriorityRule (UC13 bước 3–4)
+  // Gộp tải bối cảnh + sinh đề xuất trong 1 cú bấm cho gọn
   const selectPriorityRule = async (chosenRuleId?: string) => {
     const activeRule = chosenRuleId ?? ruleId;
     if (!selectedHubId) return;
@@ -137,16 +112,13 @@ export function SmartChargingPanel() {
     }
   };
 
-  // ChargingScheduleView.adjustPlan (UC13 bước 5)
   const adjustPlan = (index: number, newPowerKw: number) => {
     setEditableAllocations((prev) =>
       prev.map((item, i) => (i === index ? { ...item, allocatedPowerKw: newPowerKw } : item)),
     );
-    // Khi chỉnh sửa tay công suất, cần kiểm tra lại ở bước 6 trước khi áp dụng
     setValidatedPlan(null);
   };
 
-  // ChargingScheduleView.requestPlanValidation (UC13 bước 6)
   const requestPlanValidation = async () => {
     if (!draft) return;
     setError(null);
@@ -170,7 +142,6 @@ export function SmartChargingPanel() {
     }
   };
 
-  // ChargingScheduleView.confirmSchedule (UC13 bước 7–9)
   const confirmSchedule = async () => {
     if (!draft || !validatedPlan) return;
     setError(null);
@@ -184,7 +155,6 @@ export function SmartChargingPanel() {
       setAppliedResult(result);
     } catch (err) {
       if (err instanceof ApiError && err.code === "VERSION_CONFLICT") {
-        // UC13 Ext 8a: Nhu cầu, tài nguyên hoặc kế hoạch đã thay đổi -> yêu cầu tải lại bước 2
         setVersionConflictNotice(err.message);
       } else {
         setError(err);
@@ -194,358 +164,348 @@ export function SmartChargingPanel() {
     }
   };
 
-  // ChargingScheduleView.cancelApply (UC13 Ext 7a)
   const cancelApply = () => {
     setDraft(null);
     setEditableAllocations([]);
     setValidatedPlan(null);
+    setAppliedResult(null);
     setError(null);
   };
 
-  const totalProposedKw = editableAllocations.reduce(
-    (sum, a) => sum + (Number(a.allocatedPowerKw) || 0),
-    0,
-  );
-  const selectedHubName = hubs?.find((h) => h.id === selectedHubId)?.name ?? "Hub đã chọn";
+  const totalProposedKw = editableAllocations.reduce((sum, a) => sum + (Number(a.allocatedPowerKw) || 0), 0);
+  const maxPowerKw = context?.hubPowerCapacityKw ?? 0;
+  const powerPct = maxPowerKw > 0 ? Math.min(100, Math.round((totalProposedKw / maxPowerKw) * 100)) : 0;
+  const isOverPower = maxPowerKw > 0 && totalProposedKw > maxPowerKw;
+
+  const step1Done = Boolean(selectedHubId);
+  const step2Done = Boolean(draft);
+  const step3Done = Boolean(appliedResult);
 
   return (
-    <Card className="space-y-6">
-      <div className="border-b border-neutral-200 pb-4 dark:border-white/10">
-        <div>
-          <h2 className="text-lg font-bold">Lịch sạc thông minh</h2>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            Điều phối phân bổ cổng sạc &amp; công suất theo giới hạn điện của Hub, mức pin và thứ tự ưu tiên.
-          </p>
-        </div>
-      </div>
+    <div className="space-y-5">
+      {/* Thanh Stepper 3 bước rõ ràng */}
+      <Card className="flex flex-wrap items-center justify-between gap-4 px-5 py-3.5">
+        <StepPill num={1} label="Chọn Hub & Khung giờ" state={step2Done ? "done" : step1Done ? "active" : "idle"} />
+        <div className="hidden h-px flex-1 bg-neutral-200 dark:bg-white/10 sm:block" />
+        <StepPill num={2} label="Chọn quy tắc ưu tiên" state={step3Done ? "done" : step2Done ? "done" : "active"} />
+        <div className="hidden h-px flex-1 bg-neutral-200 dark:bg-white/10 sm:block" />
+        <StepPill num={3} label="Kiểm tra & Áp dụng" state={step3Done ? "done" : step2Done ? "active" : "idle"} />
+      </Card>
 
-      {/* Bước 1–2: Chọn Hub và khoảng thời gian điều phối */}
-      <div className="space-y-4 rounded-xl border border-neutral-200/80 p-4 dark:border-white/10">
-        <h3 className="text-sm font-semibold">
-          Chọn Mobility Hub &amp; Khung giờ điều phối
-        </h3>
-        {hubsLoading ? (
-          <Spinner />
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-neutral-600 dark:text-neutral-300">
-                Mobility Hub
-              </label>
-              <select
-                value={selectedHubId}
-                onChange={(e) => setSelectedHubId(e.target.value)}
-                className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-brand dark:border-white/15 dark:bg-neutral-900 dark:text-neutral-100"
-              >
-                {(hubs ?? []).map((h) => (
-                  <option key={h.id} value={h.id}>
-                    {h.name} ({h.freeChargingPorts}/{h.totalChargingPorts} cổng rảnh)
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-neutral-600 dark:text-neutral-300">
-                Bắt đầu điều phối
-              </label>
-              <input
-                type="datetime-local"
-                value={startLocal}
-                onChange={(e) => setTimeInput((prev) => ({ ...prev, startLocal: e.target.value }))}
-                className="w-full rounded-xl border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand dark:border-white/15"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-neutral-600 dark:text-neutral-300">
-                Kết thúc điều phối
-              </label>
-              <input
-                type="datetime-local"
-                value={endLocal}
-                onChange={(e) => setTimeInput((prev) => ({ ...prev, endLocal: e.target.value }))}
-                className="w-full rounded-xl border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-brand dark:border-white/15"
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => void selectHubAndTimeRange()}
-            loading={contextLoading}
-            disabled={!selectedHubId}
-          >
-            Tải dữ liệu sạc tại Hub
-          </Button>
-          {context && (
-            <span className="text-xs text-neutral-500 dark:text-neutral-400">
-              Đã tải bối cảnh của <strong>{selectedHubName}</strong>: {context.demands.length} nhu cầu sạc · Giới hạn điện:{" "}
-              <strong>{context.hubPowerCapacityKw} kW</strong>
-            </span>
-          )}
-        </div>
-
-        {/* Hiển thị tóm tắt bối cảnh sạc (UC13 bước 2) */}
-        {context && (
-          <div className="space-y-3 border-t border-neutral-200/70 pt-3 dark:border-white/10">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-lg bg-neutral-100/80 p-2.5 dark:bg-white/5">
-                <p className="text-xs text-neutral-500">Giới hạn công suất</p>
-                <p className="text-lg font-bold">{context.hubPowerCapacityKw} kW</p>
-              </div>
-              <div className="rounded-lg bg-neutral-100/80 p-2.5 dark:bg-white/5">
-                <p className="text-xs text-neutral-500">Nhu cầu cần sạc</p>
-                <p className="text-lg font-bold">{context.demands.length} xe</p>
-              </div>
-              <div className="rounded-lg bg-neutral-100/80 p-2.5 dark:bg-white/5">
-                <p className="text-xs text-neutral-500">Cam kết đã có</p>
-                <p className="text-lg font-bold">
-                  {context.confirmedReservations.length + context.activeSessions.length}
-                </p>
-              </div>
-              <div className="rounded-lg bg-neutral-100/80 p-2.5 dark:bg-white/5">
-                <p className="text-xs text-neutral-500">Tài nguyên hạn chế</p>
-                <p className="text-lg font-bold">{context.restrictedResources.length}</p>
-              </div>
-            </div>
-
-            {context.demands.length > 0 && (
-              <div>
-                <p className="mb-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-300">
-                  Danh sách nhu cầu sạc tại Hub:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {context.demands.map((d) => {
-                    const isLow = d.chargingNeed.currentBattery < 25;
-                    return (
-                      <span
-                        key={d.demandId}
-                        className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs ${
-                          isLow
-                            ? "border-amber-400/60 bg-amber-50 text-amber-900 dark:bg-amber-500/10 dark:text-amber-200"
-                            : "border-neutral-200 bg-white dark:border-white/10 dark:bg-white/5"
-                        }`}
-                      >
-                        <strong>{d.demandId}</strong>: Pin {d.chargingNeed.currentBattery}% →{" "}
-                        {d.chargingNeed.targetBattery}%
-                        {isLow && <span className="font-semibold text-amber-600 dark:text-amber-300">(Pin thấp)</span>}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {context.restrictedResources.length > 0 && (
-              <div className="rounded-lg border border-red-200 bg-red-50/70 p-2.5 text-xs text-red-800 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200">
-                <strong>Tài nguyên đang bị hạn chế do sự cố / bảo trì (không đưa vào phương án):</strong>{" "}
-                {context.restrictedResources.map((r) => r.reason).join(" · ")}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Bước 3–4: Chọn quy tắc ưu tiên & Sinh kế hoạch đề xuất */}
-      <div className="space-y-4 rounded-xl border border-neutral-200/80 p-4 dark:border-white/10">
-        <h3 className="text-sm font-semibold">
-          Chọn quy tắc ưu tiên &amp; Đề xuất kế hoạch phân bổ
-        </h3>
-        <div className="space-y-2">
-          {PRIORITY_RULES.map((rule) => (
-            <label
-              key={rule.id}
-              className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition ${
-                ruleId === rule.id
-                  ? "border-brand bg-brand/5 dark:border-lime dark:bg-lime/10"
-                  : "border-neutral-200 hover:bg-neutral-50 dark:border-white/10 dark:hover:bg-white/5"
-              }`}
-            >
-              <input
-                type="radio"
-                name="priorityRule"
-                value={rule.id}
-                checked={ruleId === rule.id}
-                onChange={() => setRuleId(rule.id)}
-                className="mt-1"
-              />
-              <div>
-                <p className="font-semibold">{rule.label}</p>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">{rule.description}</p>
-              </div>
-            </label>
-          ))}
-        </div>
-
-        <Button
-          variant="primary"
-          onClick={() => void selectPriorityRule(ruleId)}
-          loading={proposalLoading}
-          disabled={!selectedHubId}
-        >
-          Sinh kế hoạch đề xuất
-        </Button>
-      </div>
-
-      {/* Hiển thị lỗi hoặc cảnh báo xung đột phiên bản (Ext 8a) */}
-      <ErrorMessage error={error} onRetry={() => void selectHubAndTimeRange()} />
+      <ErrorMessage error={error} onRetry={() => void selectPriorityRule(ruleId)} />
 
       {versionConflictNotice && (
-        <div className="rounded-xl border border-amber-400 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-200">
-          <p className="font-semibold">Dữ liệu sạc tại Hub vừa thay đổi</p>
-          <p className="mt-1 text-xs">{versionConflictNotice}</p>
-          <div className="mt-3">
-            <Button variant="outline" onClick={() => void selectPriorityRule(ruleId)}>
-              Tải lại dữ liệu &amp; Tính lại đề xuất
-            </Button>
-          </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-400 bg-amber-50 px-4 py-3 text-xs text-amber-900 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-200">
+          <span>
+            <strong>Dữ liệu sạc vừa thay đổi:</strong> {versionConflictNotice}
+          </span>
+          <Button variant="outline" onClick={() => void selectPriorityRule(ruleId)} className="px-3 py-1 text-xs">
+            Tính lại đề xuất
+          </Button>
         </div>
       )}
 
-      {/* Bước 5–8: Xem đề xuất, điều chỉnh công suất, kiểm tra ràng buộc & áp dụng */}
-      {draft && (
-        <div className="space-y-4 rounded-xl border-2 border-brand/30 p-4 dark:border-lime/30">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h3 className="text-sm font-bold">
-                Kế hoạch phân bổ đề xuất
-              </h3>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                Tổng công suất phân bổ:{" "}
-                <strong
-                  className={
-                    context && totalProposedKw > context.hubPowerCapacityKw
-                      ? "text-red-600 dark:text-red-400"
-                      : "text-emerald-600 dark:text-lime"
-                  }
+      {/* Bố cục 2 cột thoáng: Trái cấu hình (5) | Phải phương án (7) */}
+      <div className="grid gap-5 lg:grid-cols-12">
+        {/* Cột trái: Cấu hình gọn */}
+        <Card className="flex flex-col justify-between gap-5 lg:col-span-5">
+          <div className="space-y-5">
+            {/* Bước 1 */}
+            <div data-tour="uc13-hub-time" className="space-y-2.5">
+              <h2 className="text-sm font-bold">1. Hub &amp; Khung giờ</h2>
+              {hubsLoading ? (
+                <Spinner />
+              ) : (
+                <select
+                  value={selectedHubId}
+                  onChange={(e) => {
+                    setSelectedHubId(e.target.value);
+                    setDraft(null);
+                    setValidatedPlan(null);
+                    setAppliedResult(null);
+                  }}
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3.5 py-2.5 text-sm font-medium outline-none focus:border-brand dark:border-white/15 dark:bg-white/5"
                 >
-                  {totalProposedKw.toFixed(1)} kW
-                </strong>{" "}
-                / Giới hạn Hub: <strong>{context?.hubPowerCapacityKw ?? "—"} kW</strong>
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <StatusBadge
-                status="ALLOCATED"
-                label={`Đáp ứng: ${draft.servedRequests.length} nhu cầu`}
-              />
-              {draft.waitingRequests.length > 0 && (
-                <StatusBadge
-                  status="WAITING"
-                  label={`Còn chờ: ${draft.waitingRequests.length}`}
-                />
+                  {(hubs ?? []).map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.name} ({h.freeChargingPorts}/{h.totalChargingPorts} cổng rảnh)
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              <div className="grid grid-cols-3 gap-2">
+                {(
+                  [
+                    { key: "2H", label: "2 giờ tới" },
+                    { key: "PEAK", label: "Cao điểm 17h" },
+                    { key: "CUSTOM", label: "Tùy chỉnh" },
+                  ] as const
+                ).map((p) => (
+                  <button
+                    key={p.key}
+                    type="button"
+                    onClick={() => applyPreset(p.key)}
+                    className={`cursor-pointer rounded-xl px-2.5 py-2 text-xs font-semibold transition ${
+                      timePreset === p.key
+                        ? "bg-brand text-white dark:bg-lime dark:text-brand-dark"
+                        : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-white/5 dark:text-neutral-300"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              {timePreset === "CUSTOM" && (
+                <div className="grid gap-2 pt-1 sm:grid-cols-2">
+                  <input
+                    type="datetime-local"
+                    value={startLocal}
+                    onChange={(e) => setTimeInput((prev) => ({ ...prev, startLocal: e.target.value }))}
+                    className="w-full rounded-xl border border-neutral-200 bg-transparent px-3 py-2 text-xs outline-none focus:border-brand dark:border-white/15"
+                  />
+                  <input
+                    type="datetime-local"
+                    value={endLocal}
+                    onChange={(e) => setTimeInput((prev) => ({ ...prev, endLocal: e.target.value }))}
+                    className="w-full rounded-xl border border-neutral-200 bg-transparent px-3 py-2 text-xs outline-none focus:border-brand dark:border-white/15"
+                  />
+                </div>
               )}
             </div>
-          </div>
 
-          {/* Bảng phân bổ cổng sạc & điều chỉnh công suất (UC13 bước 5) */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b border-neutral-200 uppercase text-neutral-500 dark:border-white/10">
-                <tr>
-                  <th className="py-2 pr-3">Nhu cầu / Xe</th>
-                  <th className="py-2 pr-3">Mã cổng sạc</th>
-                  <th className="py-2 pr-3">Mã vị trí đỗ</th>
-                  <th className="py-2 pr-3">Công suất cấp (kW)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
-                {editableAllocations.map((alloc, idx) => {
-                  const demandId = alloc.demandId ?? `Cam kết #${idx + 1}`;
-                  const demandObj = context?.demands.find((d) => d.demandId === demandId);
+            {/* Bước 2 */}
+            <div data-tour="uc13-rules" className="space-y-2.5">
+              <h2 className="text-sm font-bold">2. Quy tắc ưu tiên</h2>
+              <div className="space-y-2">
+                {PRIORITY_RULES.map((rule) => {
+                  const active = ruleId === rule.id;
                   return (
-                    <tr key={alloc.portId}>
-                      <td className="py-2.5 pr-3 font-semibold">
-                        {demandId}
-                        {demandObj && (
-                          <span className="ml-1.5 font-normal text-neutral-500">
-                            ({demandObj.chargingNeed.currentBattery}% → {demandObj.chargingNeed.targetBattery}%)
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2.5 pr-3 font-mono text-neutral-500">
-                        {alloc.portId.slice(0, 8)}
-                      </td>
-                      <td className="py-2.5 pr-3 font-mono text-neutral-500">
-                        {alloc.positionId.slice(0, 8)}
-                      </td>
-                      <td className="py-2.5 pr-3">
-                        <input
-                          type="number"
-                          step="0.5"
-                          min="0.5"
-                          max="25"
-                          value={alloc.allocatedPowerKw}
-                          onChange={(e) => adjustPlan(idx, parseFloat(e.target.value) || 0)}
-                          className="w-24 rounded-lg border border-neutral-300 bg-transparent px-2.5 py-1 text-sm font-semibold outline-none focus:border-brand dark:border-white/20"
-                        />{" "}
-                        kW
-                      </td>
-                    </tr>
+                    <button
+                      key={rule.id}
+                      type="button"
+                      onClick={() => setRuleId(rule.id)}
+                      className={`flex w-full cursor-pointer items-center justify-between rounded-xl border px-3.5 py-3 text-left transition ${
+                        active
+                          ? "border-brand bg-emerald-50/60 dark:border-lime dark:bg-lime/10"
+                          : "border-neutral-200 hover:bg-neutral-50 dark:border-white/10 dark:hover:bg-white/5"
+                      }`}
+                    >
+                      <div>
+                        <p className="text-sm font-semibold">{rule.label}</p>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">{rule.sub}</p>
+                      </div>
+                      <span
+                        className={`h-4 w-4 shrink-0 rounded-full border-2 ${
+                          active
+                            ? "border-brand bg-brand dark:border-lime dark:bg-lime"
+                            : "border-neutral-300 dark:border-white/25"
+                        }`}
+                      />
+                    </button>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            </div>
           </div>
 
-          {/* UC13 Ext 4a: Hiển thị rõ các nhu cầu còn chờ (nếu số nhu cầu > số cổng sạc) */}
-          {draft.waitingRequests.length > 0 && (
-            <div className="rounded-lg border border-amber-300/70 bg-amber-50/60 p-3 text-xs text-amber-900 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-200">
-              <strong>Nhu cầu còn chờ phân bổ:</strong>{" "}
-              {draft.waitingRequests.join(", ")}
+          <Button
+            variant="primary"
+            fullWidth
+            onClick={() => void selectPriorityRule(ruleId)}
+            loading={proposalLoading}
+            disabled={!selectedHubId}
+          >
+            Tạo đề xuất lịch sạc
+          </Button>
+        </Card>
+
+        {/* Cột phải: Kết quả phân bổ trực quan */}
+        <Card className="flex flex-col justify-between gap-5 lg:col-span-7">
+          <div data-tour="uc13-result" className="flex h-full flex-col justify-between gap-5">
+          {!draft ? (
+            <div className="flex h-full min-h-[360px] flex-col items-center justify-center rounded-2xl border border-dashed border-neutral-200 p-8 text-center dark:border-white/10">
+              <p className="text-sm font-semibold">Chưa có đề xuất lịch sạc</p>
+              <p className="mt-1 max-w-sm text-xs text-neutral-500 dark:text-neutral-400">
+                Chọn Hub, khung giờ và quy tắc bên trái rồi bấm <strong>Tạo đề xuất lịch sạc</strong>.
+              </p>
             </div>
-          )}
+          ) : (
+            <>
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="text-base font-bold">Phương án phân bổ đề xuất</h2>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status="ALLOCATED" label={`Đáp ứng ${draft.servedRequests.length}`} />
+                    {draft.waitingRequests.length > 0 && (
+                      <StatusBadge status="WAITING" label={`Chờ ${draft.waitingRequests.length}`} />
+                    )}
+                  </div>
+                </div>
 
-          {/* Bước 6 & 7: Nút Kiểm tra kế hoạch -> Xác nhận áp dụng */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200 pt-3 dark:border-white/10">
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => void requestPlanValidation()}
-                loading={validating}
-              >
-                Kiểm tra kế hoạch
-              </Button>
+                {/* Thanh tải điện Hub trực quan */}
+                <div className="space-y-2 rounded-xl bg-neutral-100/80 p-3.5 dark:bg-white/5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold">Tải điện dự kiến</span>
+                    <span
+                      className={`font-bold tabular-nums ${
+                        isOverPower ? "text-red-600 dark:text-red-400" : "text-emerald-700 dark:text-lime"
+                      }`}
+                    >
+                      {totalProposedKw.toFixed(1)} / {maxPowerKw || "—"} kW ({powerPct}%)
+                    </span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-white/10">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        isOverPower ? "bg-red-500" : "bg-brand dark:bg-lime"
+                      }`}
+                      style={{ width: `${powerPct}%` }}
+                    />
+                  </div>
+                </div>
 
-              {validatedPlan && (
-                <Button
-                  variant="primary"
-                  onClick={() => void confirmSchedule()}
-                  loading={applying}
-                >
-                  Xác nhận áp dụng
+                {/* Bảng phân bổ gọn */}
+                {editableAllocations.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-neutral-200 py-6 text-center text-xs text-neutral-500 dark:border-white/10">
+                    Không có nhu cầu sạc mới trong khung giờ này.
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="border-b border-neutral-200/80 text-[11px] uppercase tracking-wider text-neutral-500 dark:border-white/10">
+                        <tr>
+                          <th className="py-2 pr-3 font-semibold">Xe / Yêu cầu</th>
+                          <th className="py-2 pr-3 font-semibold">Cổng sạc</th>
+                          <th className="py-2 pr-3 font-semibold">Công suất (kW)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
+                        {editableAllocations.map((alloc, idx) => {
+                          const demandId = alloc.demandId ?? `Cam kết #${idx + 1}`;
+                          const demandObj = context?.demands.find((d) => d.demandId === demandId);
+                          const isLow = demandObj ? demandObj.chargingNeed.currentBattery < 25 : false;
+                          return (
+                            <tr key={`${alloc.portId}-${idx}`}>
+                              <td className="py-2.5 pr-3">
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <span className="font-semibold">{demandId}</span>
+                                  {demandObj && (
+                                    <span className="tabular-nums text-neutral-500">
+                                      {demandObj.chargingNeed.currentBattery}% → {demandObj.chargingNeed.targetBattery}%
+                                    </span>
+                                  )}
+                                  {isLow && (
+                                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 dark:bg-amber-500/20 dark:text-amber-200">
+                                      Pin thấp
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-2.5 pr-3 font-mono text-neutral-500">{alloc.portId.slice(0, 8)}</td>
+                              <td className="py-2.5 pr-3">
+                                <input
+                                  type="number"
+                                  step="0.5"
+                                  min="0.5"
+                                  max="25"
+                                  value={alloc.allocatedPowerKw}
+                                  onChange={(e) => adjustPlan(idx, parseFloat(e.target.value) || 0)}
+                                  className="w-20 rounded-lg border border-neutral-300 bg-transparent px-2 py-1 text-xs font-semibold tabular-nums outline-none focus:border-brand dark:border-white/20"
+                                />{" "}
+                                kW
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {draft.waitingRequests.length > 0 && (
+                  <div className="rounded-xl border border-amber-300/70 bg-amber-50/70 px-3.5 py-2.5 text-xs text-amber-900 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-200">
+                    <strong>Đang chờ cổng:</strong> {draft.waitingRequests.join(", ")}
+                  </div>
+                )}
+
+                {validatedPlan && !appliedResult && (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-3.5 py-2.5 text-xs font-medium text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-lime">
+                    ✓ Kế hoạch hợp lệ, sẵn sàng áp dụng.
+                  </div>
+                )}
+
+                {appliedResult && (
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-xs text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-200">
+                    <span className="font-bold">
+                      ✓ Đã áp dụng lịch sạc ({appliedResult.allocations.length} phân bổ).
+                    </span>
+                    <StatusBadge status="COMPLETED" label={`#${appliedResult.scheduleVersionId.slice(0, 8)}`} />
+                  </div>
+                )}
+              </div>
+
+              {/* Thanh hành động đáy */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-200/80 pt-4 dark:border-white/10">
+                <Button variant="ghost" onClick={cancelApply} className="text-xs">
+                  Hủy
                 </Button>
-              )}
-            </div>
-
-            <Button variant="ghost" onClick={cancelApply}>
-              Hủy bỏ
-            </Button>
-          </div>
-
-          {validatedPlan && !appliedResult && (
-            <p className="text-xs font-medium text-emerald-700 dark:text-lime">
-              ✓ Kế hoạch hợp lệ: Không vượt giới hạn công suất ({context?.hubPowerCapacityKw} kW), không cấp trùng tài nguyên và bảo toàn các lịch đã xác nhận.
-            </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant={validatedPlan ? "outline" : "primary"}
+                    onClick={() => void requestPlanValidation()}
+                    loading={validating}
+                    className="text-xs"
+                  >
+                    Kiểm tra hợp lệ
+                  </Button>
+                  {validatedPlan && (
+                    <Button
+                      variant="primary"
+                      onClick={() => void confirmSchedule()}
+                      loading={applying}
+                      className="text-xs"
+                    >
+                      Áp dụng lịch sạc
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </>
           )}
-        </div>
-      )}
-
-      {/* Bước 9: Hiển thị kết quả áp dụng kế hoạch sạc thành công */}
-      {appliedResult && (
-        <div className="rounded-xl border border-emerald-400/60 bg-emerald-50 p-4 text-sm text-emerald-950 dark:border-emerald-400/30 dark:bg-emerald-500/10 dark:text-emerald-200">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="font-bold">
-              ✓ Đã áp dụng kế hoạch sạc thông minh thành công!
-            </p>
-            <StatusBadge status="COMPLETED" label={`Mã kế hoạch: ${appliedResult.scheduleVersionId.slice(0, 8)}`} />
           </div>
-          <p className="mt-1 text-xs opacity-90">
-            Đã lưu {appliedResult.allocations.length} phân bổ cổng sạc vào hệ thống và gửi thông báo tới các bên liên quan. Kế hoạch sẽ có hiệu lực khi phương tiện kết nối sạc.
-          </p>
-        </div>
-      )}
-    </Card>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function StepPill({ num, label, state }: { num: number; label: string; state: "done" | "active" | "idle" }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span
+        className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+          state === "done"
+            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-lime"
+            : state === "active"
+              ? "bg-brand text-lime dark:bg-lime dark:text-brand-dark"
+              : "bg-neutral-100 text-neutral-400 dark:bg-white/10"
+        }`}
+      >
+        {state === "done" ? "✓" : num}
+      </span>
+      <span
+        className={`text-xs ${
+          state === "active"
+            ? "font-bold text-neutral-900 dark:text-white"
+            : state === "done"
+              ? "font-medium text-neutral-700 dark:text-neutral-200"
+              : "text-neutral-400"
+        }`}
+      >
+        {label}
+      </span>
+    </div>
   );
 }

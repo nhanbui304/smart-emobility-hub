@@ -4,9 +4,10 @@
 - **Độ phân giải khuyến nghị:** 1920×1080 (Full HD), zoom trình duyệt 100%
 - **Công cụ quay nhanh trên Windows:** `Win + Alt + R` (Xbox Game Bar) hoặc OBS Studio
 - **Chuẩn bị trước khi bấm quay:**
-  1. Chạy `npm run db:reset` để dữ liệu về trạng thái mẫu sạch nhất (5 Hub, 50 xe, 100 chỗ đỗ, 20 cổng sạc).
-  2. Chạy `npm run dev` và mở sẵn trình duyệt tại `http://localhost:5173`.
-  3. Chuẩn bị 3 tài khoản demo:
+  1. Đặt tạm `SIMULATOR_DEVICE_RESULT=SUCCESS` trong `server/.env` để tránh xác suất 10% giả lập lỗi mở/khóa xe lúc quay (quay xong đổi lại `RANDOM`).
+  2. Chạy `npm run db:reset` để dữ liệu về trạng thái mẫu sạch nhất (5 Hub, 50 xe, 100 chỗ đỗ, 20 cổng sạc).
+  3. Chạy `npm run dev` và mở sẵn trình duyệt tại `http://localhost:5173`.
+  4. Chuẩn bị 3 tài khoản demo:
      - Sinh viên 1 (đặt xe, đỗ xe, sạc xe): `student1@hub.local` / `student123`
      - Sinh viên 2 (có sẵn chuyến đi đang diễn ra để demo trả xe): `student2@hub.local` / `student123`
      - Nhân viên vận hành (Operator): `operator@hub.local` / `operator123`
@@ -35,14 +36,15 @@
 - **Lời thoại gợi ý:**
   > "Ngay tại Trang chủ là bản đồ thực tế ĐHQG-HCM hiển thị trực tiếp trạng thái 5 Mobility Hub, tự động đồng bộ mỗi 3 giây. Sinh viên có thể bấm vào từng Hub trên bản đồ để xem xe pin cao nhất kèm biển số, hoặc dùng chức năng Tìm phương án theo loại xe và mức pin tối thiểu."
 
-### 2.2. Đặt xe & Mở khóa nhận xe (UC02, UC03, UC04)
+### 2.2. Đặt xe, Hủy đặt & Mở khóa nhận xe (UC02, UC03, UC04)
 - **Màn hình:** Đặt xe tại Hub (`/student/hubs/:hubId/reserve`) → Chuyến đi (`/student/trips`)
 - **Thao tác:**
-  1. Chọn 1 xe → xem màn hình xác nhận (biển số, % pin, hạn giữ xe 15 phút) → bấm **Xác nhận đặt xe**.
-  2. Chuyển sang **Chuyến đi** (`/student/trips`): cho thấy thẻ xe đã đặt có **biển số xe**, thanh pin và đồng hồ đếm ngược.
-  3. Bấm **Nhận xe** → **Mở khóa và nhận xe** → chuyển sang trạng thái **Đang trong chuyến đi**.
+  1. Chọn 1 xe → xem màn hình xác nhận (biển số, % pin, hạn giữ xe 30 phút) → bấm **Xác nhận đặt xe** (UC02).
+  2. Chuyển sang **Chuyến đi** (`/student/trips`): cho thấy thẻ xe đã đặt có **biển số xe**, thanh pin và đồng hồ đếm ngược 30 phút.
+  3. *(Tùy chọn để đủ 14/14 UC)* Bấm **Hủy đặt xe** (UC03) để cho thấy xe được giải phóng về trạng thái sẵn sàng, sau đó đặt lại xe đó.
+  4. Bấm **Nhận xe** → **Mở khóa và nhận xe** (UC04) → chuyển sang trạng thái **Đang trong chuyến đi**.
 - **Lời thoại gợi ý:**
-  > "Sau khi xác nhận đặt xe, hệ thống giữ xe trong 15 phút với cơ chế chống đặt trùng giao dịch. Tại trang Chuyến đi, sinh viên đối chiếu đúng biển số trên thân xe, bấm Mở khóa để bắt đầu hành trình."
+  > "Sau khi xác nhận đặt xe, hệ thống giữ xe trong 30 phút với cơ chế chống đặt trùng giao dịch. Sinh viên có thể hủy đặt xe khi còn hạn để giải phóng xe ngay lập tức, hoặc đối chiếu đúng biển số trên thân xe và bấm Mở khóa để bắt đầu hành trình."
 
 ### 2.3. Trả xe tại Hub đích (UC05)
 - **Màn hình:** Chuyến đi (`/student/trips`) *(tiếp tục luôn trên chuyến vừa nhận, hoặc đăng nhập `student2@hub.local` nếu muốn demo tách riêng)*
@@ -59,7 +61,7 @@
 - **Màn hình:** Xe của tôi (`/student/my-vehicle`) & Sạc ngay (`/student/charging-request`)
 - **Thao tác:**
   1. **UC06 — Đặt chỗ đỗ:** Chọn Hub, xe cá nhân (`59-X1 123.45`), khung giờ → **Tìm vị trí trống** → chọn ô → **Giữ chỗ tạm** (hiện đếm ngược) → **Xác nhận đặt chỗ**.
-  2. **UC08 — Đặt lịch sạc:** Chọn Hub, khung giờ, % pin → **Tìm khung giờ sạc phù hợp** → chọn cổng → **Xác nhận đặt lịch**.
+  2. **UC08 — Đặt lịch sạc:** Chọn Hub, khung giờ *(chọn cách hiện tại > 2 giờ và tránh trùng lịch mẫu `10:00–11:30` ngày mai để không đụng UC07)*, % pin → **Tìm khung giờ sạc phù hợp** → chọn cổng → **Xác nhận đặt lịch**.
   3. **UC09 — Quản lý lịch sạc:** Xem lịch sạc vừa tạo hoặc lịch mẫu → bấm **Đổi khung giờ** (hoặc **Hủy lịch sạc**).
   4. **UC07 — Sạc ngay tại Hub:** Bấm **Sạc ngay →** sang `/student/charging-request` → bấm **Kiểm tra khả năng sạc ngay** → **Xác nhận nhận cổng sạc**.
   5. Bật nhanh **Cài đặt** (`/student/settings`) chuyển **Giao diện Sáng ↔ Tối** (cho thấy bản đồ và toàn bộ giao diện đổi mượt mà).

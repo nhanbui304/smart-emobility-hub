@@ -10,8 +10,12 @@ export function ActiveTripPage() {
   return (
     <div className="space-y-4">
       <PageHeader title="Chuyến đi" subtitle="Đặt xe hiện tại và chuyến đi đang diễn ra" />
-      <VehicleReservationPanel onTripStarted={(trip) => setTripId(trip.id)} />
-      <ReturnVehicleSection key={tripId} />
+      <div data-tour="st-trip-booking">
+        <VehicleReservationPanel onTripStarted={(trip) => setTripId(trip.id)} />
+      </div>
+      <div data-tour="st-trip-return">
+        <ReturnVehicleSection key={tripId} />
+      </div>
     </div>
   );
 }

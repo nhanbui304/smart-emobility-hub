@@ -167,8 +167,9 @@ export function RedistributionPage() {
         </Card>
       )}
 
-      <Card className="space-y-4">
-        <h2 className="text-lg font-bold">1. Chọn Hub và thời điểm</h2>
+      <div data-tour="uc12-scope">
+        <Card className="space-y-4">
+          <h2 className="text-lg font-bold">1. Chọn Hub và thời điểm</h2>
         <div className="grid gap-3 md:grid-cols-3">
           <HubSelect label="Hub nguồn" value={sourceHubId} onChange={setSourceHubId} hubs={hubs.data ?? []} />
           <HubSelect label="Hub đích" value={targetHubId} onChange={setTargetHubId} hubs={hubs.data ?? []} />
@@ -186,6 +187,7 @@ export function RedistributionPage() {
           Xem phương án
         </Button>
       </Card>
+      </div>
 
       {preview && (
         <Card className="space-y-3">
@@ -219,7 +221,7 @@ export function RedistributionPage() {
         </Card>
       )}
 
-      <section className="space-y-3">
+      <section data-tour="uc12-orders" className="space-y-3">
         <h2 className="text-lg font-bold">Lệnh điều chuyển</h2>
         <ErrorMessage error={orders.error} onRetry={() => void orders.reload()} />
         {orders.data?.length === 0 && <p className="text-sm text-neutral-500">Chưa có lệnh nào.</p>}

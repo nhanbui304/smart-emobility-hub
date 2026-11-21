@@ -194,7 +194,7 @@ export function ReserveVehiclePage() {
           {vehicles.data?.length === 0 && (
             <EmptyState title="Hub này hiện không còn xe có thể đặt" description="Hãy chọn Hub khác ở Trang chủ." />
           )}
-          <ul className="grid gap-3 md:grid-cols-2">
+          <ul data-tour="st-reserve-list" className="grid gap-3 md:grid-cols-2">
             {orderedVehicles.map((v) => (
               <li key={v.id}>
                 <Card className="flex items-center justify-between gap-3 p-4">

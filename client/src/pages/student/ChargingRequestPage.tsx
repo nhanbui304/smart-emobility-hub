@@ -156,8 +156,9 @@ export function ChargingRequestPage() {
         </div>
       )}
 
-      <Card className="space-y-4 p-4">
-        <h2 className="text-base font-bold">Thông tin yêu cầu sạc</h2>
+      <div data-tour="st-uc07-form">
+        <Card className="space-y-4 p-4">
+          <h2 className="text-base font-bold">Thông tin yêu cầu sạc</h2>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
@@ -300,7 +301,9 @@ export function ChargingRequestPage() {
           </div>
         )}
       </Card>
+      </div>
 
+      <div data-tour="st-uc07-list">
       <Card className="space-y-3 p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold">Yêu cầu sạc của bạn ({requests.length})</h2>
@@ -352,6 +355,7 @@ export function ChargingRequestPage() {
           </div>
         )}
       </Card>
+      </div>
     </div>
   );
 }

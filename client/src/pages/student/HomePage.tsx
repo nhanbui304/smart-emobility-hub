@@ -106,7 +106,7 @@ export function HomePage() {
             <h1 className="text-xl font-bold tracking-tight md:text-2xl">Khám phá Mobility Hub tại ĐHQG-HCM</h1>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div data-tour="st-home-modes" className="flex flex-wrap items-center gap-2">
             <div
               className="inline-flex rounded-xl border border-neutral-200 bg-white p-1 dark:border-white/10 dark:bg-panel-dark"
               role="radiogroup"
@@ -147,7 +147,7 @@ export function HomePage() {
         {/* Bố cục Map-First: Bản đồ thật bên trái (7/12) + Thẻ xem nhanh Hub bên phải (5/12) */}
         {hubs && hubs.length > 0 && (
           <div className="grid gap-4 lg:grid-cols-12">
-            <div className="relative lg:col-span-7 xl:col-span-8">
+            <div data-tour="st-home-map" className="relative lg:col-span-7 xl:col-span-8">
               <CampusHubMap
                 hubs={filteredHubs}
                 selectedHubId={selectedHub?.id ?? null}
@@ -226,7 +226,7 @@ export function HomePage() {
             </div>
 
             {/* Thẻ chi tiết Hub đang chọn bên phải */}
-            <div className="lg:col-span-5 xl:col-span-4">
+            <div data-tour="st-home-hubcard" className="lg:col-span-5 xl:col-span-4">
               {selectedHub ? (
                 <Card className="flex h-full flex-col justify-between space-y-5 p-5">
                   <div className="space-y-4">
@@ -344,7 +344,9 @@ export function HomePage() {
       </section>
 
       {selectedHub && hubs && (
-        <MobilitySearchPanel key={`${mode}:${selectedHub.id}`} purpose={mode} origin={selectedHub} hubs={hubs} />
+        <div data-tour="st-home-search">
+          <MobilitySearchPanel key={`${mode}:${selectedHub.id}`} purpose={mode} origin={selectedHub} hubs={hubs} />
+        </div>
       )}
 
       {/* Dải chọn nhanh tất cả các Hub */}

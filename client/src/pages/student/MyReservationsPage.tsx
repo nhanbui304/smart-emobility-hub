@@ -11,7 +11,7 @@ export function MyReservationsPage() {
   const { loading, error, reload } = useAsync(() => myReservationsApi.list(), []);
 
   return (
-    <div className="space-y-4">
+    <div data-tour="st-myres" className="space-y-4">
       <Link to="/student" className="text-sm text-neutral-500">
         ← Trang chủ
       </Link>
@@ -63,7 +63,7 @@ export function MyReservationsPage() {
   const empty = r && r.vehicleReservations.length + r.parkingAllocations.length + r.chargingReservations.length === 0;
 
   return (
-    <div className="space-y-4">
+    <div data-tour="st-myres" className="space-y-4">
       <Link to="/student" className="text-sm text-neutral-500">
         ← Trang chủ
       </Link>
