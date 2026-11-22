@@ -29,6 +29,12 @@ export const applyChargingScheduleBody = z.object({
 });
 
 export const chargingScheduleController = {
+  /** GET /api/charging-schedules/latest?hubId=... */
+  async getLatestAppliedSchedule(req: Request, res: Response): Promise<void> {
+    const { hubId } = parseOrThrow(z.object({ hubId: z.string().min(1) }), req.query);
+    sendOk(res, await smartChargingService.getLatestAppliedSchedule(hubId));
+  },
+
   /** GET /api/charging-schedules/context */
   async loadChargingContext(req: Request, res: Response): Promise<void> {
     const { hubId, startTime, endTime } = parseOrThrow(loadChargingContextQuery, req.query);

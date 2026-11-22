@@ -62,6 +62,24 @@ export function getLatestScheduleVersionNumber(hubId: string): number {
   return latest?.version ?? 0;
 }
 
+export function getLatestAppliedSchedule(hubId: string) {
+  const latest = db
+    .select()
+    .from(chargingScheduleVersions)
+    .where(eq(chargingScheduleVersions.hubId, hubId))
+    .orderBy(desc(chargingScheduleVersions.version))
+    .get();
+  if (!latest) return null;
+  return {
+    scheduleVersionId: latest.id,
+    hubId: latest.hubId,
+    version: latest.version,
+    appliedAt: latest.appliedAt,
+    allocations: latest.allocations,
+    notificationPending: latest.notificationPending,
+  };
+}
+
 export function listHubChargingPortsWithSlots(hubId: string) {
   return db
     .select({
