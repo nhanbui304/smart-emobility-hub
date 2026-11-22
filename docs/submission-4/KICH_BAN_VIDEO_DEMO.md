@@ -113,16 +113,17 @@
 - **Chỉ chuột & thao tác:**
   1. **Tab 1 — `Lịch sạc thông minh` (UC13):**
      - Chỉ vào **Stepper 3 bước** ở đầu trang.
-     - Cột trái: chọn Hub (**ĐH Bách Khoa**), bấm chip **`2 giờ tới`**, chọn quy tắc **`Pin thấp trước (< 25%)`** → bấm **`Tạo đề xuất lịch sạc`**.
-     - Cột phải: chỉ **thanh tải điện kW** so với giới hạn Hub và bảng phân bổ cổng sạc → bấm **`Kiểm tra hợp lệ`** → bấm **`Áp dụng lịch sạc`**.
+     - Cột trái: chọn **Trạm sạc (Hub)** (vd: **Ga Metro ĐHQG** — chỉ 3 ô trạng thái cổng `Cổng đang rảnh`, `Đang có xe sạc`, `Đang lỗi / bảo trì`), bấm chip **`2 giờ tới`**, chọn quy tắc **`Pin thấp trước (< 25%)`** → bấm **`Tạo đề xuất lịch sạc`**.
+     - Cột phải: chỉ **thanh tải điện kW 2 màu** (`Đang sạc sẵn` xanh dương vs `Phân bổ mới` xanh lá) và nhãn **`Giảm tải tự động`** nếu cổng bị hạ công suất để giữ trong giới hạn điện Hub → *(tùy chọn)* đổi sang **`Đến trước sạc trước (FIFO)`** bấm **`Tạo đề xuất lịch sạc`** để cho thấy danh sách xe ưu tiên thay đổi ngay → bấm **`Kiểm tra hợp lệ`** → bấm **`Áp dụng lịch sạc`**.
+     - Chỉ thẻ **Lịch sạc đang áp dụng (`Phiên bản vN`)** vẫn được lưu giữ và hiển thị rõ ràng khi quay lại trang.
   2. **Tab 2 — `Xử lý sự cố` (UC11):**
      - Từ cảnh báo tổng hợp **`Thư viện Trung tâm — 3 tài nguyên lỗi/bảo trì`** ở Giám sát mạng lưới bấm **`Xử lý`** (hoặc chuyển sang tab **`Xử lý sự cố`**): chỉ rõ giao diện phân tách **`Hồ sơ đang mở (0)`** / **`Hồ sơ đã đóng`** với danh sách **`Tài nguyên lỗi/bảo trì chưa có hồ sơ (3)`** (không tự tạo hồ sơ ảo).
-     - Chọn 1 trong 3 tài nguyên lỗi → bấm **`Ghi nhận sự cố`** (tài nguyên đã điền sẵn), chọn mức độ **Cao**, nhập mô tả ngắn *"Mất nguồn đầu ra"* → bấm **`Ghi nhận & Hạn chế tài nguyên`** → chỉ **`Hồ sơ đang mở (1)`** và **`Tài nguyên lỗi/bảo trì chưa có hồ sơ (2)`** hiển thị đồng thời.
+     - Chọn 1 trong 3 tài nguyên lỗi → bấm **`Xử lý tài nguyên này`** (tài nguyên được khóa sẵn, có nút **`Đổi tài nguyên khác`**), chọn mức độ **Cao**, nhập mô tả ngắn *"Mất nguồn đầu ra"* → bấm **`Ghi nhận & Hạn chế tài nguyên`** → chỉ **`Hồ sơ đang mở (1)`** và **`Tài nguyên lỗi/bảo trì chưa có hồ sơ (2)`** hiển thị đồng thời.
      - Cột phải (hồ sơ vừa tạo tự được mở):
-       - **Bước 1:** Chọn phương án xử lý → bấm **`Lưu phương án xử lý`**.
-       - **Bước 2:** Nhập minh chứng *"Đã thay CB nguồn, đo ổn định 220V"*, giữ tích *Đã khắc phục xong* → bấm **`Đóng sự cố & Khôi phục`**.
+       - **Phương án xử lý (*Tùy chọn*):** Chọn phương án xử lý → bấm **`Lưu phương án xử lý`** → chỉ **Nhật ký xử lý sự cố** vừa cập nhật theo dòng thời gian.
+       - **Xác minh khắc phục:** Nhập minh chứng (*tối thiểu 5 ký tự*, vd: *"Đã thay CB nguồn, đo ổn định 220V"*), giữ tích *Đã khắc phục xong* → bấm **`Đóng sự cố & Khôi phục`** (nếu xe dùng chung có pin `< 25%`, hệ thống tự chuyển sang `Đang sạc`).
 - **Lời thoại:**
-  > "Trang **Lịch sạc & Sự cố** tách gọn thành 2 tab rõ ràng. Ở **UC13 — Lịch sạc thông minh**, nhân viên đi qua đúng 3 bước: chọn Hub & khung giờ, chọn quy tắc ưu tiên xe pin thấp, rồi kiểm tra tải điện kW và áp dụng phiên bản lịch sạc mới. Sang tab **UC11 — Xử lý sự cố**, nhân viên ghi nhận lỗi để tự động khóa đặt mới tài nguyên hỏng, lưu phương án xử lý, và xác minh minh chứng kỹ thuật để đóng sự cố, khôi phục dịch vụ."
+  > "Trang **Lịch sạc & Sự cố** tách gọn thành 2 tab rõ ràng. Ở **UC13 — Lịch sạc thông minh**, nhân viên chọn Hub & khung giờ, chọn quy tắc ưu tiên, kiểm tra thanh tải điện 2 màu giữa phiên đang sạc sẵn và phân bổ mới — hệ thống tự giảm tải công suất nếu chạm ngưỡng Hub — rồi áp dụng phiên bản lịch sạc mới và lưu trực quan ngay trên màn hình. Sang tab **UC11 — Xử lý sự cố**, nhân viên ghi nhận lỗi để tự động khóa đặt mới tài nguyên hỏng, lưu phương án vào nhật ký xử lý, và xác minh minh chứng kỹ thuật để đóng sự cố, khôi phục dịch vụ."
 
 ---
 
@@ -140,12 +141,12 @@
 ### 6.2. Mô phỏng tình huống What-if (`UC14`)
 - **Màn hình:** `/operator/simulation`
 - **Chỉ chuột & thao tác:**
-  1. Chỉ vào huy hiệu **`● Tách biệt dữ liệu thật`** và **Stepper 3 bước** ở đầu trang.
-  2. Cột trái: bấm chọn thẻ kịch bản **`Tăng nhu cầu`**, chọn Hub (**ĐH Bách Khoa**), kéo **thanh trượt** lên **`2.4x`** (hoặc `3.0x`) → bấm **`Chạy mô phỏng ngay`**.
-  3. Cột phải: chỉ **3 thẻ So sánh Trước vs Sau** (*Xe thiếu hụt, Chờ trung bình, Hub quá tải*) → tại **Đề xuất hành động**, bấm **`Mô phỏng tác động`** để xem ngay dự đoán KPI trước/sau hành động kèm giả định đã dùng ngay trong trang What-if (chỉ thêm nút phụ **`Mở quy trình vận hành`** khi cần chuyển sang UC12/UC13).
+  1. Chỉ vào huy hiệu **`● Bản nháp độc lập DB`** và nút **`Phạm vi: 5 Hub`** ở đầu trang.
+  2. Cột trái: bấm chọn thẻ kịch bản **`Tăng nhu cầu`**, chọn **Hub áp dụng** (**ĐH Bách Khoa** — chỉ 3 ô *Xe sẵn sàng / Nhu cầu / Hiện trạng*), kéo **thanh trượt** lên **`2.4x`** (hoặc `3.0x`) → bấm **`Chạy mô phỏng`**.
+  3. Cột phải: chỉ **3 thẻ KPI tổng toàn mạng (Trước → Sau)** và **Bảng chi tiết từng Hub** → tại **Các phương án điều phối độc lập**, bấm **`Thử nghiệm`** để xem dự đoán KPI ngay trên bản chụp không sửa DB thật (chỉ thêm nút **`Mở Điều chuyển →`** / **`Mở Lịch sạc →`** khi cần chuyển ngữ cảnh sang UC12/UC13).
   4. Cuộn xuống bảng **Lịch sử mô phỏng**: bấm **`Xem kết quả`** trên một lượt đã lưu trước đó để cho thấy có thể xem lại kết quả mà không cần chạy lại.
 - **Lời thoại:**
-  > "Cuối cùng là **UC14 — Mô phỏng What-if**. Hệ thống chụp bản sao tách biệt hoàn toàn dữ liệu thật, cho phép chạy kịch bản tăng nhu cầu, bấm **Mô phỏng tác động** để dự đoán hiệu quả của từng đề xuất ngay trên bản chụp mà không tạo lệnh thật, và xem lại các lượt đã lưu trong **Lịch sử mô phỏng**."
+  > "Cuối cùng là **UC14 — Mô phỏng What-if**. Hệ thống chụp bản sao độc lập hoàn toàn với dữ liệu thật, hiển thị rõ KPI toàn mạng lẫn bảng chi tiết từng Hub, cho phép bấm **Thử nghiệm** từng phương án điều phối độc lập ngay trên bản chụp hoặc mở thẳng sang **Điều chuyển xe / Lịch sạc**, và xem lại các lượt đã lưu trong **Lịch sử mô phỏng**."
 
 ---
 

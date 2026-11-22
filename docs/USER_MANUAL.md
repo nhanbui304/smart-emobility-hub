@@ -149,12 +149,14 @@ Giao diện Operator được thiết kế tối giản theo nguyên tắc **ít
 - **Đường dẫn:** `/operator/charging-incidents` (hỗ trợ `?tab=incidents` để mở thẳng tab Sự cố)
 - **Thuộc Use Case nào:** Tách gọn bằng **2 Tab lớn** ở góc trên bên phải để tránh rối mắt:
   - **Tab 1 — Lịch sạc thông minh (`UC13 — Manage & Apply Smart Charging Schedule`):** Điều phối phân bổ cổng sạc & công suất theo giới hạn điện của Hub.
-    1. **Bước 1 (Hub & Khung giờ):** Chọn Hub và bấm chip chọn nhanh khung giờ (*2 giờ tới*, *Cao điểm 17h* hoặc *Tùy chỉnh*).
-    2. **Bước 2 (Quy tắc ưu tiên):** Chọn 1 trong 3 quy tắc (*Pin thấp trước < 25%*, *Đến trước sạc trước FIFO*, hoặc *Thiếu pin nhiều nhất*) → bấm **Tạo đề xuất lịch sạc**.
-    3. **Bước 3 (Kiểm tra & Áp dụng):** Xem **thanh tải điện kW** so với giới hạn Hub, chỉnh tay công suất từng dòng nếu cần → bấm **Kiểm tra hợp lệ** → bấm **Áp dụng lịch sạc** (tự kiểm tra `baseVersion` chống xung đột).
-  - **Tab 2 — Xử lý sự cố (`UC11 — Record & Handle Resource Incident`):** Hiển thị theo bố cục **Master–Detail 2 cột** (trái: danh sách hồ sơ lọc **`Hồ sơ đang mở (N)`** / **`Hồ sơ đã đóng (N)`**; phải: chi tiết hồ sơ đang chọn và danh sách độc lập **`Tài nguyên lỗi/bảo trì chưa có hồ sơ (N)`**).
-    1. Khi đi từ nút **`Xử lý`** ở cảnh báo tổng hợp trên Giám sát mạng lưới (vd: *“3 tài nguyên lỗi/bảo trì”*), hệ thống giữ ngữ cảnh Hub: chọn đúng tài nguyên trong danh sách *Tài nguyên lỗi/bảo trì chưa có hồ sơ* và bấm **`Ghi nhận sự cố`** (hoặc bấm **`+ Ghi nhận sự cố mới`**) để lập hồ sơ UC11 và tự động hạn chế phân bổ mới.
-    2. Chọn một hồ sơ ở cột trái → **Bước 1:** chọn phương án xử lý (*Hạn chế & thông báo*, *Chuyển tài nguyên thay thế*, *Đưa đi bảo trì*) và bấm **Lưu phương án xử lý** → **Bước 2:** nhập minh chứng kỹ thuật, tích *Đã khắc phục xong* và bấm **Đóng sự cố & Khôi phục** để mở lại tài nguyên.
+    1. **Bước 1 (Chọn Hub & Khung giờ):** Chọn **Trạm sạc (Hub)** và xem ngay 3 ô trạng thái cổng trực quan (**`Cổng đang rảnh`**, **`Đang có xe sạc`**, **`Đang lỗi / bảo trì`**); chọn **Khung giờ lập lịch** (*2 giờ tới*, *Cao điểm 17h* hoặc *Tùy chỉnh* với 2 ô `Từ lúc` / `Đến lúc` kèm khung giờ thực tế hiển thị rõ).
+    2. **Bước 2 (Quy tắc ưu tiên):** Chọn 1 trong 3 quy tắc (*Pin thấp trước < 25%*, *Đến trước sạc trước FIFO*, hoặc *Thiếu pin nhiều nhất*) → bấm **`Tạo đề xuất lịch sạc`**.
+    3. **Bước 3 (Kiểm tra & Áp dụng):** Cột phải hiển thị **thanh tải điện kW 2 màu** tách rõ **`Đang sạc sẵn`** (xanh dương — giữ nguyên phiên đang sạc/lịch đặt trước) và **`Phân bổ mới`** (xanh lá — cấp cho cổng rảnh), tên cổng sạc đầy đủ kèm nhãn **`Giảm tải tự động`** khi hệ thống tự hạ công suất để không vượt giới hạn điện Hub. Có thể chỉnh tay kW từng dòng → bấm **`Kiểm tra hợp lệ`** → bấm **`Áp dụng lịch sạc`** (tự kiểm tra `baseVersion` chống xung đột).
+    4. **Lịch sạc đang áp dụng:** Sau khi áp dụng, cột phải tự động hiển thị phiên bản đang hiệu lực (**`Phiên bản vN`**, thời điểm áp dụng, khung giờ và bảng phân bổ — được tải từ `GET /api/charging-schedules/latest`, không bị mất khi chuyển tab hoặc tải lại trang).
+  - **Tab 2 — Xử lý sự cố (`UC11 — Record & Handle Resource Incident`):** Hiển thị theo bố cục **Master–Detail 2 cột** (trái: danh sách hồ sơ lọc **`Hồ sơ đang mở (N)`** / **`Hồ sơ đã đóng (N)`**; phải: chi tiết hồ sơ đang chọn và danh sách độc lập **`Tài nguyên lỗi/bảo trì chưa có hồ sơ (N)`**; bộ đếm sự cố ở góc trên tự cập nhật đồng bộ ngay khi có thay đổi).
+    1. Khi đi từ nút **`Xử lý`** ở cảnh báo tổng hợp trên Giám sát mạng lưới (vd: *“3 tài nguyên lỗi/bảo trì”*), hệ thống giữ ngữ cảnh Hub: bấm **`Xử lý tài nguyên này`** trên đúng tài nguyên trong danh sách *Tài nguyên lỗi/bảo trì chưa có hồ sơ* (tài nguyên được khóa sẵn kèm nút **`Đổi tài nguyên khác`** và danh sách phân nhóm rõ tài nguyên lỗi/bảo trì vs tài nguyên khác), nhập mức độ & mô tả → bấm **`Ghi nhận & Hạn chế tài nguyên`** để lập hồ sơ UC11 và tự động khóa phân bổ mới.
+    2. Chọn một hồ sơ ở cột trái → phần **Phương án xử lý (*Tùy chọn*)** cho phép chọn phương án (*Hạn chế & thông báo*, *Chuyển tài nguyên thay thế*, *Đưa đi bảo trì*), phạm vi ảnh hưởng và bấm **`Lưu phương án xử lý`** nhiều lần nếu cần; phần **Xác minh khắc phục & Đóng sự cố** có thể thực hiện trực tiếp (nhập minh chứng kỹ thuật từ 5 ký tự trở lên, giữ tích *Đã khắc phục xong* → bấm **`Đóng sự cố & Khôi phục`**). Nếu xe dùng chung được khôi phục có pin `< 25%`, hệ thống tự chuyển xe sang trạng thái **`Đang sạc (CHARGING)`** thay vì để kẹt ở bảo trì.
+    3. Cả hồ sơ đang mở lẫn đã đóng đều hiển thị **Nhật ký xử lý sự cố** dạng dòng thời gian (ghi nhận thời điểm, nhân viên thao tác, phương án và phạm vi ảnh hưởng).
 
 ![Lịch sạc thông minh và Sự cố UC11-UC13](submission-4/screenshots/09_operator_uc11_uc13_charging_incidents.png)
 
@@ -164,7 +166,7 @@ Giao diện Operator được thiết kế tối giản theo nguyên tắc **ít
 - **Đường dẫn:** `/operator/redistribution`
 - **Thuộc Use Case nào:** **UC12 — Redistribute Shared Vehicles** (cân bằng đội xe từ Hub dư sang Hub thiếu, giữ trước sức chứa tiếp nhận tại Hub đích).
 - **Cách sử dụng:**
-  1. Chọn **Hub nguồn**, **Hub đích** và thời gian dự kiến (ETA) → hệ thống tự kiểm tra sức chứa tiếp nhận khả dụng tại Hub đích.
+  1. Chọn **Hub nguồn**, **Hub đích** và thời gian dự kiến (ETA) → hệ thống tự kiểm tra sức chứa tiếp nhận khả dụng tại Hub đích *(khi đi từ nút **`Mở Điều chuyển →`** bên trang Mô phỏng What-if, Hub nguồn, Hub đích và số xe đề xuất được tự động điền sẵn)*.
   2. Chọn danh sách xe cần chuyển → bấm **Tạo lệnh điều chuyển**.
   3. Theo dõi trạng thái lệnh và lần lượt bấm **Xác nhận xuất phát** → **Xác nhận tiếp nhận** → **Đóng lệnh** (hoặc hủy mục chưa xuất phát).
 
@@ -174,13 +176,13 @@ Giao diện Operator được thiết kế tối giản theo nguyên tắc **ít
 
 ### 4.4 Mô phỏng tình huống What-if (`UC14`)
 - **Đường dẫn:** `/operator/simulation`
-- **Thuộc Use Case nào:** **UC14 — Run What-if Operational Simulation** (chạy giả lập hoàn toàn tách biệt trên `simulation_snapshots`, tuyệt đối không ghi đè dữ liệu vận hành thật).
-- **Cách sử dụng theo Stepper 3 bước:**
-  1. **Bước 1 (Phạm vi & Bản chụp):** Chọn các Hub và khung giờ đánh giá (mặc định đã chọn đủ 5 Hub và 2 giờ tới; có thể thu gọn hoặc bấm **Đổi phạm vi bản chụp** khi cần).
-  2. **Bước 2 (Chọn kịch bản giả định):** Chọn 1 trong 4 thẻ kịch bản (*Tăng nhu cầu*, *Đóng 1 Hub*, *Thêm cổng sạc*, *Thêm xe điện*), chọn Hub áp dụng và kéo **thanh trượt (slider)** chỉnh tham số → bấm **Chạy mô phỏng ngay**.
-  3. **Bước 3 (So sánh KPI, Mô phỏng tác động & Lịch sử):**
-     - Xem **3 thẻ So sánh Trước vs Sau** (*Xe thiếu hụt, Chờ trung bình, Hub quá tải*).
-     - Tại **Đề xuất hành động**, bấm **`Mô phỏng tác động`** để ở lại ngay trang What-if và xem dự đoán KPI trước/sau hành động kèm giả định đã dùng (chỉ tính trên bản chụp mô phỏng, không sửa tài nguyên thật); giữ nút phụ **`Mở quy trình vận hành`** khi cần chuyển sang UC12/UC13.
+- **Thuộc Use Case nào:** **UC14 — Run What-if Operational Simulation** (chạy giả lập hoàn toàn tách biệt trên `simulation_snapshots`, gắn huy hiệu **`● Bản nháp độc lập DB`**, tuyệt đối không ghi đè dữ liệu vận hành thật).
+- **Cách sử dụng theo bố cục 2 cột (Cấu hình bên trái · Kết quả bên phải):**
+  1. **Phạm vi bản chụp (tùy chọn):** Mặc định đã chọn đủ **5 Hub** và khung 2 giờ tới; bấm nút **`Phạm vi: 5 Hub`** ở góc trên phải khi muốn tùy chỉnh danh sách Hub, khung giờ hoặc chụp lại bản dữ liệu mới.
+  2. **Chọn kịch bản & chạy mô phỏng (Cột trái):** Chọn 1 trong 4 thẻ kịch bản (*Tăng nhu cầu*, *Đóng Hub / Hết chỗ*, *Thêm cổng sạc*, *Thêm / Tập trung xe*), chọn **Hub áp dụng** (xem ngay 3 ô *Xe sẵn sàng*, *Nhu cầu*, *Hiện trạng dư/thiếu* của Hub đó), kéo **thanh trượt (slider)** chỉnh tham số → bấm **`Chạy mô phỏng`**.
+  3. **Xem kết quả, Thử nghiệm phương án & Lịch sử (Cột phải):**
+     - Xem **3 thẻ KPI tổng toàn mạng (Trước → Sau)** (*Tổng xe thiếu*, *Chờ trung bình*, *Hub quá tải*) và **Bảng chi tiết từng Hub** (*Xe sẵn sàng*, *Nhu cầu*, *Chỗ trống*, *Trạng thái*).
+     - Tại mục **Các phương án điều phối độc lập** (*Hướng người dùng sang Hub thay thế*, *Điều chuyển phương tiện*, *Thay đổi lịch sạc*): bấm **`Thử nghiệm`** để mô phỏng tác động ngay trên bản chụp mà không sửa dữ liệu thật, hoặc bấm **`Mở Điều chuyển →`** / **`Mở Lịch sạc →`** để chuyển thẳng sang UC12 / UC13 với ngữ cảnh Hub đã điền sẵn.
      - Kéo xuống bảng **Lịch sử mô phỏng** để xem các lượt đã lưu mới nhất và bấm **`Xem kết quả`** mở lại bất kỳ lượt nào (kể cả sau khi tải lại trang, không chạy lại mô phỏng).
 
 ![Mô phỏng What-if UC14](submission-4/screenshots/11_operator_uc14_simulation.png)

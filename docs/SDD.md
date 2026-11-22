@@ -57,7 +57,7 @@ CSDL SQLite gồm **20 bảng** quản lý qua Drizzle ORM. Các entity vận h�
 | **Xe dùng chung** | `vehicle_reservations`, `trips` | `trips.reservation_id` unique; index theo `student_id`. |
 | **Đỗ xe** | `parking_allocations` | Lưu chung trạng thái giữ tạm (`HELD`), xác nhận (`CONFIRMED`), đang trả xe (`IN_USE`); index `(slot_id, start_time, end_time)`. |
 | **Sạc xe** | `charging_requests`, `charging_reservations`, `charging_sessions`, `charging_schedule_versions` | `charging_reservations.version` & `charging_schedule_versions.version` dùng cho optimistic locking (UC09, UC13). |
-| **Vận hành & Mô phỏng** | `incidents`, `alerts`, `redistribution_orders`, `redistribution_items`, `simulation_snapshots`, `simulation_runs` | `incidents.version` (optimistic locking); `simulation_snapshots` chụp trạng thái vận hành độc lập cho UC14. |
+| **Vận hành & Mô phỏng** | `incidents`, `alerts`, `redistribution_orders`, `redistribution_items`, `simulation_snapshots`, `simulation_runs` | `incidents.version` (optimistic locking) & `incidents.handling_plan` (lưu phương án kèm nhật ký xử lý `history`); `simulation_snapshots` chụp trạng thái vận hành độc lập cho UC14. |
 | **Idempotency** | `processed_requests` | Khóa chính `request_id`; ghi cùng transaction để chống thực thi lặp cho 22 thao tác ghi (`REQUEST_OPERATIONS`). |
 
 ## 4. Tóm tắt API Endpoints (`server/src/routes/index.ts`)
@@ -79,5 +79,5 @@ Tất cả endpoint có tiền tố `/api` và trả về JSON thống nhất `{
 | `/api/monitoring` | Giám sát mạng lưới, KPI, cảnh báo Hub (UC10) | `OPERATOR` |
 | `/api/incidents` | Ghi nhận, đánh giá, xử lý và đóng sự cố (UC11) | `OPERATOR` |
 | `/api/redistribution-orders` | Xem phương án & thực thi điều chuyển xe giữa các Hub (UC12) | `OPERATOR` |
-| `/api/charging-schedules` | Tạo, xem trước và áp dụng lịch sạc thông minh (UC13) | `OPERATOR` |
+| `/api/charging-schedules` | Tạo, xem trước, áp dụng và tra cứu lịch sạc thông minh đang áp dụng (`GET /latest`) (UC13) | `OPERATOR` |
 | `/api/simulations` | Chụp snapshot, chạy mô phỏng What-if & xem khuyến nghị (UC14) | `OPERATOR` |
