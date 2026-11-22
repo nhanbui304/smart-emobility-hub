@@ -12,12 +12,15 @@ import {
   getRecommendationById,
   getScenarioDraft,
   getUnsavedRunResult,
+  listSimulationRuns,
   saveScenarioDraft,
   setUnsavedRunResult,
   simulationRunRepository,
 } from "../repositories/SimulationRunRepository";
-import { computeBaselineMetrics, simulationEngine } from "../simulator/SimulationEngine";
+import { computeActionImpactOnScenario, computeBaselineMetrics, simulationEngine } from "../simulator/SimulationEngine";
 import type {
+  ActionImpactRequest,
+  ActionImpactResult,
   OperationalState,
   RawSimulationResult,
   Recommendation,
@@ -29,6 +32,7 @@ import type {
   ScenarioAssumptions,
   SimulationComparison,
   SimulationPreview,
+  SimulationRunHistoryItem,
   SnapshotDataAssessment,
   SnapshotInfo,
   SnapshotReady,
@@ -230,20 +234,33 @@ export const simulationService = {
       throw new AppError("NOT_FOUND", "Không tìm thấy lần chạy mô phỏng.");
     }
 
+    const snapshot = findSnapshotById(run.snapshotId);
+    const meta = {
+      runId: run.id,
+      snapshotId: run.snapshotId,
+      scenario: run.scenario,
+      hubIds: snapshot?.hubIds ?? [],
+      hubNames: snapshot?.operationalState?.hubs?.map((h) => h.name) ?? [],
+      timeRange: snapshot?.timeRange,
+      createdAt: run.createdAt,
+    };
+
     if (run.status === "FAILED") {
       return {
+        ...meta,
         status: "FAILED",
         failureReason: getFailedRunReason(runId) ?? "Mô phỏng gặp lỗi hoặc vượt giới hạn xử lý.",
       };
     }
 
     if (run.status === "CANCELLED") {
-      return { status: "CANCELLED" };
+      return { ...meta, status: "CANCELLED" };
     }
 
     const unsaved = getUnsavedRunResult(runId);
     if (unsaved) {
       return {
+        ...meta,
         status: "COMPLETED",
         result: {
           comparison: unsaved.comparison,
@@ -258,9 +275,28 @@ export const simulationService = {
     }
 
     return {
+      ...meta,
       status: run.status,
       result: run.result ?? undefined,
     };
+  },
+
+  /** Liệt kê lịch sử các lượt mô phỏng đã lưu (mới nhất lên đầu). */
+  async listRuns(): Promise<SimulationRunHistoryItem[]> {
+    return listSimulationRuns();
+  },
+
+  /** Mô phỏng dự đoán tác động của một hành động đề xuất (UC12 / UC13) trên cùng bản chụp & kịch bản, KHÔNG sửa dữ liệu vận hành thật. */
+  async simulateActionImpact(runId: string, req: ActionImpactRequest): Promise<ActionImpactResult> {
+    const run = findRunById(runId);
+    if (!run) {
+      throw new AppError("NOT_FOUND", "Không tìm thấy lần chạy mô phỏng để dự đoán tác động.");
+    }
+    const snapshot = findSnapshotById(run.snapshotId);
+    if (!snapshot) {
+      throw new AppError("NOT_FOUND", "Không tìm thấy bản chụp dữ liệu của lần chạy mô phỏng này.");
+    }
+    return computeActionImpactOnScenario(run.id, snapshot.id, snapshot.operationalState, run.scenario, req);
   },
 
   /** UC14 Ext 9a: Thử lưu lại kết quả đang giữ tạm trong bộ nhớ. */

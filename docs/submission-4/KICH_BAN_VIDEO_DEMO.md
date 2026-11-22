@@ -52,28 +52,28 @@
 - **Màn hình:** `/student`
 - **Chỉ chuột & thao tác:**
   1. *(Nếu Onboarding Tour tự hiện)* Bấm **`Tiếp theo →`** 1 lần để cho thấy khung spotlight chỉ từng tính năng, rồi bấm **`Bỏ qua`**.
-  2. Bấm chuyển nhanh 3 nút chế độ trên góc phải: **`Thuê xe`** → **`Đỗ xe`** → **`Sạc xe`** rồi quay về **`Thuê xe`** (cho thấy số liệu trên các pin bản đồ đổi theo).
-  3. Bấm trực tiếp vào pin **ĐH Bách Khoa** trên bản đồ → chỉ vào thẻ bên phải hiển thị số xe sẵn sàng, chỗ trống, cổng sạc và **top 3 xe pin cao nhất kèm biển số**.
-  4. Cuộn xuống khung **Tìm phương án phù hợp (UC01)**: chọn loại xe + mức pin tối thiểu → bấm **`Tìm phương án`** → bấm **`Chọn xe`** ở một kết quả.
+  2. Bấm chuyển nhanh 3 nút chế độ trên góc phải: **`Thuê xe`** → **`Đỗ xe`** → **`Sạc xe`** rồi quay về **`Thuê xe`**.
+  3. Bấm trực tiếp vào pin **ĐH Bách Khoa** trên bản đồ → chỉ vào nhóm **Xe pin cao sẵn sàng nhận ngay** (có thể bấm trực tiếp từng xe để mở thẳng xác nhận, hoặc bấm **`Xem tất cả xe →`**).
+  4. Cuộn xuống khung **Tìm xe thuê (UC01)**: chọn loại xe + mức pin tối thiểu → bấm **`Tìm`** → cho thấy nhóm 3 kết quả đầu gọn (có nút **`Xem thêm`**) → bấm **`Chọn xe`** ở một kết quả (có thể chọn xe ở Hub khác để thấy mở đúng cả Hub lẫn xe).
 - **Lời thoại:**
-  > "Ngay lần đầu truy cập từng màn hình, hệ thống có sẵn **hướng dẫn tương tác từng bước** để người mới biết dùng ngay. Tại Trang chủ là bản đồ thật ĐHQG-HCM gồm 5 Hub tự động đồng bộ mỗi 3 giây. Sinh viên có thể bấm từng pin để xem top 3 xe pin cao nhất kèm biển số, hoặc dùng bộ lọc **UC01** tìm phương án theo loại xe và mức pin."
+  > "Ngay lần đầu truy cập từng màn hình, hệ thống có sẵn **hướng dẫn tương tác từng bước**. Tại Trang chủ là bản đồ thật ĐHQG-HCM gồm 5 Hub đồng bộ mỗi 3 giây. Sinh viên có thể bấm trực tiếp một xe trong nhóm gợi ý pin cao, bấm **Xem tất cả xe**, hoặc dùng bộ lọc **Tìm xe thuê (UC01)** để mở thẳng màn hình xác nhận đúng chiếc xe và Hub đó."
 
 ### 2.2. Đặt xe, Hủy đặt & Mở khóa nhận xe (`UC02`, `UC03`, `UC04`)
-- **Màn hình:** `/student/hubs/:hubId/reserve` → `/student/trips`
+- **Màn hình:** `/student/hubs/:hubId/reserve?vehicleId=...` → `/student/trips`
 - **Chỉ chuột & thao tác:**
-  1. Trên danh sách xe khả dụng (pin ≥ 30%), bấm **`Chọn xe`** → màn hình xác nhận hiện biển số, % pin và hạn giữ **30 phút** → bấm **`Xác nhận đặt xe`** (**UC02**).
+  1. Bước **Xác nhận đặt xe** mở sẵn cho đúng xe vừa chọn (hiện rõ Hub, biển số, mã xe, % pin, hạn giữ **30 phút**) → bấm **`Xác nhận đặt xe`** (**UC02**).
   2. Bấm nút xanh **`Đến trang Chuyến đi để xem xe & mở khóa`**.
-  3. Tại `/student/trips`, chỉ vào đồng hồ đếm ngược 30 phút và biển số xe → bấm **`Hủy đặt xe`** → xác nhận hủy (**UC03** — cho thấy xe được giải phóng ngay!).
-  4. Quay lại **Khám phá Hub** → chọn nhanh 1 xe và bấm **`Xác nhận đặt xe`** lại → sang **Chuyến đi**.
-  5. Bấm **`Mở khóa và nhận xe`** (**UC04**) → trạng thái chuyển sang **Đang trong chuyến đi**.
+  3. Tại `/student/trips`, chỉ vào thẻ **Xe đã đặt** (biển số, đồng hồ đếm ngược 30 phút) → bấm **`Hủy đặt xe`** → xác nhận hủy (**UC03** — màn hình chuyển về 1 trạng thái trống duy nhất).
+  4. Quay lại **Khám phá Hub** → bấm thẳng 1 xe trong nhóm gợi ý pin cao → bấm **`Xác nhận đặt xe`** → sang **Chuyến đi**.
+  5. Bấm **`Nhận xe`** → **`Mở khóa và nhận xe`** (**UC04**) → giao diện chuyển sang ưu tiên thẻ **Xe đang thuê** và form **Trả xe** (không còn hiện thông báo trống về đặt xe).
 - **Lời thoại:**
-  > "Khi đặt xe ở **UC02**, hệ thống giữ xe trong **30 phút** với cơ chế transaction và chống gửi lặp `requestId`. Tại trang Chuyến đi, sinh viên có thể **hủy đặt xe (UC03)** để giải phóng xe ngay lập tức nếu đổi ý, hoặc đối chiếu biển số và bấm **Mở khóa nhận xe (UC04)** để bắt đầu hành trình."
+  > "Khi chọn xe, hệ thống mở thẳng màn hình xác nhận đúng Hub và biển số, chỉ tạo lượt đặt khi sinh viên bấm **Xác nhận đặt xe (UC02)**. Tại trang Chuyến đi, sinh viên có thể **hủy đặt xe (UC03)** hoặc **mở khóa nhận xe (UC04)** để chuyển sang trạng thái **Xe đang thuê**."
 
 ### 2.3. Trả xe tại Hub đích (`UC05`)
 - **Màn hình:** `/student/trips` *(trên chính chuyến đi vừa mở khóa)*
 - **Chỉ chuột & thao tác:**
-  1. Ở khối **Trả xe**, chọn Hub đích (vd: **Ga Metro ĐHQG**) → bấm **`Chuẩn bị trả xe`** (hệ thống tự cấp 1 ô đỗ thường trống, không lấy ô sạc).
-  2. Bấm **`Xác nhận trả xe & khóa xe`** → hiện thông báo trả xe thành công.
+  1. Ở khối **Trả xe**, chọn Hub đích (vd: **Ga Metro ĐHQG**) → bấm **`Nhận vị trí đỗ`** (hệ thống tự cấp 1 ô đỗ thường trống, không lấy ô sạc).
+  2. Bấm **`Đã đỗ xe – Khóa và trả xe`** → hiện thông báo trả xe thành công.
 - **Lời thoại:**
   > "Khi tới Hub đích, sinh viên thực hiện **UC05 — Trả xe**. Hệ thống kiểm tra và cấp riêng một vị trí đỗ trống, gửi lệnh khóa xe an toàn và kết thúc chuyến đi."
 
@@ -83,12 +83,12 @@
 
 - **Màn hình:** `/student/my-vehicle` → `/student/charging-request` → `/student/settings`
 - **Chỉ chuột & thao tác:**
-  1. Bấm tab **`Xe của tôi`** trên thanh menu.
-  2. **UC06 — Đặt chỗ đỗ:** Chọn xe `59-X1 123.45`, Hub (vd **ĐH Bách Khoa**), khung giờ → bấm **`Tìm vị trí trống`** → chọn 1 ô → bấm **`Giữ chỗ tạm`** (chỉ vào đếm ngược giữ tạm) → bấm **`Xác nhận đặt chỗ`**.
-  3. **UC08 — Đặt lịch sạc trước:** Cuộn xuống mục *Đặt lịch sạc*, chọn Hub và khung giờ *(chọn cách hiện tại > 2 giờ và **tránh khung 10:00–11:30 ngày mai** để không đụng lịch mẫu và UC07)*, nhập % pin → bấm **`Tìm khung giờ phù hợp`** → chọn cổng → bấm **`Xác nhận đặt lịch`**.
-  4. **UC09 — Đổi / Hủy lịch sạc:** Cuộn xuống *Quản lý lịch sạc*, chỉ lịch vừa tạo và lịch mẫu → bấm **`Đổi lịch`** (hoặc **`Hủy lịch`**) để chứng minh cơ chế kiểm tra phiên bản (`version`).
-  5. **UC07 — Sạc ngay tại Hub:** Bấm thẻ **`Sạc ngay →`** ở cuối trang sang `/student/charging-request` → bấm **`Kiểm tra khả năng sạc ngay`** → bấm **`Xác nhận nhận cổng sạc`** *(hoặc Xác nhận vào hàng đợi)*.
-  6. Bấm tab **`Cài đặt`** (`/student/settings`) → bấm chuyển **`Tối`** (cho thấy toàn app chuyển Dark Mode mượt mà) → bấm lại **`Sáng`** → bấm **`Đăng xuất`**.
+  1. Bấm tab **`Xe của tôi`** trên thanh menu — chỉ 3 tab gọn (**`Đặt chỗ đỗ`**, **`Đặt lịch sạc`**, **`Quản lý lịch sạc`**) và lối tắt **`Sạc ngay →`** nổi bật ở đầu trang.
+  2. **Tab `Đặt chỗ đỗ` (UC06):** Chọn xe `59-X1 123.45`, Hub (vd **ĐH Bách Khoa**), khung giờ → bấm **`Tìm vị trí trống`** → chọn 1 ô → bấm **`Giữ chỗ tạm`** → bấm **`Xác nhận đặt chỗ`**.
+  3. **Tab `Đặt lịch sạc` (UC08):** Chuyển sang tab **`Đặt lịch sạc`**, chọn Hub và khung giờ *(cách hiện tại > 2 giờ và **tránh khung 10:00–11:30 ngày mai**)*, nhập % pin → bấm **`Tìm khung giờ phù hợp`** → chọn cổng → bấm **`Xác nhận đặt lịch`**.
+  4. **Tab `Quản lý lịch sạc` (UC09):** Chuyển sang tab **`Quản lý lịch sạc`** — chỉ lịch vừa đặt đã hiện ngay trong danh sách → bấm **`Đổi lịch`** (hoặc **`Hủy lịch`**).
+  5. **Lối tắt `Sạc ngay →` (UC07):** Bấm thẻ **`Sạc ngay →`** ở đầu trang sang `/student/charging-request` → bấm **`Kiểm tra khả năng sạc ngay`** → bấm **`Xác nhận nhận cổng sạc`** *(hoặc Xác nhận vào hàng đợi)*.
+  6. Bấm tab **`Cài đặt`** (`/student/settings`) → bấm chuyển **`Tối`** → bấm lại **`Sáng`** → bấm **`Đăng xuất`**.
 - **Lời thoại:**
   > "Với xe điện cá nhân tại trang **Xe của tôi**, sinh viên có thể giữ tạm và đặt chỗ đỗ (**UC06**), đặt lịch sạc trước theo đúng chuẩn đầu cắm (**UC08**), đổi hoặc hủy lịch có kiểm soát xung đột phiên bản (**UC09**), hoặc gửi yêu cầu **Sạc ngay (UC07)** để nhận cổng trống hoặc xếp hàng đợi ưu tiên pin thấp. Ngoài ra sinh viên có thể đổi giao diện **Sáng/Tối** lưu trực tiếp lên tài khoản."
 
@@ -142,9 +142,10 @@
 - **Chỉ chuột & thao tác:**
   1. Chỉ vào huy hiệu **`● Tách biệt dữ liệu thật`** và **Stepper 3 bước** ở đầu trang.
   2. Cột trái: bấm chọn thẻ kịch bản **`Tăng nhu cầu`**, chọn Hub (**ĐH Bách Khoa**), kéo **thanh trượt** lên **`2.4x`** (hoặc `3.0x`) → bấm **`Chạy mô phỏng ngay`**.
-  3. Cột phải: chỉ vào **3 thẻ So sánh Trước vs Sau** (*Xe thiếu hụt, Chờ trung bình, Hub quá tải* kèm thanh bar song song) và **thẻ Đề xuất hành động** ở dưới → chỉ (hoặc bấm) nút **`Áp dụng →`** chuyển thẳng sang Điều chuyển xe / Lịch sạc.
+  3. Cột phải: chỉ **3 thẻ So sánh Trước vs Sau** (*Xe thiếu hụt, Chờ trung bình, Hub quá tải*) → tại **Đề xuất hành động**, bấm **`Mô phỏng tác động`** để xem ngay dự đoán KPI trước/sau hành động kèm giả định đã dùng ngay trong trang What-if (chỉ thêm nút phụ **`Mở quy trình vận hành`** khi cần chuyển sang UC12/UC13).
+  4. Cuộn xuống bảng **Lịch sử mô phỏng**: bấm **`Xem kết quả`** trên một lượt đã lưu trước đó để cho thấy có thể xem lại kết quả mà không cần chạy lại.
 - **Lời thoại:**
-  > "Cuối cùng là **UC14 — Mô phỏng What-if**. Hệ thống chụp một bản sao trạng thái hoàn toàn tách biệt nên không ảnh hưởng dữ liệu vận hành thật. Nhân viên chọn kịch bản tăng nhu cầu giờ cao điểm, kéo thanh tham số và bấm chạy ngay để so sánh trực quan 3 chỉ số KPI Trước và Sau, đồng thời nhận đề xuất hành động chuyển thẳng sang điều chuyển xe hoặc tối ưu lịch sạc."
+  > "Cuối cùng là **UC14 — Mô phỏng What-if**. Hệ thống chụp bản sao tách biệt hoàn toàn dữ liệu thật, cho phép chạy kịch bản tăng nhu cầu, bấm **Mô phỏng tác động** để dự đoán hiệu quả của từng đề xuất ngay trên bản chụp mà không tạo lệnh thật, và xem lại các lượt đã lưu trong **Lịch sử mô phỏng**."
 
 ---
 

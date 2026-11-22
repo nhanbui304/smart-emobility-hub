@@ -52,6 +52,7 @@ export interface IncidentResourceOption {
   id: string;
   resourceType: ResourceType;
   status: string;
+  hubId: string | null;
   hubName: string;
   label: string;
 }
@@ -260,6 +261,7 @@ export function listIncidentsAndResources(): {
       id: port.id,
       resourceType: "CHARGING_PORT",
       status: port.status,
+      hubId: slot.hubId,
       hubName: hubById.get(slot.hubId) ?? slot.hubId,
       label: `Cổng sạc ${slot.code} (${port.connectorType}, ${port.maxPowerKw} kW)`,
     });
@@ -271,6 +273,7 @@ export function listIncidentsAndResources(): {
       id: slot.id,
       resourceType: "PARKING_SLOT",
       status: slot.status,
+      hubId: slot.hubId,
       hubName: hubById.get(slot.hubId) ?? slot.hubId,
       label: `Vị trí đỗ ${slot.code}${slot.hasCharger ? " (có sạc)" : ""}`,
     });
@@ -282,6 +285,7 @@ export function listIncidentsAndResources(): {
       id: v.id,
       resourceType: "SHARED_VEHICLE",
       status: v.status,
+      hubId: v.hubId,
       hubName: v.hubId ? (hubById.get(v.hubId) ?? v.hubId) : "Đang di chuyển",
       label: `Xe ${v.code} (${v.type}, pin ${v.batteryLevel}%)`,
     });

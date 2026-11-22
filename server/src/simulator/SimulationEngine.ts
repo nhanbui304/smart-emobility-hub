@@ -8,7 +8,14 @@
 import { systemConfig } from "../config/systemConfig";
 import { findSnapshotById } from "../repositories/SimulationRunRepository";
 import { simulationService } from "../services/SimulationService";
-import type { OperationalState, RawSimulationResult, Scenario, SimulationMetrics } from "../types/dto";
+import type {
+  ActionImpactRequest,
+  ActionImpactResult,
+  OperationalState,
+  RawSimulationResult,
+  Scenario,
+  SimulationMetrics,
+} from "../types/dto";
 
 const activeTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const abortedRunIds = new Set<string>();
@@ -120,6 +127,218 @@ export function computeScenarioMetrics(state: OperationalState, scenario: Scenar
     unavailableVehicles,
     waitingTimeMinutes,
     overloadedHubCount,
+  };
+}
+
+/**
+ * Dự đoán tác động của một hành động điều phối (UC12 / UC13) HOÀN TOÀN trên bản chụp OperationalState
+ * và kịch bản đã chạy. Không đọc/ghi bất kỳ bảng vận hành thật nào.
+ */
+export function computeActionImpactOnScenario(
+  runId: string,
+  snapshotId: string,
+  state: OperationalState,
+  scenario: Scenario,
+  req: ActionImpactRequest,
+): ActionImpactResult {
+  const beforeAction = computeScenarioMetrics(state, scenario);
+  const clonedHubs = state.hubs.map((h) => ({ ...h }));
+  const clonedState: OperationalState = {
+    hubIds: [...state.hubIds],
+    timeRange: { ...state.timeRange },
+    hubs: clonedHubs,
+  };
+
+  const assumptionsUsed: string[] = [];
+  const unavailableKpis: string[] = [];
+  const limitations: string[] = [
+    "Tính toán hoàn toàn trên bản chụp và kịch bản mô phỏng; không tạo lệnh vận hành hay thay đổi tài nguyên thật.",
+  ];
+
+  if (req.actionType === "REDISTRIBUTE_VEHICLES") {
+    // Tìm Hub thiếu nhiều nhất (ưu tiên target của kịch bản) và Hub dư nhiều nhất làm mặc định nếu chưa chỉ định
+    const targetHub =
+      (req.targetHubId ? clonedHubs.find((h) => h.id === req.targetHubId) : undefined) ??
+      (scenario.assumptions.hubId && scenario.scenarioType !== "HUB_CLOSURE"
+        ? clonedHubs.find((h) => h.id === scenario.assumptions.hubId)
+        : undefined) ??
+      [...clonedHubs].sort((a, b) => a.availableVehicles - b.availableVehicles)[0];
+
+    const sourceHub =
+      (req.sourceHubId ? clonedHubs.find((h) => h.id === req.sourceHubId) : undefined) ??
+      [...clonedHubs]
+        .filter((h) => h.id !== targetHub?.id)
+        .sort((a, b) => b.availableVehicles - a.availableVehicles)[0];
+
+    if (!targetHub || !sourceHub || sourceHub.id === targetHub.id) {
+      unavailableKpis.push(
+        "Cần ít nhất 2 Mobility Hub khác nhau trong phạm vi bản chụp để mô phỏng điều chuyển xe.",
+      );
+      return {
+        runId,
+        snapshotId,
+        actionType: req.actionType,
+        beforeAction,
+        afterAction: beforeAction,
+        assumptionsUsed: ["Chưa đủ Hub nguồn và Hub đích khác nhau trong bản chụp."],
+        unavailableKpis,
+        limitations,
+        appliedParams: {
+          sourceHubId: sourceHub?.id,
+          targetHubId: targetHub?.id,
+          vehicleCount: 0,
+        },
+      };
+    }
+
+    const maxFromSource = Math.max(0, sourceHub.availableVehicles - systemConfig.lowVehicleThreshold);
+    const maxIntoTarget = Math.max(0, targetHub.freeSlots);
+    const maxMovable = Math.min(maxFromSource, maxIntoTarget);
+    const requested = req.vehicleCount !== undefined ? Math.max(0, Math.floor(req.vehicleCount)) : Math.min(3, maxMovable || sourceHub.availableVehicles);
+    const actualMoved = Math.min(requested, sourceHub.availableVehicles, Math.max(0, targetHub.freeSlots));
+
+    if (actualMoved <= 0) {
+      unavailableKpis.push(
+        `Không thể chuyển xe từ ${sourceHub.name} (còn ${sourceHub.availableVehicles} xe) sang ${targetHub.name} (còn ${targetHub.freeSlots} chỗ trống) với tham số hiện tại.`,
+      );
+      return {
+        runId,
+        snapshotId,
+        actionType: req.actionType,
+        beforeAction,
+        afterAction: beforeAction,
+        assumptionsUsed: [
+          `Hub nguồn: ${sourceHub.name} (${sourceHub.availableVehicles} xe khả dụng)`,
+          `Hub đích: ${targetHub.name} (${targetHub.freeSlots} chỗ trống)`,
+        ],
+        unavailableKpis,
+        limitations,
+        appliedParams: {
+          sourceHubId: sourceHub.id,
+          targetHubId: targetHub.id,
+          vehicleCount: 0,
+        },
+      };
+    }
+
+    sourceHub.availableVehicles -= actualMoved;
+    sourceHub.totalVehicles = Math.max(sourceHub.availableVehicles, sourceHub.totalVehicles - actualMoved);
+    sourceHub.freeSlots += actualMoved;
+
+    targetHub.availableVehicles += actualMoved;
+    targetHub.totalVehicles += actualMoved;
+    targetHub.freeSlots = Math.max(0, targetHub.freeSlots - actualMoved);
+
+    assumptionsUsed.push(
+      `Điều chuyển mô phỏng ${actualMoved} xe từ ${sourceHub.name} → ${targetHub.name} trên cùng bản chụp & kịch bản đang xem.`,
+    );
+    if (requested > actualMoved) {
+      assumptionsUsed.push(
+        `Giới hạn thực tế bản chụp: chỉ chuyển tối đa ${actualMoved}/${requested} xe do số xe khả dụng ở Hub nguồn hoặc chỗ trống ở Hub đích.`,
+      );
+    }
+    limitations.push("Mô hình chưa tính thời gian di chuyển vật lý giữa hai Hub trong lúc xe đang quá cảnh.");
+
+    const afterAction = computeScenarioMetrics(clonedState, scenario);
+    return {
+      runId,
+      snapshotId,
+      actionType: req.actionType,
+      beforeAction,
+      afterAction,
+      assumptionsUsed,
+      unavailableKpis,
+      limitations,
+      appliedParams: {
+        sourceHubId: sourceHub.id,
+        targetHubId: targetHub.id,
+        vehicleCount: actualMoved,
+      },
+    };
+  }
+
+  // Hành động 2: PRIORITIZE_LOW_BATTERY_CHARGING (UC13 — Ưu tiên sạc xe pin thấp < 25%)
+  const focusHub =
+    (req.hubId ? clonedHubs.find((h) => h.id === req.hubId) : undefined) ??
+    (scenario.assumptions.hubId ? clonedHubs.find((h) => h.id === scenario.assumptions.hubId) : undefined) ??
+    clonedHubs[0];
+
+  if (!focusHub) {
+    unavailableKpis.push("Không tìm thấy Hub hợp lệ trong bản chụp để mô phỏng ưu tiên lịch sạc.");
+    return {
+      runId,
+      snapshotId,
+      actionType: req.actionType,
+      beforeAction,
+      afterAction: beforeAction,
+      assumptionsUsed: [],
+      unavailableKpis,
+      limitations,
+      appliedParams: {},
+    };
+  }
+
+  const busyAtHub = Math.max(0, focusHub.totalVehicles - focusHub.availableVehicles);
+  const maxTurnaround = Math.min(focusHub.totalChargingPorts, busyAtHub);
+  const requestedTurnaround =
+    req.priorityTurnaroundVehicles !== undefined
+      ? Math.max(0, Math.floor(req.priorityTurnaroundVehicles))
+      : Math.min(maxTurnaround, Math.max(1, Math.ceil(focusHub.totalChargingPorts * 0.5)));
+  const actualTurnaround = Math.min(requestedTurnaround, maxTurnaround);
+
+  // Ghi nhận trung thực những KPI mô hình chưa đủ dữ liệu chi tiết để tính
+  unavailableKpis.push(
+    "Phân bổ công suất chi tiết từng cổng (kW) và thời điểm đầy pin từng xe: bản chụp chỉ lưu tổng hợp theo Hub (pin trung bình, số cổng), chưa có mức pin riêng từng xe.",
+  );
+
+  if (maxTurnaround <= 0) {
+    unavailableKpis.push(
+      `Tại ${focusHub.name} hiện không có cổng sạc hoặc xe đang chờ/đang sạc trong bản chụp (cổng sạc: ${focusHub.totalChargingPorts}, xe bận: ${busyAtHub}) nên không thể tính mức giảm chờ sạc.`,
+    );
+    return {
+      runId,
+      snapshotId,
+      actionType: req.actionType,
+      beforeAction,
+      afterAction: beforeAction,
+      assumptionsUsed: [`Hub áp dụng: ${focusHub.name} (cổng sạc: ${focusHub.totalChargingPorts}, xe bận: ${busyAtHub})`],
+      unavailableKpis,
+      limitations,
+      appliedParams: {
+        hubId: focusHub.id,
+        priorityTurnaroundVehicles: 0,
+      },
+    };
+  }
+
+  // Ưu tiên sạc xe pin thấp giúp giải phóng sớm `actualTurnaround` xe quay lại phục vụ & tối ưu cổng rảnh
+  focusHub.availableVehicles = Math.min(focusHub.totalVehicles, focusHub.availableVehicles + actualTurnaround);
+  focusHub.freeChargingPorts = Math.min(
+    focusHub.totalChargingPorts,
+    focusHub.freeChargingPorts + Math.ceil(actualTurnaround * 0.5),
+  );
+
+  assumptionsUsed.push(
+    `Ưu tiên sạc xe pin thấp (< 25%) tại ${focusHub.name}: giả định ${actualTurnaround} xe (tối đa ${maxTurnaround} xe theo số cổng sạc & xe đang bận trong bản chụp) quay vòng sẵn sàng sớm hơn trong khung đánh giá.`,
+  );
+  limitations.push(
+    "Số liệu dự kiến dựa trên trạng thái tổng hợp của bản chụp (pin TB & số cổng sạc của Hub), không thay đổi lịch sạc CONFIRMED hay phiên đang sạc thật.",
+  );
+
+  const afterAction = computeScenarioMetrics(clonedState, scenario);
+  return {
+    runId,
+    snapshotId,
+    actionType: req.actionType,
+    beforeAction,
+    afterAction,
+    assumptionsUsed,
+    unavailableKpis,
+    limitations,
+    appliedParams: {
+      hubId: focusHub.id,
+      priorityTurnaroundVehicles: actualTurnaround,
+    },
   };
 }
 

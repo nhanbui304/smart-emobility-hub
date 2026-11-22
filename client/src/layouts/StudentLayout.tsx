@@ -208,9 +208,9 @@ function getStudentPageTour(pathname: string): PageTourConfig {
       {
         target: '[data-tour="st-home-hubcard"]',
         ucTag: "Đặt nhanh",
-        title: "Xem top 3 xe pin cao & Chuyển sang đặt ngay",
+        title: "Chọn thẳng 1 xe pin cao hoặc Xem tất cả xe",
         content:
-          "Xem 3 xe pin cao nhất kèm biển số và bấm nút xanh bên dưới để chuyển thẳng sang màn hình Đặt xe (UC02), Đỗ xe (UC06) hoặc Sạc xe (UC08).",
+          "Bấm trực tiếp vào bất kỳ xe nào trong top 3 để mở ngay bước xác nhận đặt xe (UC02), hoặc bấm Xem tất cả xe để duyệt toàn bộ xe tại Hub.",
         placement: "left",
       },
       {

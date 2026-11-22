@@ -8,6 +8,7 @@ export interface IncidentResourceOption {
   id: string;
   resourceType: ResourceType;
   status: string;
+  hubId: string | null;
   hubName: string;
   label: string;
 }

@@ -331,7 +331,15 @@ export function MonitoringPage() {
                       selectedHubOpenIncidents.length > 0 ||
                       selectedHubMaintenanceVehicles.length > 0) && (
                         <Link
-                          to="/operator/charging-incidents?tab=incidents"
+                          to={buildIncidentLink(
+                            selectedHub.id,
+                            selectedHubOpenIncidents.length === 1
+                              ? selectedHubOpenIncidents[0]!.incident.id
+                              : undefined,
+                            selectedHubOpenIncidents.length === 0 && selectedHubMaintenanceVehicles.length === 1
+                              ? selectedHubMaintenanceVehicles[0]!.id
+                              : undefined,
+                          )}
                           className="inline-flex flex-1 items-center justify-center rounded-xl border border-amber-400/70 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 transition hover:bg-amber-100 dark:border-amber-400/30 dark:bg-amber-500/15 dark:text-amber-200"
                         >
                           Xử lý sự cố
@@ -713,7 +721,7 @@ function AlertCard({
         )}
         {alert.type === "RESOURCE_FAULT" && (
           <Link
-            to="/operator/charging-incidents?tab=incidents"
+            to={buildIncidentLink(alert.hubId)}
             className="rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-light dark:bg-lime dark:text-brand-dark"
           >
             Xử lý
@@ -722,6 +730,13 @@ function AlertCard({
       </div>
     </div>
   );
+}
+
+function buildIncidentLink(hubId: string, incidentId?: string, resourceId?: string): string {
+  const params = new URLSearchParams({ tab: "incidents", hubId });
+  if (incidentId) params.set("incidentId", incidentId);
+  if (resourceId) params.set("resourceId", resourceId);
+  return `/operator/charging-incidents?${params.toString()}`;
 }
 
 function HubRow({

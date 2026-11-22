@@ -16,7 +16,7 @@ const labels: Record<MapMetric, { search: string; select: string }> = {
   CHARGE: { search: "Tìm cổng sạc", select: "Yêu cầu sạc" },
 };
 
-const pageSize = 6;
+const pageSize = 3;
 
 export function MobilitySearchPanel({ purpose, origin, hubs }: {
   purpose: MapMetric;
@@ -114,7 +114,7 @@ export function MobilitySearchPanel({ purpose, origin, hubs }: {
               </label>
             </>
           )}
-          <Button type="submit" variant="dark" loading={searching}>Tìm phương án</Button>
+          <Button type="submit" variant="dark" loading={searching}>{isRental ? "Tìm" : "Tìm phương án"}</Button>
         </fieldset>
       </form>
       <ErrorMessage error={error} />

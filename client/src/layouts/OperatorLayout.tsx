@@ -122,9 +122,9 @@ function getOperatorPageTour(pathname: string, search: string): PageTourConfig {
         {
           target: '[data-tour="uc14-results"]',
           ucTag: "UC14 · Bước 3",
-          title: "Đọc kết quả Trước/Sau & Áp dụng đề xuất",
+          title: "Đọc kết quả, Mô phỏng tác động & Lịch sử",
           content:
-            "So sánh 3 chỉ số (Xe thiếu hụt, Chờ TB, Hub quá tải) giữa hiện tại và kịch bản. Bấm Áp dụng → trên thẻ đề xuất để nhảy thẳng sang UC12 hoặc UC13.",
+            "So sánh 3 chỉ số Trước/Sau, bấm Mô phỏng tác động để dự đoán hiệu quả ngay trên bản chụp (hoặc Mở quy trình vận hành sang UC12/UC13), và xem lại các lượt đã lưu ở Lịch sử mô phỏng.",
           placement: "left",
         },
       ],
