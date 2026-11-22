@@ -1,5 +1,6 @@
 // Owner: Nguyễn Hoàng Nhân – UC13 Manage Smart Charging Schedule
 import { useEffect, useState } from "react";
+import { HANDOFF_UC13_KEY } from "./SimulationPage";
 import { chargingScheduleApi } from "../../api/chargingSchedule";
 import { ApiError } from "../../api/client";
 import { hubApi } from "../../api/hubs";
@@ -70,7 +71,22 @@ export function SmartChargingPanel() {
   const [versionConflictNotice, setVersionConflictNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!selectedHubId && hubs && hubs.length > 0) {
+    if (!hubs || hubs.length === 0) return;
+    try {
+      const raw = sessionStorage.getItem(HANDOFF_UC13_KEY);
+      if (raw) {
+        sessionStorage.removeItem(HANDOFF_UC13_KEY);
+        const parsed = JSON.parse(raw) as { hubId?: string; ruleId?: string };
+        const matched = parsed.hubId ? hubs.find((h) => h.id === parsed.hubId) : undefined;
+        const targetId = matched?.id ?? hubs[0]!.id;
+        setSelectedHubId(targetId);
+        if (parsed.ruleId) setRuleId(parsed.ruleId);
+        return;
+      }
+    } catch {
+      // ignore
+    }
+    if (!selectedHubId) {
       setSelectedHubId(hubs[0]!.id);
     }
   }, [hubs, selectedHubId]);

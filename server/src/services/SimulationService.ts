@@ -17,7 +17,12 @@ import {
   setUnsavedRunResult,
   simulationRunRepository,
 } from "../repositories/SimulationRunRepository";
-import { computeActionImpactOnScenario, computeBaselineMetrics, simulationEngine } from "../simulator/SimulationEngine";
+import {
+  buildHubBreakdowns,
+  computeActionImpactOnScenario,
+  computeBaselineMetrics,
+  simulationEngine,
+} from "../simulator/SimulationEngine";
 import type {
   ActionImpactRequest,
   ActionImpactResult,
@@ -198,7 +203,7 @@ export const simulationService = {
     const snapshot = findSnapshotById(run.snapshotId);
     const dataLimitation = snapshot?.dataLimitation ?? "";
     const comparison = compareWithBaseline(rawResults);
-    const recommendations = generateRecommendations(comparison);
+    const recommendations = generateRecommendations(comparison, snapshot?.operationalState, run.scenario);
 
     try {
       const { saveStatus } = simulationRunRepository.storeRunResult(
@@ -235,6 +240,9 @@ export const simulationService = {
     }
 
     const snapshot = findSnapshotById(run.snapshotId);
+    const hubBreakdowns = snapshot
+      ? buildHubBreakdowns(snapshot.operationalState, run.scenario)
+      : undefined;
     const meta = {
       runId: run.id,
       snapshotId: run.snapshotId,
@@ -243,6 +251,7 @@ export const simulationService = {
       hubNames: snapshot?.operationalState?.hubs?.map((h) => h.name) ?? [],
       timeRange: snapshot?.timeRange,
       createdAt: run.createdAt,
+      hubBreakdowns,
     };
 
     if (run.status === "FAILED") {
@@ -478,41 +487,108 @@ function compareWithBaseline(rawResults: RawSimulationResult): SimulationCompari
  * Sinh danh sách khuyến nghị điều phối dựa trên sự chênh lệch giữa kịch bản và phương án cơ sở,
  * kèm căn cứ và giới hạn áp dụng (UC14 bước 8 & Ext 8a, 8b).
  */
-function generateRecommendations(comparison: SimulationComparison): Recommendation[] {
+function generateRecommendations(
+  comparison: SimulationComparison,
+  state?: OperationalState,
+  scenarioInfo?: Scenario,
+): Recommendation[] {
   const { baseline, scenario } = comparison;
   const recommendations: Recommendation[] = [];
 
   const vehicleDelta = scenario.unavailableVehicles - baseline.unavailableVehicles;
   const waitDelta = Math.round((scenario.waitingTimeMinutes - baseline.waitingTimeMinutes) * 10) / 10;
 
-  // 1. Nếu kịch bản dẫn đến thiếu xe hoặc tăng số Hub quá tải -> Khuyến nghị Điều chuyển xe (UC12)
-  if (scenario.unavailableVehicles > 0 || vehicleDelta > 0 || scenario.overloadedHubCount > 0) {
+  const breakdowns =
+    state && scenarioInfo ? buildHubBreakdowns(state, scenarioInfo) : [];
+  const openHubs = breakdowns.filter((b) => !b.closed);
+  const topSource = [...openHubs].sort((a, b) => b.scenarioSurplus - a.scenarioSurplus)[0];
+  const topTarget = [...openHubs].sort((a, b) => b.scenarioDeficit - a.scenarioDeficit)[0];
+  const nearFullHub = openHubs.find((b) => (b.scenarioFreeSlots ?? 10) <= 2 && b.scenarioSurplus > 0);
+  const scenarioType = scenarioInfo?.scenarioType;
+
+  // 1. Điều chuyển phương tiện: Chỉ đề xuất khi không phải kịch bản ADD_CHARGERS và thực sự có Hub thiếu xe hoặc đầy bãi đỗ
+  if (scenarioType !== "ADD_CHARGERS" && (scenario.unavailableVehicles > 0 || nearFullHub)) {
+    let reason = "";
+    const closedHub = breakdowns.find((b) => b.closed);
+    const replacementHub = [...openHubs]
+      .filter((b) => b.scenarioDeficit === 0 && (b.scenarioFreeSlots ?? 10) > 2)
+      .sort((a, b) => b.scenarioAvailable - a.scenarioAvailable)[0];
+
+    if (scenarioType === "HUB_CLOSURE" && closedHub && replacementHub) {
+      const otherSource = [...openHubs]
+        .filter((b) => b.hubId !== replacementHub.hubId)
+        .sort((a, b) => b.scenarioAvailable - a.scenarioAvailable)[0];
+      reason = `Điều chuyển xe từ ${otherSource?.hubName ?? "Hub lân cận"} tiếp ứng cho ${replacementHub.hubName} để đón ${closedHub.scenarioDemand} khách từ ${closedHub.hubName}`;
+    } else if (nearFullHub && topTarget && topTarget.scenarioDeficit > 0) {
+      const moveCount = Math.min(nearFullHub.scenarioSurplus, topTarget.scenarioDeficit);
+      reason = `Giải tỏa bãi đỗ: Chuyển ${moveCount} xe từ ${nearFullHub.hubName} (còn ${nearFullHub.scenarioFreeSlots} chỗ trống) → ${topTarget.hubName} (thiếu ${topTarget.scenarioDeficit} xe)`;
+    } else if (nearFullHub) {
+      const dest = openHubs.find((b) => b.hubId !== nearFullHub.hubId && (b.scenarioFreeSlots ?? 0) > 4);
+      reason = `Giải tỏa tập trung xe tại ${nearFullHub.hubName} (còn ${nearFullHub.scenarioFreeSlots} chỗ trống) sang ${dest?.hubName ?? "Hub lân cận"}`;
+    } else if (topSource && topTarget && topSource.hubId !== topTarget.hubId && topTarget.scenarioDeficit > 0) {
+      const focusTarget =
+        (scenarioInfo?.assumptions.hubId
+          ? openHubs.find((b) => b.hubId === scenarioInfo.assumptions.hubId && b.scenarioDeficit > 0)
+          : undefined) ?? topTarget;
+      const canMove = Math.max(1, Math.min(topSource.scenarioSurplus || 2, focusTarget.scenarioDeficit));
+      reason = `Chuyển ${canMove} xe từ ${topSource.hubName} (dư ${topSource.scenarioSurplus} xe) sang ${focusTarget.hubName} (thiếu ${focusTarget.scenarioDeficit} xe)`;
+    } else {
+      reason =
+        vehicleDelta > 0
+          ? `Thiếu ${scenario.unavailableVehicles} xe (+${vehicleDelta} xe) · Điều chuyển xe từ Hub dư sang Hub thiếu`
+          : `Còn thiếu ${scenario.unavailableVehicles} xe · Điều chuyển cân bằng xe giữa các Hub`;
+    }
+
     recommendations.push({
       recommendationId: crypto.randomUUID(),
       targetUseCase: "UC12",
-      reason:
-        vehicleDelta > 0
-          ? `Kịch bản làm tăng số xe thiếu hụt lên ${scenario.unavailableVehicles} xe (+${vehicleDelta} xe so với phương án cơ sở) và gây quá tải tại ${scenario.overloadedHubCount} Hub. Khuyến nghị điều chuyển xe từ các Hub còn dư sang Hub thiếu xe.`
-          : `Mạng lưới còn thiếu ${scenario.unavailableVehicles} xe khả dụng (${scenario.overloadedHubCount} Hub chịu tải cao). Khuyến nghị điều chuyển cân bằng xe giữa các Hub.`,
+      reason,
       constraints: [
-        "Cần kiểm tra sức chứa tiếp nhận thực tế tại Hub đích trước khi tạo lệnh điều chuyển.",
-        "Không điều chuyển các xe đang được giữ chỗ, đang sạc hoặc gặp sự cố.",
+        "Kiểm tra sức chứa Hub đích trước khi tạo lệnh.",
+        "Không chuyển xe đang giữ chỗ, đang sạc hoặc gặp sự cố.",
       ],
     });
   }
 
-  // 2. Nếu thời gian chờ sạc cao hoặc kịch bản cải thiện hạ tầng sạc -> Khuyến nghị Lập kế hoạch sạc thông minh (UC13)
-  if (scenario.waitingTimeMinutes >= 3.0 || waitDelta !== 0) {
+  // 2. Thay đổi lịch sạc:
+  // - Không đề xuất khi đang chạy kịch bản ADD_VEHICLES (trừ khi thời gian chờ tăng cao hơn cơ sở)
+  // - Đề xuất khi chạy ADD_CHARGERS, hoặc khi DEMAND_SURGE / HUB_CLOSURE làm tăng thời gian chờ sạc
+  const shouldRecommendCharging =
+    scenarioType === "ADD_CHARGERS" ||
+    (scenarioType !== "ADD_VEHICLES" && (waitDelta > 0 || scenario.waitingTimeMinutes >= 6.0));
+
+  if (shouldRecommendCharging) {
+    const closedHub = breakdowns.find((b) => b.closed);
+    const replacementHub = [...openHubs]
+      .filter((b) => b.scenarioDeficit === 0 && (b.scenarioFreeSlots ?? 10) > 2)
+      .sort((a, b) => b.scenarioAvailable - a.scenarioAvailable)[0];
+    const focusHub =
+      (scenarioInfo?.assumptions.hubId
+        ? openHubs.find((b) => b.hubId === scenarioInfo.assumptions.hubId)
+        : undefined) ??
+      replacementHub ??
+      topTarget ??
+      openHubs[0];
+    const inUse = focusHub?.inUseChargingPorts ?? 2;
+
+    let reason = "";
+    if (scenarioType === "ADD_CHARGERS") {
+      reason = `Đã thêm cổng sạc tại ${focusHub?.hubName ?? "Hub"} (chờ giảm ${Math.abs(waitDelta)} phút) · Xếp lại lịch sạc ưu tiên xe pin < 25%`;
+    } else if (scenarioType === "HUB_CLOSURE") {
+      reason = `Đẩy nhanh sạc ${inUse} xe đang cắm sạc tại ${replacementHub?.hubName ?? focusHub?.hubName ?? "Hub thay thế"} để phục vụ khách từ ${closedHub?.hubName ?? "Hub đóng cửa"}`;
+    } else if (focusHub && inUse > 0) {
+      reason = `Ưu tiên sạc nhanh ${inUse} xe đang cắm sạc tại ${focusHub.hubName} (pin < 25%) để quay vòng xe sớm`;
+    } else {
+      reason = `Thời gian chờ ${scenario.waitingTimeMinutes} phút · Ưu tiên sạc xe pin < 25%`;
+    }
+
     recommendations.push({
       recommendationId: crypto.randomUUID(),
       targetUseCase: "UC13",
-      reason:
-        waitDelta < 0
-          ? `Kịch bản giúp giảm thời gian chờ trung bình từ ${baseline.waitingTimeMinutes} phút xuống ${scenario.waitingTimeMinutes} phút (${waitDelta} phút). Khuyến nghị cập nhật kế hoạch sạc thông minh ưu tiên xe pin thấp để tối ưu tốc độ quay vòng xe.`
-          : `Thời gian chờ dự kiến ở mức ${scenario.waitingTimeMinutes} phút (${waitDelta >= 0 ? `+${waitDelta}` : waitDelta} phút so với cơ sở). Khuyến nghị điều chỉnh kế hoạch sạc thông minh ưu tiên xe pin thấp (< 25%).`,
+      reason,
       constraints: [
-        "Tổng công suất phân bổ không được vượt giới hạn cung cấp điện của Hub.",
-        "Không tự ý thay đổi lịch sạc đã xác nhận (CONFIRMED) hoặc phiên đang sạc.",
+        "Không vượt giới hạn công suất điện của Hub.",
+        "Không đổi lịch sạc đã CONFIRMED hoặc phiên đang sạc.",
       ],
     });
   }
