@@ -71,6 +71,18 @@ function findRecordedIncidentId(
   return previousId;
 }
 
+function connectorLabel(connectorType: string): string {
+  if (connectorType === "STANDARD_PLUG") return "AC thường";
+  if (connectorType === "TYPE2") return "Type 2";
+  return connectorType;
+}
+
+function vehicleTypeLabel(vehicleType: string): string {
+  if (vehicleType === "E_BIKE") return "Xe đạp điện";
+  if (vehicleType === "E_MOTORBIKE") return "Xe máy điện";
+  return vehicleType;
+}
+
 function resolveResource(resourceId: string): ResolvedResource | undefined {
   const port = db.select().from(chargingPorts).where(eq(chargingPorts.id, resourceId)).get();
   if (port) {
@@ -82,7 +94,7 @@ function resolveResource(resourceId: string): ResolvedResource | undefined {
       hubId: slot?.hubId ?? null,
       slotId: port.slotId,
       connectorType: port.connectorType,
-      label: `Cổng sạc ${slot?.code ?? port.id.slice(0, 8)} (${port.connectorType})`,
+      label: `Cổng sạc ${slot?.code ?? port.id.slice(0, 8)} (${connectorLabel(port.connectorType)})`,
     };
   }
 
@@ -266,7 +278,7 @@ export function listIncidentsAndResources(): {
       status: port.status,
       hubId: slot.hubId,
       hubName: hubById.get(slot.hubId) ?? slot.hubId,
-      label: `Cổng sạc ${slot.code} (${port.connectorType}, ${port.maxPowerKw} kW)`,
+      label: `Cổng sạc ${slot.code} (${connectorLabel(port.connectorType)}, ${port.maxPowerKw} kW)`,
     });
   }
 
@@ -290,7 +302,7 @@ export function listIncidentsAndResources(): {
       status: v.status,
       hubId: v.hubId,
       hubName: v.hubId ? (hubById.get(v.hubId) ?? v.hubId) : "Đang di chuyển",
-      label: `Xe ${v.code} (${v.type}, pin ${v.batteryLevel}%)`,
+      label: `Xe ${v.code} (${vehicleTypeLabel(v.type)}, pin ${v.batteryLevel}%)`,
     });
   }
 

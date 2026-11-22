@@ -31,6 +31,14 @@ function actionTypeLabel(code: string): string {
   return ACTION_TYPE_OPTIONS.find((opt) => opt.value === code)?.label ?? code;
 }
 
+function impactLevelLabel(level: string): string {
+  if (level === "LOW") return "Thấp";
+  if (level === "MEDIUM") return "Trung bình";
+  if (level === "HIGH") return "Cao";
+  if (level === "CRITICAL") return "Nghiêm trọng";
+  return level;
+}
+
 function formatAllocationChange(change: string): string {
   return change === "NOTIFY_AFFECTED_USERS" ? "Thông báo người dùng bị ảnh hưởng" : change;
 }
@@ -508,7 +516,7 @@ export function IncidentManagementPanel({ onChanged }: { onChanged?: () => void 
                       <div className="flex items-center justify-between pt-0.5">
                         <StatusBadge status={inc.status} />
                         <span className="text-[11px] font-medium text-neutral-400">
-                          {inc.impactLevel} · v{inc.version}
+                          {impactLevelLabel(inc.impactLevel)} · v{inc.version}
                         </span>
                       </div>
                     </button>
@@ -694,7 +702,7 @@ export function IncidentManagementPanel({ onChanged }: { onChanged?: () => void 
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-bold text-red-800 dark:bg-red-500/20 dark:text-red-300">
-                          {displayedDetails.incident.impactLevel}
+                          {impactLevelLabel(displayedDetails.incident.impactLevel)}
                         </span>
                         <StatusBadge status={displayedDetails.incident.status} />
                       </div>
