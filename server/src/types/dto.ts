@@ -468,6 +468,27 @@ export interface RunCancelled {
   runId: string;
 }
 
+export interface SimulatedHubBreakdown {
+  hubId: string;
+  hubName: string;
+  closed: boolean;
+  baselineAvailable: number;
+  baselineDemand: number;
+  baselineDeficit: number;
+  baselineSurplus: number;
+  baselineFreeSlots: number;
+  scenarioAvailable: number;
+  scenarioDemand: number;
+  scenarioDeficit: number;
+  scenarioSurplus: number;
+  scenarioFreeSlots: number;
+  isTargetHub: boolean;
+  isOverloaded: boolean;
+  inUseChargingPorts?: number;
+  freeChargingPorts: number;
+  totalChargingPorts: number;
+}
+
 export interface RunOutcome {
   status: SimulationRunStatus;
   result?: SimulationResult;
@@ -480,6 +501,7 @@ export interface RunOutcome {
   hubNames?: string[];
   timeRange?: TimeRange;
   createdAt?: Date;
+  hubBreakdowns?: SimulatedHubBreakdown[];
 }
 
 export interface RunStarted {
@@ -664,4 +686,5 @@ export interface ActionImpactResult {
     hubId?: string;
     priorityTurnaroundVehicles?: number;
   };
+  hubBreakdowns?: SimulatedHubBreakdown[];
 }

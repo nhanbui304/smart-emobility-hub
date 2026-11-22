@@ -14,11 +14,17 @@ import type {
   OperationalState,
   RawSimulationResult,
   Scenario,
+  SimulatedHubBreakdown,
   SimulationMetrics,
 } from "../types/dto";
 
 const activeTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const abortedRunIds = new Set<string>();
+
+/** Nhu cầu cơ sở ước tính tại mỗi Hub (~50% tổng số xe tại Hub, tối thiểu 4 xe). */
+export function getHubBaselineDemand(totalVehicles: number): number {
+  return Math.max(4, Math.round(totalVehicles * 0.5));
+}
 
 /**
  * Tính chỉ số Phương án cơ sở (Baseline) hoàn toàn từ dữ liệu trong bản chụp OperationalState.
@@ -31,7 +37,7 @@ export function computeBaselineMetrics(state: OperationalState): SimulationMetri
 
   for (const h of state.hubs) {
     // Nhu cầu cơ sở ước tính tại mỗi Hub trong khung giờ đánh giá
-    const baselineDemand = Math.max(6, Math.round(h.totalVehicles * 0.85));
+    const baselineDemand = getHubBaselineDemand(h.totalVehicles);
     const deficit = Math.max(0, baselineDemand - h.availableVehicles);
     unavailableVehicles += deficit;
 
@@ -83,7 +89,7 @@ export function applyScenarioToHubStates(state: OperationalState, scenario: Scen
   const { scenarioType, assumptions } = scenario;
   const targetHubId = assumptions.hubId;
 
-  return state.hubs.map((h) => {
+  const states: SimulatedHubState[] = state.hubs.map((h) => {
     const isTarget = !targetHubId || h.id === targetHubId;
     let closed = false;
     let totalVehicles = h.totalVehicles;
@@ -92,7 +98,7 @@ export function applyScenarioToHubStates(state: OperationalState, scenario: Scen
     let totalPorts = h.totalChargingPorts;
     let freeSlots = h.freeSlots;
     let inUseChargingPorts = typeof h.inUseChargingPorts === "number" ? h.inUseChargingPorts : undefined;
-    let demand = Math.max(6, Math.round(h.totalVehicles * 0.85));
+    let demand = getHubBaselineDemand(h.totalVehicles);
 
     if (scenarioType === "DEMAND_SURGE" && isTarget) {
       const mult = assumptions.demandMultiplier ?? 1.5;
@@ -107,17 +113,16 @@ export function applyScenarioToHubStates(state: OperationalState, scenario: Scen
         if (inUseChargingPorts !== undefined) {
           inUseChargingPorts = 0;
         }
-      } else {
-        // Nhu cầu từ Hub đóng dồn sang các Hub lân cận
-        demand = Math.round(demand * 1.35);
       }
     } else if (scenarioType === "ADD_CHARGERS" && isTarget) {
       const addChargers = Math.max(0, assumptions.additionalChargers ?? 2);
       freePorts += addChargers;
       totalPorts += addChargers;
-      // Cổng mới thêm KHÔNG được tính là phiên đang sạc (inUseChargingPorts giữ nguyên)
-      availableVehicles = Math.min(totalVehicles, availableVehicles + Math.ceil(addChargers * 0.75));
-    } else if (scenarioType === "ADD_VEHICLES" && isTarget) {
+      // Cổng mới thêm giúp giải phóng nhanh các xe đang chờ sạc/pin yếu tại Hub (giữ lại tối thiểu 1 xe đang sạc IN_USE nếu có)
+      const reserveInUse = (inUseChargingPorts ?? 0) > 0 ? 1 : 0;
+      const maxAvail = Math.max(availableVehicles, totalVehicles - reserveInUse);
+      availableVehicles = Math.min(maxAvail, availableVehicles + Math.ceil(addChargers * 0.6));
+    } else if (scenarioType === "ADD_VEHICLES" && targetHubId && isTarget) {
       const addVehicles = Math.max(0, assumptions.additionalVehicles ?? 4);
       availableVehicles += addVehicles;
       totalVehicles += addVehicles;
@@ -136,6 +141,91 @@ export function applyScenarioToHubStates(state: OperationalState, scenario: Scen
       inUseChargingPorts,
       demand,
     };
+  });
+
+  // Nếu ADD_VEHICLES áp dụng cho Toàn mạng lưới (!targetHubId), phân bổ số xe thêm ưu tiên vào các Hub đang thiếu xe
+  if (scenarioType === "ADD_VEHICLES" && !targetHubId && states.length > 0) {
+    let remaining = Math.max(0, assumptions.additionalVehicles ?? 4);
+    const byDeficit = [...states].sort((a, b) => (b.demand - b.availableVehicles) - (a.demand - a.availableVehicles));
+    for (const st of byDeficit) {
+      if (remaining <= 0) break;
+      const deficit = Math.max(0, st.demand - st.availableVehicles);
+      const give = deficit > 0 ? Math.min(remaining, deficit) : 0;
+      if (give > 0) {
+        st.availableVehicles += give;
+        st.totalVehicles += give;
+        remaining -= give;
+      }
+    }
+    let idx = 0;
+    while (remaining > 0) {
+      const st = byDeficit[idx % byDeficit.length]!;
+      st.availableVehicles += 1;
+      st.totalVehicles += 1;
+      remaining -= 1;
+      idx += 1;
+    }
+  }
+
+  return states;
+}
+
+/**
+ * Dựng bảng chi tiết từng Hub (Trước vs Sau kịch bản/hành động) để hiển thị rõ trên UI:
+ * Hub nào đang thiếu bao nhiêu xe, Hub nào đang dư bao nhiêu xe, tổng thiếu toàn mạng là bao nhiêu.
+ */
+export function buildHubBreakdowns(
+  state: OperationalState,
+  scenario: Scenario,
+  customHubStates?: SimulatedHubState[],
+): SimulatedHubBreakdown[] {
+  const scenarioHubs = customHubStates ?? applyScenarioToHubStates(state, scenario);
+  const byId = new Map(scenarioHubs.map((h) => [h.id, h]));
+
+  const rows: SimulatedHubBreakdown[] = state.hubs.map((baseHub) => {
+    const baseDemand = getHubBaselineDemand(baseHub.totalVehicles);
+    const baseDeficit = Math.max(0, baseDemand - baseHub.availableVehicles);
+    const baseSurplus = Math.max(0, baseHub.availableVehicles - baseDemand);
+
+    const sc = byId.get(baseHub.id);
+    const scAvail = sc ? sc.availableVehicles : baseHub.availableVehicles;
+    const scDemand = sc ? sc.demand : baseDemand;
+    const closed = sc ? sc.closed : false;
+    const scDeficit = Math.max(0, scDemand - scAvail);
+    const scSurplus = closed ? 0 : Math.max(0, scAvail - scDemand);
+    const freeSlots = sc ? sc.freeSlots : baseHub.freeSlots;
+    const isOverloaded =
+      closed ||
+      scDeficit > 0 ||
+      scAvail < systemConfig.lowVehicleThreshold ||
+      freeSlots <= systemConfig.nearFullThreshold;
+
+    return {
+      hubId: baseHub.id,
+      hubName: baseHub.name,
+      closed,
+      baselineAvailable: baseHub.availableVehicles,
+      baselineDemand: baseDemand,
+      baselineDeficit: baseDeficit,
+      baselineSurplus: baseSurplus,
+      baselineFreeSlots: baseHub.freeSlots,
+      scenarioAvailable: scAvail,
+      scenarioDemand: scDemand,
+      scenarioDeficit: scDeficit,
+      scenarioSurplus: scSurplus,
+      scenarioFreeSlots: freeSlots,
+      isTargetHub: scenario.assumptions.hubId ? scenario.assumptions.hubId === baseHub.id : false,
+      isOverloaded,
+      inUseChargingPorts: sc?.inUseChargingPorts ?? baseHub.inUseChargingPorts,
+      freeChargingPorts: sc?.freeChargingPorts ?? baseHub.freeChargingPorts,
+      totalChargingPorts: sc?.totalChargingPorts ?? baseHub.totalChargingPorts,
+    };
+  });
+
+  return rows.sort((a, b) => {
+    if (a.isTargetHub !== b.isTargetHub) return a.isTargetHub ? -1 : 1;
+    if (a.scenarioDeficit !== b.scenarioDeficit) return b.scenarioDeficit - a.scenarioDeficit;
+    return b.scenarioSurplus - a.scenarioSurplus;
   });
 }
 
@@ -212,18 +302,30 @@ export function simulateActionOnScenarioStates(
   const openHubs = workingHubs.filter((h) => !h.closed);
 
   if (req.actionType === "REDISTRIBUTE_VEHICLES") {
+    const scenarioFocusHub = scenario.assumptions.hubId
+      ? openHubs.find((h) => h.id === scenario.assumptions.hubId)
+      : undefined;
+
+    // Hub đích (nhận xe): ưu tiên Hub được chỉ định hoặc Hub đang thiếu nhiều xe nhất (demand - availableVehicles lớn nhất)
     const targetHub =
       (req.targetHubId ? workingHubs.find((h) => h.id === req.targetHubId) : undefined) ??
-      (scenario.assumptions.hubId
-        ? openHubs.find((h) => h.id === scenario.assumptions.hubId)
+      (scenarioFocusHub && scenarioFocusHub.demand > scenarioFocusHub.availableVehicles
+        ? scenarioFocusHub
         : undefined) ??
-      [...openHubs].sort((a, b) => a.availableVehicles - b.availableVehicles)[0];
+      [...openHubs].sort(
+        (a, b) => (b.demand - b.availableVehicles) - (a.demand - a.availableVehicles),
+      )[0];
 
+    // Hub nguồn (xuất xe): ưu tiên Hub đang dư nhiều xe nhất so với nhu cầu (availableVehicles - demand lớn nhất)
     const sourceHub =
       (req.sourceHubId ? workingHubs.find((h) => h.id === req.sourceHubId) : undefined) ??
       [...openHubs]
         .filter((h) => h.id !== targetHub?.id)
-        .sort((a, b) => b.availableVehicles - a.availableVehicles)[0];
+        .sort(
+          (a, b) =>
+            (b.availableVehicles - b.demand) - (a.availableVehicles - a.demand) ||
+            b.availableVehicles - a.availableVehicles,
+        )[0];
 
     if (!targetHub || !sourceHub || sourceHub.id === targetHub.id) {
       unavailableKpis.push(
@@ -281,13 +383,19 @@ export function simulateActionOnScenarioStates(
       };
     }
 
+    const sourceSurplus = Math.max(0, sourceHub.availableVehicles - sourceHub.demand);
+    const targetDeficit = Math.max(1, targetHub.demand - targetHub.availableVehicles);
     const maxFromSource = Math.max(0, sourceHub.availableVehicles - systemConfig.lowVehicleThreshold);
     const maxIntoTarget = Math.max(0, targetHub.freeSlots);
-    const maxMovable = Math.min(maxFromSource, maxIntoTarget);
+    const defaultSuggested = Math.min(
+      targetDeficit,
+      sourceSurplus > 0 ? sourceSurplus : Math.max(1, maxFromSource),
+      maxIntoTarget,
+    );
     const requested =
       req.vehicleCount !== undefined
         ? Math.max(0, Math.floor(req.vehicleCount))
-        : Math.min(3, maxMovable || Math.min(sourceHub.availableVehicles, targetHub.freeSlots));
+        : Math.max(1, defaultSuggested);
     const actualMoved = Math.min(requested, sourceHub.availableVehicles, targetHub.freeSlots);
 
     if (actualMoved <= 0) {
@@ -355,6 +463,7 @@ export function simulateActionOnScenarioStates(
           targetHubId: targetHub.id,
           vehicleCount: actualMoved,
         },
+        hubBreakdowns: buildHubBreakdowns(state, scenario, workingHubs),
       },
     };
   }
@@ -528,6 +637,7 @@ export function simulateActionOnScenarioStates(
         hubId: focusHub.id,
         priorityTurnaroundVehicles: actualTurnaround,
       },
+      hubBreakdowns: buildHubBreakdowns(state, scenario, workingHubs),
     },
   };
 }
