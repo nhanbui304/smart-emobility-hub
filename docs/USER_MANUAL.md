@@ -152,9 +152,9 @@ Giao diện Operator được thiết kế tối giản theo nguyên tắc **ít
     1. **Bước 1 (Hub & Khung giờ):** Chọn Hub và bấm chip chọn nhanh khung giờ (*2 giờ tới*, *Cao điểm 17h* hoặc *Tùy chỉnh*).
     2. **Bước 2 (Quy tắc ưu tiên):** Chọn 1 trong 3 quy tắc (*Pin thấp trước < 25%*, *Đến trước sạc trước FIFO*, hoặc *Thiếu pin nhiều nhất*) → bấm **Tạo đề xuất lịch sạc**.
     3. **Bước 3 (Kiểm tra & Áp dụng):** Xem **thanh tải điện kW** so với giới hạn Hub, chỉnh tay công suất từng dòng nếu cần → bấm **Kiểm tra hợp lệ** → bấm **Áp dụng lịch sạc** (tự kiểm tra `baseVersion` chống xung đột).
-  - **Tab 2 — Xử lý sự cố (`UC11 — Record & Handle Resource Incident`):** Hiển thị theo bố cục **Master–Detail 2 cột** (trái: danh sách sự cố lọc *Đang mở / Đã đóng*; phải: thao tác xử lý).
-    1. Bấm **`+ Ghi nhận sự cố mới`** để báo lỗi cổng sạc / chỗ đỗ / xe và tự động hạn chế phân bổ mới.
-    2. Chọn một sự cố ở cột trái → **Bước 1:** chọn phương án xử lý (*Hạn chế & thông báo*, *Chuyển tài nguyên thay thế*, *Đưa đi bảo trì*) và lưu → **Bước 2:** nhập minh chứng kỹ thuật, tích *Đã khắc phục xong* và bấm **Đóng sự cố & Khôi phục** để mở lại tài nguyên.
+  - **Tab 2 — Xử lý sự cố (`UC11 — Record & Handle Resource Incident`):** Hiển thị theo bố cục **Master–Detail 2 cột** (trái: danh sách hồ sơ lọc **`Hồ sơ đang mở (N)`** / **`Hồ sơ đã đóng (N)`**; phải: chi tiết hồ sơ đang chọn và danh sách độc lập **`Tài nguyên lỗi/bảo trì chưa có hồ sơ (N)`**).
+    1. Khi đi từ nút **`Xử lý`** ở cảnh báo tổng hợp trên Giám sát mạng lưới (vd: *“3 tài nguyên lỗi/bảo trì”*), hệ thống giữ ngữ cảnh Hub: chọn đúng tài nguyên trong danh sách *Tài nguyên lỗi/bảo trì chưa có hồ sơ* và bấm **`Ghi nhận sự cố`** (hoặc bấm **`+ Ghi nhận sự cố mới`**) để lập hồ sơ UC11 và tự động hạn chế phân bổ mới.
+    2. Chọn một hồ sơ ở cột trái → **Bước 1:** chọn phương án xử lý (*Hạn chế & thông báo*, *Chuyển tài nguyên thay thế*, *Đưa đi bảo trì*) và bấm **Lưu phương án xử lý** → **Bước 2:** nhập minh chứng kỹ thuật, tích *Đã khắc phục xong* và bấm **Đóng sự cố & Khôi phục** để mở lại tài nguyên.
 
 ![Lịch sạc thông minh và Sự cố UC11-UC13](submission-4/screenshots/09_operator_uc11_uc13_charging_incidents.png)
 

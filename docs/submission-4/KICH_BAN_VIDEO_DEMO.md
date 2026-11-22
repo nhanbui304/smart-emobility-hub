@@ -116,9 +116,9 @@
      - Cột trái: chọn Hub (**ĐH Bách Khoa**), bấm chip **`2 giờ tới`**, chọn quy tắc **`Pin thấp trước (< 25%)`** → bấm **`Tạo đề xuất lịch sạc`**.
      - Cột phải: chỉ **thanh tải điện kW** so với giới hạn Hub và bảng phân bổ cổng sạc → bấm **`Kiểm tra hợp lệ`** → bấm **`Áp dụng lịch sạc`**.
   2. **Tab 2 — `Xử lý sự cố` (UC11):**
-     - Bấm chuyển sang tab **`Xử lý sự cố`** ở góc trên phải.
-     - Cột trái: bấm **`+ Ghi nhận sự cố mới`** → chọn 1 tài nguyên (vd cổng sạc/xe), chọn mức độ **Cao**, nhập mô tả ngắn *"Mất nguồn đầu ra"* → bấm **`Ghi nhận & Hạn chế tài nguyên`**.
-     - Cột phải (sự cố vừa tạo tự được mở):
+     - Từ cảnh báo tổng hợp **`Thư viện Trung tâm — 3 tài nguyên lỗi/bảo trì`** ở Giám sát mạng lưới bấm **`Xử lý`** (hoặc chuyển sang tab **`Xử lý sự cố`**): chỉ rõ giao diện phân tách **`Hồ sơ đang mở (0)`** / **`Hồ sơ đã đóng`** với danh sách **`Tài nguyên lỗi/bảo trì chưa có hồ sơ (3)`** (không tự tạo hồ sơ ảo).
+     - Chọn 1 trong 3 tài nguyên lỗi → bấm **`Ghi nhận sự cố`** (tài nguyên đã điền sẵn), chọn mức độ **Cao**, nhập mô tả ngắn *"Mất nguồn đầu ra"* → bấm **`Ghi nhận & Hạn chế tài nguyên`** → chỉ **`Hồ sơ đang mở (1)`** và **`Tài nguyên lỗi/bảo trì chưa có hồ sơ (2)`** hiển thị đồng thời.
+     - Cột phải (hồ sơ vừa tạo tự được mở):
        - **Bước 1:** Chọn phương án xử lý → bấm **`Lưu phương án xử lý`**.
        - **Bước 2:** Nhập minh chứng *"Đã thay CB nguồn, đo ổn định 220V"*, giữ tích *Đã khắc phục xong* → bấm **`Đóng sự cố & Khôi phục`**.
 - **Lời thoại:**
