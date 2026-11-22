@@ -76,6 +76,7 @@ export function MyVehiclePage() {
               type="button"
               role="tab"
               aria-selected={active}
+              data-tour={t.tourId}
               onClick={() => switchTab(t.key)}
               className={`relative cursor-pointer rounded-xl px-2 py-2.5 text-center text-xs font-semibold transition sm:text-sm ${
                 active
@@ -105,23 +106,11 @@ export function MyVehiclePage() {
         </div>
       )}
 
-      {activeTab === "parking" && (
-        <div data-tour="st-parking">
-          <ParkingReservationSection />
-        </div>
-      )}
+      {activeTab === "parking" && <ParkingReservationSection />}
 
-      {activeTab === "schedule" && (
-        <div data-tour="st-charge-schedule">
-          <ScheduleChargingPanel onCreated={handleChargingCreated} />
-        </div>
-      )}
+      {activeTab === "schedule" && <ScheduleChargingPanel onCreated={handleChargingCreated} />}
 
-      {activeTab === "manage" && (
-        <div data-tour="st-charge-manage">
-          <ManageChargingSchedulePanel key={latestReservationId} />
-        </div>
-      )}
+      {activeTab === "manage" && <ManageChargingSchedulePanel key={latestReservationId} />}
     </div>
   );
 }

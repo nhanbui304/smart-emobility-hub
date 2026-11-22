@@ -32,6 +32,7 @@ export function ActiveTripPage() {
   const isLoading = resState.loading || tripState.loading;
   const hasReservation = resState.count > 0;
   const hasActiveTrip = tripState.hasTrip;
+  const prioritizeReturn = hasActiveTrip || tripState.hasReturnResult;
   const showUnifiedEmpty = !isLoading && !hasReservation && !hasActiveTrip && !tripState.hasReturnResult;
 
   return (
@@ -50,37 +51,21 @@ export function ActiveTripPage() {
         />
       )}
 
-      {/* Khi đang thuê xe: ưu tiên hiện Xe đang thuê + form Trả xe ở trên, ẩn thông báo trống về đặt xe */}
-      {hasActiveTrip ? (
-        <>
-          <div data-tour="st-trip-return">
-            <ReturnVehicleSection key={tripReloadKey} hideEmpty onStatusChange={handleTripStatus} />
-          </div>
-          <div data-tour="st-trip-booking">
-            <VehicleReservationPanel
-              hideEmpty
-              onStatusChange={handleResStatus}
-              onTripStarted={(trip) => setTripReloadKey(trip.id)}
-            />
-          </div>
-        </>
-      ) : (
-        <>
-          <div data-tour="st-trip-booking">
-            <VehicleReservationPanel
-              hideEmpty
-              onStatusChange={handleResStatus}
-              onTripStarted={(trip) => {
-                setTripState((prev) => ({ ...prev, hasTrip: true }));
-                setTripReloadKey(trip.id);
-              }}
-            />
-          </div>
-          <div data-tour="st-trip-return">
-            <ReturnVehicleSection key={tripReloadKey} hideEmpty onStatusChange={handleTripStatus} />
-          </div>
-        </>
-      )}
+      {/* Giữ ổn định cây component của cả 2 khối (chỉ đổi thứ tự hiển thị bằng CSS order) để không bị remount mất trạng thái kết quả trả xe */}
+      <div className="flex flex-col gap-4">
+        <div data-tour="st-trip-return" className={`empty:hidden ${prioritizeReturn ? "order-1" : "order-2"}`}>
+          <ReturnVehicleSection reloadSignal={tripReloadKey} hideEmpty onStatusChange={handleTripStatus} />
+        </div>
+        <div data-tour="st-trip-booking" className={`empty:hidden ${prioritizeReturn ? "order-2" : "order-1"}`}>
+          <VehicleReservationPanel
+            hideEmpty
+            onStatusChange={handleResStatus}
+            onTripStarted={(trip) => {
+              setTripReloadKey(trip.id);
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }

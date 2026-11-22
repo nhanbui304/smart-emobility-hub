@@ -43,7 +43,6 @@ export function ReserveVehiclePage() {
 
   // requestId sinh MỘT lần cho mỗi lần mở màn hình xác nhận; mất mạng thì gửi lại cùng mã.
   const requestId = useRef(newRequestId());
-  const autoPreparedKey = useRef<string | null>(null);
 
   /** Khi đi từ chọn xe trực tiếp (URL có ?vehicleId=...), tự động mở thẳng bước xác nhận đúng xe đó. */
   useEffect(() => {
@@ -51,9 +50,6 @@ export function ReserveVehiclePage() {
       setAutoPreparing(false);
       return;
     }
-    const key = `${hubId}:${suggestedVehicleId}`;
-    if (autoPreparedKey.current === key) return;
-    autoPreparedKey.current = key;
 
     let cancelled = false;
     setAutoPreparing(true);

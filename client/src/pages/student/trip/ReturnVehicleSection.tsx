@@ -53,9 +53,11 @@ function savePendingConfirm(value: PendingConfirm | null): void {
 
 export function ReturnVehicleSection({
   hideEmpty = false,
+  reloadSignal,
   onStatusChange,
 }: {
   hideEmpty?: boolean;
+  reloadSignal?: string;
   onStatusChange?: (state: { loading: boolean; hasTrip: boolean; hasReturnResult: boolean }) => void;
 }) {
   const current = useAsync(() => returnApi.getCurrentTrip(), [], { refreshEveryMs: 5000 });
@@ -173,6 +175,16 @@ export function ReturnVehicleSection({
 
   const info = current.data ?? null;
   const selectedHubId = hubId || hubs.data?.[0]?.id || "";
+  const lastReloadSignal = useRef<string | undefined>(reloadSignal);
+
+  useEffect(() => {
+    if (!reloadSignal || reloadSignal === lastReloadSignal.current) return;
+    lastReloadSignal.current = reloadSignal;
+    setResult(null);
+    setError(null);
+    void current.reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reloadSignal]);
 
   useEffect(() => {
     onStatusChange?.({
