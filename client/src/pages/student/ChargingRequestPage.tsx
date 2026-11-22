@@ -16,7 +16,7 @@ import type {
   HubStatus,
   PrivateVehicle,
 } from "../../types";
-import { connectorTypeLabel, friendlyPortLabel } from "../../utils/display";
+import { friendlyPortLabel } from "../../utils/display";
 
 function formatDateTimeVi(iso?: string | null): string {
   if (!iso) return "—";
@@ -183,23 +183,32 @@ export function ChargingRequestPage() {
 
           <div>
             <label className="mb-1 block text-xs font-medium text-neutral-600 dark:text-neutral-300">
-              Phương tiện của bạn
+              Biển số xe cá nhân
             </label>
-            <select
-              value={vehicleId}
-              onChange={(e) => {
-                setVehicleId(e.target.value);
-                setProposal(null);
-              }}
-              className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-neutral-900"
-            >
-              {vehicles.length === 0 && <option value="">Chưa có phương tiện cá nhân</option>}
-              {vehicles.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.plate} ({connectorTypeLabel(v.connectorType)})
-                </option>
-              ))}
-            </select>
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={vehicleId}
+                onChange={(e) => {
+                  setVehicleId(e.target.value);
+                  setProposal(null);
+                }}
+                className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-neutral-900"
+              >
+                {vehicles.length === 0 && <option value="">Chưa có phương tiện cá nhân</option>}
+                {vehicles.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.plate}
+                  </option>
+                ))}
+              </select>
+              <div className="flex items-center rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm font-medium text-neutral-700 dark:border-white/10 dark:bg-white/5 dark:text-neutral-200">
+                {(() => {
+                  const current = vehicles.find((v) => v.id === vehicleId);
+                  if (!current) return "—";
+                  return current.type === "E_BIKE" ? "Xe đạp điện" : "Xe máy điện";
+                })()}
+              </div>
+            </div>
           </div>
 
           <div>

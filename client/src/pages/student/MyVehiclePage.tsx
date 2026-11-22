@@ -54,7 +54,7 @@ export function MyVehiclePage() {
         <div className="min-w-0">
           <p className="text-sm font-bold text-brand dark:text-lime">Cần sạc gấp ngay tại Hub?</p>
           <p className="text-xs text-neutral-600 dark:text-neutral-300">
-            Gửi yêu cầu sạc tức thời để nhận cổng trống hoặc vào hàng đợi (UC07).
+            Gửi yêu cầu sạc tức thời để nhận cổng trống hoặc vào hàng đợi.
           </p>
         </div>
         <span className="shrink-0 rounded-xl bg-brand px-3.5 py-2 text-xs font-bold text-lime dark:bg-lime dark:text-brand-dark">

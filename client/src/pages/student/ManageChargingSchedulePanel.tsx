@@ -11,7 +11,7 @@ import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { StatusBadge } from "../../components/StatusBadge";
 import { useAuth } from "../../context/AuthContext";
-import { connectorTypeLabel, friendlyPortLabel, vehicleTypeLabel } from "../../utils/display";
+import { friendlyPortLabel, vehicleTypeLabel } from "../../utils/display";
 import type {
   CancellationCheck,
   CancellationResult,
@@ -496,9 +496,6 @@ export function ManageChargingSchedulePanel() {
             <div className="rounded-xl bg-surface p-3 dark:bg-white/5">
               <p className="text-neutral-500 dark:text-neutral-400">Cổng sạc được phân bổ</p>
               <p className="mt-1 font-semibold">{friendlyPortLabel(detail.portId)}</p>
-              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                {connectorTypeLabel(detail.vehicle.connectorType)}
-              </p>
             </div>
             <div className="rounded-xl bg-surface p-3 dark:bg-white/5">
               <p className="text-neutral-500 dark:text-neutral-400">Phương tiện cá nhân</p>
