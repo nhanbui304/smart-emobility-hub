@@ -11,7 +11,7 @@ export function ChargingIncidentPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab: ActiveTab = searchParams.get("tab") === "incidents" ? "incidents" : "charging";
 
-  const { data: incidentOverview } = useAsync(() => incidentApi.listOverview(), [], {
+  const { data: incidentOverview, reload: reloadIncidentOverview } = useAsync(() => incidentApi.listOverview(), [], {
     refreshEveryMs: 10000,
   });
   const openCount = (incidentOverview?.incidents ?? []).filter((i) => i.status !== "CLOSED").length;
@@ -71,7 +71,11 @@ export function ChargingIncidentPage() {
         </div>
       </header>
 
-      {activeTab === "charging" ? <SmartChargingPanel /> : <IncidentManagementPanel />}
+      {activeTab === "charging" ? (
+        <SmartChargingPanel />
+      ) : (
+        <IncidentManagementPanel onChanged={() => void reloadIncidentOverview()} />
+      )}
     </div>
   );
 }

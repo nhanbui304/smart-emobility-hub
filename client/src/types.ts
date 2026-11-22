@@ -122,6 +122,7 @@ export interface Incident {
   notificationPending: boolean;
   resolutionNote: string | null;
   createdAt: string;
+  updatedAt?: string;
   resolvedAt: string | null;
   version: number;
 }
@@ -424,9 +425,18 @@ export interface CreateRunResult {
   created: boolean;
 }
 
+export interface HandlingPlanLogEntry {
+  version: number;
+  actionType: string;
+  allocationChanges: string[];
+  updatedBy: string;
+  updatedAt: string;
+}
+
 export interface HandlingPlan {
   actionType: string;
   allocationChanges: string[];
+  history?: HandlingPlanLogEntry[];
 }
 
 export interface HubAcceptance {

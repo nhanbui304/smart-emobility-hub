@@ -16,6 +16,7 @@ import {
   redistributionItems,
   sharedVehicles,
   trips,
+  users,
   vehicleReservations,
   type Incident,
 } from "../../db/schema";
@@ -188,15 +189,17 @@ function restoreResourceOperationalStatus(resource: ResolvedResource, now: Date)
 
   if (resource.resourceType === "SHARED_VEHICLE" && resource.status === "UNDER_MAINTENANCE") {
     const commitment = findBlockingVehicleReservation(resource.id)?.status;
-    const status = commitment === "RESERVED" || commitment === "HANDING_OVER" || commitment === "PENDING_VERIFICATION"
-      ? commitment
-      : "AVAILABLE";
-    if (status === "AVAILABLE" && (resource.batteryLevel ?? 0) < systemConfig.reservableBatteryThreshold) return false;
+    const status =
+      commitment === "RESERVED" || commitment === "HANDING_OVER" || commitment === "PENDING_VERIFICATION"
+        ? commitment
+        : (resource.batteryLevel ?? 0) < systemConfig.reservableBatteryThreshold
+          ? "CHARGING"
+          : "AVAILABLE";
     db.update(sharedVehicles)
       .set({ status, lastUpdatedAt: now, updatedAt: now })
       .where(eq(sharedVehicles.id, resource.id))
       .run();
-    return status === "AVAILABLE";
+    return status === "AVAILABLE" || status === "CHARGING";
   }
 
   return false;
@@ -593,11 +596,47 @@ export const incidentOps = {
       }
 
       const now = new Date();
+      const operator = db
+        .select({ fullName: users.fullName })
+        .from(users)
+        .where(eq(users.id, operatorId))
+        .get();
+      const operatorName = operator?.fullName ?? operatorId;
+
+      const existingHistory = current.handlingPlan?.history
+        ? [...current.handlingPlan.history]
+        : current.handlingPlan
+          ? [
+              {
+                version: current.version,
+                actionType: current.handlingPlan.actionType,
+                allocationChanges: current.handlingPlan.allocationChanges,
+                updatedBy: operatorName,
+                updatedAt: current.updatedAt.toISOString(),
+              },
+            ]
+          : [];
+
+      const planWithHistory: HandlingPlan = {
+        actionType: plan.actionType,
+        allocationChanges: plan.allocationChanges,
+        history: [
+          ...existingHistory,
+          {
+            version: expectedVersion + 1,
+            actionType: plan.actionType,
+            allocationChanges: plan.allocationChanges,
+            updatedBy: operatorName,
+            updatedAt: now.toISOString(),
+          },
+        ],
+      };
+
       const updated = db
         .update(incidents)
         .set({
           status: "IN_PROGRESS",
-          handlingPlan: plan,
+          handlingPlan: planWithHistory,
           consentPlan,
           version: expectedVersion + 1,
           updatedAt: now,
@@ -777,14 +816,20 @@ export const incidentOps = {
       const resource = resolveResource(current.resourceId);
       const hasOtherRestrictions = this.checkOtherActiveIncidentsOrRestrictions(this.queryResourceAndRemainingImpacts(incidentId));
       const restored = resource && !hasOtherRestrictions && restoreResourceOperationalStatus(resource, now);
+      const movedToCharging =
+        restored &&
+        resource?.resourceType === "SHARED_VEHICLE" &&
+        (resource.batteryLevel ?? 0) < systemConfig.reservableBatteryThreshold;
 
       recordProcessedRequest(requestId, operatorId, "VERIFY_INCIDENT_RESOLUTION", updated.id);
 
       return {
         success: true,
-        message: restored
-          ? "Đã xác nhận khắc phục, đóng sự cố và khôi phục trạng thái phục vụ của tài nguyên."
-          : "Đã đóng sự cố. Tài nguyên vẫn tuân theo các cam kết và hạn chế còn hiệu lực.",
+        message: movedToCharging
+          ? "Đã xác nhận khắc phục và đóng sự cố; xe được chuyển sang Đang sạc do pin dưới 25%."
+          : restored
+            ? "Đã xác nhận khắc phục, đóng sự cố và khôi phục trạng thái phục vụ của tài nguyên."
+            : "Đã đóng sự cố. Tài nguyên vẫn tuân theo các cam kết và hạn chế còn hiệu lực.",
         incidentId: updated.id,
       };
     });

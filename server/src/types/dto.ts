@@ -193,9 +193,19 @@ export interface CreateRunResult {
   created: boolean;
 }
 
+export interface HandlingPlanLogEntry {
+  version: number;
+  actionType: string;
+  allocationChanges: string[];
+  updatedBy: string;
+  updatedAt: string;
+}
+
 export interface HandlingPlan {
   actionType: string;
   allocationChanges: string[];
+  /** Nhật ký các lần cập nhật phương án xử lý (bổ sung, tương thích ngược với dữ liệu cũ). */
+  history?: HandlingPlanLogEntry[];
 }
 
 export interface HubAcceptance {

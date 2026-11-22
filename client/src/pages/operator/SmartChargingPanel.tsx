@@ -1,8 +1,9 @@
 // Owner: Nguyễn Hoàng Nhân – UC13 Manage Smart Charging Schedule
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { chargingScheduleApi } from "../../api/chargingSchedule";
 import { ApiError } from "../../api/client";
 import { hubApi } from "../../api/hubs";
+import { incidentApi } from "../../api/incident";
 import { newRequestId } from "../../api/requestId";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
@@ -47,8 +48,50 @@ function getPresetRange(preset: Exclude<TimePreset, "CUSTOM">): { startLocal: st
   return { startLocal: toLocalInput(start), endLocal: toLocalInput(end) };
 }
 
+function formatDemandLabel(demandId: string | undefined, idx: number): { title: string; subtitle?: string } {
+  if (!demandId) {
+    return {
+      title: `Phiên đang sạc / Lịch đã đặt #${idx + 1}`,
+      subtitle: "Giữ nguyên cam kết hiện có",
+    };
+  }
+  if (demandId.startsWith("demand-")) {
+    const vehicleCode = demandId.slice("demand-".length);
+    return {
+      title: `Xe dùng chung ${vehicleCode}`,
+      subtitle: "Đề xuất sạc bổ sung",
+    };
+  }
+  return {
+    title: `Yêu cầu sạc ngay #${demandId.slice(0, 6)}`,
+    subtitle: "Hàng đợi sinh viên (UC07)",
+  };
+}
+
+function formatWaitingItem(demandId: string): string {
+  if (demandId.startsWith("demand-")) return `Xe ${demandId.slice("demand-".length)}`;
+  return `Yêu cầu #${demandId.slice(0, 6)}`;
+}
+
+function formatPortLabel(rawLabel: string | undefined, fallbackId: string, idx: number): string {
+  if (!rawLabel) return `Cổng sạc #${idx + 1} (${fallbackId.slice(0, 6)})`;
+  return rawLabel
+    .replace("STANDARD_PLUG", "AC thường")
+    .replace("TYPE_2", "Type 2");
+}
+
 export function SmartChargingPanel() {
   const { data: hubs, loading: hubsLoading } = useAsync(() => hubApi.list(), []);
+  const { data: resourceOverview } = useAsync(() => incidentApi.listOverview(), []);
+  const portLabelById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const r of resourceOverview?.resources ?? []) {
+      if (r.resourceType === "CHARGING_PORT") {
+        map.set(r.id, r.label);
+      }
+    }
+    return map;
+  }, [resourceOverview]);
   const [selectedHubId, setSelectedHubId] = useState<string>("");
   const [timePreset, setTimePreset] = useState<TimePreset>("2H");
   const [{ startLocal, endLocal }, setTimeInput] = useState(() => getPresetRange("2H"));
@@ -383,14 +426,17 @@ export function SmartChargingPanel() {
                       </thead>
                       <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
                         {editableAllocations.map((alloc, idx) => {
-                          const demandId = alloc.demandId ?? `Cam kết #${idx + 1}`;
-                          const demandObj = context?.demands.find((d) => d.demandId === demandId);
+                          const demandObj = alloc.demandId
+                            ? context?.demands.find((d) => d.demandId === alloc.demandId)
+                            : undefined;
+                          const label = formatDemandLabel(alloc.demandId, idx);
                           const isLow = demandObj ? demandObj.chargingNeed.currentBattery < 25 : false;
+                          const portText = formatPortLabel(portLabelById.get(alloc.portId), alloc.portId, idx);
                           return (
                             <tr key={`${alloc.portId}-${idx}`}>
                               <td className="py-2.5 pr-3">
                                 <div className="flex flex-wrap items-center gap-1.5">
-                                  <span className="font-semibold">{demandId}</span>
+                                  <span className="font-semibold">{label.title}</span>
                                   {demandObj && (
                                     <span className="tabular-nums text-neutral-500">
                                       {demandObj.chargingNeed.currentBattery}% → {demandObj.chargingNeed.targetBattery}%
@@ -402,8 +448,15 @@ export function SmartChargingPanel() {
                                     </span>
                                   )}
                                 </div>
+                                {label.subtitle && (
+                                  <p className="mt-0.5 text-[11px] text-neutral-500 dark:text-neutral-400">
+                                    {label.subtitle}
+                                  </p>
+                                )}
                               </td>
-                              <td className="py-2.5 pr-3 font-mono text-neutral-500">{alloc.portId.slice(0, 8)}</td>
+                              <td className="py-2.5 pr-3 font-medium text-neutral-700 dark:text-neutral-200">
+                                {portText}
+                              </td>
                               <td className="py-2.5 pr-3">
                                 <input
                                   type="number"
@@ -426,22 +479,32 @@ export function SmartChargingPanel() {
 
                 {draft.waitingRequests.length > 0 && (
                   <div className="rounded-xl border border-amber-300/70 bg-amber-50/70 px-3.5 py-2.5 text-xs text-amber-900 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-200">
-                    <strong>Đang chờ cổng:</strong> {draft.waitingRequests.join(", ")}
+                    <strong>Chưa đủ cổng trong khung này (chờ lượt sau):</strong>{" "}
+                    {draft.waitingRequests.map(formatWaitingItem).join(", ")}
                   </div>
                 )}
 
                 {validatedPlan && !appliedResult && (
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-3.5 py-2.5 text-xs font-medium text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-lime">
-                    ✓ Kế hoạch hợp lệ, sẵn sàng áp dụng.
+                    ✓ Kế hoạch hợp lệ (không vượt giới hạn kW, không trùng cổng hỏng hoặc lịch đã đặt), sẵn sàng áp dụng.
                   </div>
                 )}
 
                 {appliedResult && (
-                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-xs text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-200">
-                    <span className="font-bold">
-                      ✓ Đã áp dụng lịch sạc ({appliedResult.allocations.length} phân bổ).
-                    </span>
-                    <StatusBadge status="COMPLETED" label={`#${appliedResult.scheduleVersionId.slice(0, 8)}`} />
+                  <div className="space-y-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-xs text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-200">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-bold">
+                        ✓ Đã áp dụng lịch sạc ({appliedResult.allocations.length} phân bổ cổng &amp; công suất).
+                      </span>
+                      <StatusBadge
+                        status="COMPLETED"
+                        label={`Phiên bản v${(validatedPlan?.baseVersion ?? 0) + 1}`}
+                      />
+                    </div>
+                    <p className="text-[11px] opacity-85">
+                      Đã lưu kế hoạch vào hệ thống, tự cấp cổng cho các yêu cầu sạc đang chờ (UC07) và giữ nguyên các
+                      phiên đang sạc/lịch đã đặt trước. Cổng có sự cố bên UC11 tự động được loại trừ.
+                    </p>
                   </div>
                 )}
               </div>
