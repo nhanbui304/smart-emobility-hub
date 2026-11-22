@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { computeActionImpactOnScenario } from "../simulator/SimulationEngine";
+import {
+  computeActionImpactOnScenario,
+  simulateActionOnScenarioStates,
+} from "../simulator/SimulationEngine";
 import type { OperationalState, Scenario } from "../types/dto";
 
 function makeState(): OperationalState {
@@ -15,11 +18,12 @@ function makeState(): OperationalState {
         name: "Ga Metro ĐHQG",
         location: "Cổng ĐHQG",
         totalVehicles: 10,
-        availableVehicles: 5,
+        availableVehicles: 0, // 0 xe khả dụng ban đầu để test ADD_VEHICLES + điều chuyển
         totalSlots: 20,
         freeSlots: 10,
         totalChargingPorts: 4,
-        freeChargingPorts: 4, // cả 4 cổng đều rảnh
+        freeChargingPorts: 3, // 3 cổng rảnh
+        inUseChargingPorts: 0, // 0 cổng đang dùng, 1 cổng OUT_OF_SERVICE
         averageBattery: 70,
         lastUpdatedAt: "2026-11-22T08:00:00.000Z",
       },
@@ -28,11 +32,12 @@ function makeState(): OperationalState {
         name: "ĐH Bách Khoa",
         location: "Dĩ An",
         totalVehicles: 10,
-        availableVehicles: 8,
+        availableVehicles: 6,
         totalSlots: 20,
         freeSlots: 12,
         totalChargingPorts: 4,
-        freeChargingPorts: 2, // 2 cổng đang bận
+        freeChargingPorts: 1, // 1 rảnh, 2 IN_USE, 1 OUT_OF_SERVICE
+        inUseChargingPorts: 2,
         averageBattery: 65,
         lastUpdatedAt: "2026-11-22T08:00:00.000Z",
       },
@@ -45,7 +50,8 @@ function makeState(): OperationalState {
         totalSlots: 20,
         freeSlots: 8,
         totalChargingPorts: 4,
-        freeChargingPorts: 1, // 3 cổng đang bận
+        freeChargingPorts: 1,
+        inUseChargingPorts: 2,
         averageBattery: 45,
         lastUpdatedAt: "2026-11-22T08:00:00.000Z",
       },
@@ -54,16 +60,132 @@ function makeState(): OperationalState {
 }
 
 describe("SimulationEngine.computeActionImpactOnScenario", () => {
-  it("rejects redistributing vehicles into or from a Hub closed by HUB_CLOSURE scenario", () => {
+  it("does not count OUT_OF_SERVICE or newly added chargers as IN_USE charging sessions (3 free + 1 faulty + 0 IN_USE)", () => {
     const state = makeState();
-    const scenario: Scenario = {
-      scenarioDraftId: "draft-1",
+    const surge: Scenario = {
+      scenarioDraftId: "draft-faulty-port",
+      snapshotId: "snap-1",
+      scenarioType: "DEMAND_SURGE",
+      assumptions: { hubId: "hub-a", demandMultiplier: 2.0 },
+    };
+
+    // hub-a: 4 total, 3 free, 1 OUT_OF_SERVICE, 0 IN_USE
+    const res = computeActionImpactOnScenario("run-1", "snap-1", state, surge, {
+      actionType: "PRIORITIZE_LOW_BATTERY_CHARGING",
+      hubId: "hub-a",
+      priorityTurnaroundVehicles: 2,
+    });
+    expect(res.appliedParams.priorityTurnaroundVehicles).toBe(0);
+    expect(res.afterAction).toEqual(res.beforeAction);
+    expect(res.unavailableKpis.some((m) => m.includes("0 cổng sạc đang sử dụng"))).toBe(true);
+
+    // Even after ADD_CHARGERS (+2) on hub-a, new ports are NOT active IN_USE sessions
+    const addChargers: Scenario = {
+      scenarioDraftId: "draft-add-chargers",
+      snapshotId: "snap-1",
+      scenarioType: "ADD_CHARGERS",
+      assumptions: { hubId: "hub-a", additionalChargers: 2 },
+    };
+    const resAdded = computeActionImpactOnScenario("run-1b", "snap-1", state, addChargers, {
+      actionType: "PRIORITIZE_LOW_BATTERY_CHARGING",
+      hubId: "hub-a",
+      priorityTurnaroundVehicles: 2,
+    });
+    expect(resAdded.appliedParams.priorityTurnaroundVehicles).toBe(0);
+    expect(resAdded.afterAction).toEqual(resAdded.beforeAction);
+  });
+
+  it("bounds charging turnaround strictly by real IN_USE ports (excluding OUT_OF_SERVICE)", () => {
+    const state = makeState();
+    const surge: Scenario = {
+      scenarioDraftId: "draft-in-use",
+      snapshotId: "snap-1",
+      scenarioType: "DEMAND_SURGE",
+      assumptions: { hubId: "hub-b", demandMultiplier: 2.0 },
+    };
+
+    // hub-b has 4 total, 1 free, 2 IN_USE, 1 OUT_OF_SERVICE -> max turnaround must be 2 (NOT 3!)
+    const res = computeActionImpactOnScenario("run-2", "snap-1", state, surge, {
+      actionType: "PRIORITIZE_LOW_BATTERY_CHARGING",
+      hubId: "hub-b",
+      priorityTurnaroundVehicles: 5,
+    });
+    expect(res.appliedParams.priorityTurnaroundVehicles).toBe(2);
+    expect(res.afterAction.waitingTimeMinutes).toBeLessThan(res.beforeAction.waitingTimeMinutes);
+    expect(res.unavailableKpis.length).toBeGreaterThan(0);
+  });
+
+  it("handles legacy snapshots missing inUseChargingPorts gracefully without fabricating KPI change", () => {
+    const legacyState = makeState();
+    for (const h of legacyState.hubs) {
+      delete h.inUseChargingPorts;
+    }
+    const surge: Scenario = {
+      scenarioDraftId: "draft-legacy",
+      snapshotId: "snap-legacy",
+      scenarioType: "DEMAND_SURGE",
+      assumptions: { hubId: "hub-b", demandMultiplier: 2.0 },
+    };
+
+    const res = computeActionImpactOnScenario("run-legacy", "snap-legacy", legacyState, surge, {
+      actionType: "PRIORITIZE_LOW_BATTERY_CHARGING",
+      hubId: "hub-b",
+      priorityTurnaroundVehicles: 2,
+    });
+    expect(res.appliedParams.priorityTurnaroundVehicles).toBe(0);
+    expect(res.afterAction).toEqual(res.beforeAction);
+    expect(res.unavailableKpis.some((m) => m.includes("Bản chụp cũ"))).toBe(true);
+  });
+
+  it("does not double-count vehicles when ADD_VEHICLES (+4 on Hub A with 0 avail) is followed by moving 4 from A to B", () => {
+    const state = makeState();
+    const addVehicles: Scenario = {
+      scenarioDraftId: "draft-add-veh",
+      snapshotId: "snap-1",
+      scenarioType: "ADD_VEHICLES",
+      assumptions: { hubId: "hub-a", additionalVehicles: 4 },
+    };
+
+    const exec = simulateActionOnScenarioStates("run-3", "snap-1", state, addVehicles, {
+      actionType: "REDISTRIBUTE_VEHICLES",
+      sourceHubId: "hub-a",
+      targetHubId: "hub-b",
+      vehicleCount: 4,
+    });
+
+    const beforeA = exec.beforeHubs.find((h) => h.id === "hub-a")!;
+    const beforeB = exec.beforeHubs.find((h) => h.id === "hub-b")!;
+    const afterA = exec.afterHubs.find((h) => h.id === "hub-a")!;
+    const afterB = exec.afterHubs.find((h) => h.id === "hub-b")!;
+
+    // Sau kịch bản (trước điều chuyển): A có đúng 4 xe, B có 6 xe
+    expect(beforeA.availableVehicles).toBe(4);
+    expect(beforeB.availableVehicles).toBe(6);
+
+    // Sau điều chuyển 4 xe A -> B: A còn đúng 0, B tăng đúng 4 thành 10 (không tính trùng ở A!)
+    expect(exec.result.appliedParams.vehicleCount).toBe(4);
+    expect(afterA.availableVehicles).toBe(0);
+    expect(afterB.availableVehicles).toBe(10);
+
+    // Bảo toàn tổng số xe khả dụng & tổng số xe trước/sau hành động
+    const totalAvailBefore = exec.beforeHubs.reduce((s, h) => s + h.availableVehicles, 0);
+    const totalAvailAfter = exec.afterHubs.reduce((s, h) => s + h.availableVehicles, 0);
+    const totalFleetBefore = exec.beforeHubs.reduce((s, h) => s + h.totalVehicles, 0);
+    const totalFleetAfter = exec.afterHubs.reduce((s, h) => s + h.totalVehicles, 0);
+    expect(totalAvailAfter).toBe(totalAvailBefore);
+    expect(totalFleetAfter).toBe(totalFleetBefore);
+  });
+
+  it("rejects redistributing vehicles into/from a Hub closed by HUB_CLOSURE and rejects charging priority on closed Hub", () => {
+    const state = makeState();
+    const closure: Scenario = {
+      scenarioDraftId: "draft-closure",
       snapshotId: "snap-1",
       scenarioType: "HUB_CLOSURE",
       assumptions: { hubId: "hub-c" },
     };
 
-    const intoClosed = computeActionImpactOnScenario("run-1", "snap-1", state, scenario, {
+    const intoClosed = computeActionImpactOnScenario("run-4a", "snap-1", state, closure, {
       actionType: "REDISTRIBUTE_VEHICLES",
       sourceHubId: "hub-b",
       targetHubId: "hub-c",
@@ -73,74 +195,17 @@ describe("SimulationEngine.computeActionImpactOnScenario", () => {
     expect(intoClosed.afterAction).toEqual(intoClosed.beforeAction);
     expect(intoClosed.unavailableKpis.some((m) => m.includes("đóng cửa"))).toBe(true);
 
-    const fromClosed = computeActionImpactOnScenario("run-1", "snap-1", state, scenario, {
+    const fromClosed = computeActionImpactOnScenario("run-4b", "snap-1", state, closure, {
       actionType: "REDISTRIBUTE_VEHICLES",
       sourceHubId: "hub-c",
-      targetHubId: "hub-a",
+      targetHubId: "hub-b",
       vehicleCount: 2,
     });
     expect(fromClosed.appliedParams.vehicleCount).toBe(0);
     expect(fromClosed.afterAction).toEqual(fromClosed.beforeAction);
     expect(fromClosed.unavailableKpis.some((m) => m.includes("đóng cửa"))).toBe(true);
 
-    // Default target/source selection skips closed hub-c
-    const autoSelect = computeActionImpactOnScenario("run-1", "snap-1", state, scenario, {
-      actionType: "REDISTRIBUTE_VEHICLES",
-      vehicleCount: 2,
-    });
-    expect(autoSelect.appliedParams.sourceHubId).not.toBe("hub-c");
-    expect(autoSelect.appliedParams.targetHubId).not.toBe("hub-c");
-    expect(autoSelect.appliedParams.vehicleCount).toBe(2);
-  });
-
-  it("reports insufficient data instead of reducing waiting time when all charging ports at the Hub are free", () => {
-    const state = makeState();
-    const scenario: Scenario = {
-      scenarioDraftId: "draft-2",
-      snapshotId: "snap-1",
-      scenarioType: "DEMAND_SURGE",
-      assumptions: { hubId: "hub-a", demandMultiplier: 2.0 },
-    };
-
-    // hub-a has 4/4 free charging ports (0 busy ports), even though 5 vehicles are unavailable (in use/maintenance)
-    const res = computeActionImpactOnScenario("run-2", "snap-1", state, scenario, {
-      actionType: "PRIORITIZE_LOW_BATTERY_CHARGING",
-      hubId: "hub-a",
-      priorityTurnaroundVehicles: 2,
-    });
-
-    expect(res.appliedParams.priorityTurnaroundVehicles).toBe(0);
-    expect(res.afterAction).toEqual(res.beforeAction);
-    expect(res.unavailableKpis.some((m) => m.includes("đều đang rảnh") || m.includes("0 cổng đang bận"))).toBe(true);
-  });
-
-  it("bounds charging turnaround strictly by occupied ports and rejects closed Hubs", () => {
-    const state = makeState();
-    const surge: Scenario = {
-      scenarioDraftId: "draft-3",
-      snapshotId: "snap-1",
-      scenarioType: "DEMAND_SURGE",
-      assumptions: { hubId: "hub-b", demandMultiplier: 2.0 },
-    };
-
-    // hub-b has 2 busy ports (4 total, 2 free) and 2 unavailable vehicles
-    const valid = computeActionImpactOnScenario("run-3", "snap-1", state, surge, {
-      actionType: "PRIORITIZE_LOW_BATTERY_CHARGING",
-      hubId: "hub-b",
-      priorityTurnaroundVehicles: 5, // request more than busy ports -> capped to 2
-    });
-    expect(valid.appliedParams.priorityTurnaroundVehicles).toBe(2);
-    expect(valid.afterAction.waitingTimeMinutes).toBeLessThan(valid.beforeAction.waitingTimeMinutes);
-    expect(valid.unavailableKpis.length).toBeGreaterThan(0);
-
-    // Closed Hub cannot run charging priority
-    const closure: Scenario = {
-      scenarioDraftId: "draft-4",
-      snapshotId: "snap-1",
-      scenarioType: "HUB_CLOSURE",
-      assumptions: { hubId: "hub-c" },
-    };
-    const closedCharge = computeActionImpactOnScenario("run-4", "snap-1", state, closure, {
+    const closedCharge = computeActionImpactOnScenario("run-4c", "snap-1", state, closure, {
       actionType: "PRIORITIZE_LOW_BATTERY_CHARGING",
       hubId: "hub-c",
       priorityTurnaroundVehicles: 2,

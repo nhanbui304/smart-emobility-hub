@@ -26,6 +26,8 @@ export interface HubStatus {
   totalSlots: number;
   freeChargingPorts: number;
   totalChargingPorts: number;
+  /** Số cổng sạc đang thực sự có trạng thái IN_USE (không gộp cổng OUT_OF_SERVICE). Optional để tương thích snapshot cũ. */
+  inUseChargingPorts?: number;
   averageBattery: number;
   lastUpdatedAt: string;
 }

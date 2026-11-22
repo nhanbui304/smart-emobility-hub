@@ -677,7 +677,7 @@ function describeAlert(alert: AlertDto): string {
     return `Còn ${alert.value} chỗ trống (ngưỡng ≤ ${alert.threshold})${windowStr}.`;
   }
   if (alert.type === "RESOURCE_FAULT") {
-    return `${alert.value} tài nguyên đang lỗi / bảo trì.`;
+    return `${alert.value} tài nguyên lỗi/bảo trì`;
   }
   if (alert.type === "DATA_STALE") {
     return `Chưa cập nhật ${alert.value}s (ngưỡng ${alert.threshold}s).`;

@@ -106,6 +106,7 @@ function buildStatuses(hubs: Hub[], now: Date): HubStatus[] {
       totalSlots: hubSlots.length,
       freeChargingPorts: hubPorts.filter((p) => p.port.status === "AVAILABLE").length,
       totalChargingPorts: hubPorts.length,
+      inUseChargingPorts: hubPorts.filter((p) => p.port.status === "IN_USE").length,
       averageBattery: hubVehicles.length === 0 ? 0 : Math.round(totalBattery / hubVehicles.length),
       lastUpdatedAt: hub.lastUpdatedAt.toISOString(),
     };

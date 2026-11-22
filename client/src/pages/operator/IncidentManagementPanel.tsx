@@ -1,11 +1,12 @@
 // Owner: Ngô Minh Triết – UC11 Handle Operational Incident
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { incidentApi, type IncidentResourceOption } from "../../api/incident";
 import { newRequestId } from "../../api/requestId";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { ErrorMessage } from "../../components/ErrorMessage";
+import { Spinner } from "../../components/Spinner";
 import { StatusBadge } from "../../components/StatusBadge";
 import type { Incident, IncidentContext, IncidentDetails, IncidentImpact } from "../../types";
 
@@ -48,6 +49,11 @@ export function IncidentManagementPanel() {
   // Chi tiết sự cố đang chọn
   const [activeIncidentId, setActiveIncidentId] = useState<string>("");
   const [incidentDetails, setIncidentDetails] = useState<IncidentDetails | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState<boolean>(false);
+  const [detailError, setDetailError] = useState<unknown>(null);
+  const detailSeqRef = useRef<number>(0);
+  const activeIncidentIdRef = useRef<string>("");
+
   const [actionType, setActionType] = useState<string>(ACTION_TYPE_OPTIONS[0].value);
   const [allocationChangesText, setAllocationChangesText] = useState<string>("");
   const [planRequestId, setPlanRequestId] = useState<string>(newRequestId);
@@ -113,18 +119,60 @@ export function IncidentManagementPanel() {
     }
   }
 
+  function resetDetailForm() {
+    setActionType(ACTION_TYPE_OPTIONS[0].value);
+    setAllocationChangesText("");
+    setIsResolved(true);
+    setEvidence("");
+    setPlanRequestId(newRequestId());
+    setResolutionRequestId(newRequestId());
+  }
+
+  /**
+   * Nạp chi tiết hồ sơ có kiểm soát thứ tự phản hồi (detailSeqRef) và đối chiếu đúng activeIncidentId.
+   * Khi đổi hồ sơ mới (resetForm = true), xóa ngay chi tiết & dữ liệu nhập cũ để tránh gửi nhầm sang hồ sơ mới.
+   */
+  async function loadIncidentDetails(incidentId: string, opts?: { resetForm?: boolean }) {
+    const seq = ++detailSeqRef.current;
+    activeIncidentIdRef.current = incidentId;
+    setActiveIncidentId(incidentId);
+    setDetailError(null);
+
+    if (opts?.resetForm) {
+      setIncidentDetails(null);
+      resetDetailForm();
+    }
+
+    if (!incidentId) {
+      setIncidentDetails(null);
+      setLoadingDetails(false);
+      return;
+    }
+
+    setLoadingDetails(true);
+    try {
+      const details = await incidentApi.openExistingIncident(incidentId);
+      // Bỏ qua phản hồi đến muộn nếu người dùng đã chuyển sang hồ sơ khác
+      if (detailSeqRef.current !== seq || activeIncidentIdRef.current !== incidentId) return;
+      setIncidentDetails(details);
+    } catch (err) {
+      if (detailSeqRef.current !== seq || activeIncidentIdRef.current !== incidentId) return;
+      setIncidentDetails(null);
+      setDetailError(err);
+    } finally {
+      if (detailSeqRef.current === seq) {
+        setLoadingDetails(false);
+      }
+    }
+  }
+
   async function refreshOverview(keepIncidentId?: string) {
     const overview = await incidentApi.listOverview();
     setIncidents(overview.incidents);
     setResources(overview.resources);
-    const targetIncId = keepIncidentId ?? activeIncidentId;
-    if (targetIncId) {
-      try {
-        const det = await incidentApi.openExistingIncident(targetIncId);
-        setIncidentDetails(det);
-      } catch {
-        setIncidentDetails(null);
-      }
+    const targetIncId = keepIncidentId ?? activeIncidentIdRef.current;
+    if (targetIncId && targetIncId === activeIncidentIdRef.current) {
+      await loadIncidentDetails(targetIncId, { resetForm: false });
     }
   }
 
@@ -158,8 +206,8 @@ export function IncidentManagementPanel() {
 
         setChosenFaultResourceId(
           (contextResourceId && faultyInScope.some((r) => r.id === contextResourceId) ? contextResourceId : "") ||
-            faultyInScope[0]?.id ||
-            "",
+          faultyInScope[0]?.id ||
+          "",
         );
         setSelectedResourceId(defaultResId);
         if (defaultResId) {
@@ -178,21 +226,12 @@ export function IncidentManagementPanel() {
           : undefined;
         const defaultOpen = requestedOpen ?? openInScope[0];
 
+        setShowCreateForm(false);
+        setStatusFilter("OPEN");
         if (defaultOpen) {
-          setShowCreateForm(false);
-          setStatusFilter("OPEN");
-          setActiveIncidentId(defaultOpen.id);
-          void incidentApi
-            .openExistingIncident(defaultOpen.id)
-            .then((det) => {
-              if (active) setIncidentDetails(det);
-            })
-            .catch(() => undefined);
+          void loadIncidentDetails(defaultOpen.id, { resetForm: true });
         } else {
-          setShowCreateForm(false);
-          setStatusFilter("OPEN");
-          setActiveIncidentId("");
-          setIncidentDetails(null);
+          void loadIncidentDetails("", { resetForm: true });
         }
       })
       .catch((err) => {
@@ -200,7 +239,9 @@ export function IncidentManagementPanel() {
       });
     return () => {
       active = false;
+      detailSeqRef.current += 1;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contextHubId, contextIncidentId, contextResourceId]);
 
   async function handleSelectResource(resId: string) {
@@ -242,7 +283,9 @@ export function IncidentManagementPanel() {
       setShowCreateForm(false);
       setStatusFilter("OPEN");
       if (res.incidentId) {
+        activeIncidentIdRef.current = res.incidentId;
         setActiveIncidentId(res.incidentId);
+        resetDetailForm();
       }
       await refreshOverview(res.incidentId);
       await loadResourceContext(selectedResourceId);
@@ -253,23 +296,30 @@ export function IncidentManagementPanel() {
     }
   }
 
-  async function handleOpenIncident(incidentId: string) {
+  function handleOpenIncident(incidentId: string) {
     setShowCreateForm(false);
-    setActiveIncidentId(incidentId);
     setError(null);
     setInfoMsg(null);
-    setPlanRequestId(newRequestId());
-    setResolutionRequestId(newRequestId());
-    try {
-      const details = await incidentApi.openExistingIncident(incidentId);
-      setIncidentDetails(details);
-    } catch (err) {
-      setError(err);
-    }
+    void loadIncidentDetails(incidentId, { resetForm: true });
   }
 
+  const activeResInfo = incidentDetails ? resourceById.get(incidentDetails.incident.resourceId) : undefined;
+  const activeIncidentMatchesScope =
+    !incidentDetails || !contextHubId || activeResInfo?.hubId === contextHubId;
+  const detailsMatchActive = Boolean(
+    activeIncidentId && incidentDetails && incidentDetails.incident.id === activeIncidentId,
+  );
+  const displayedDetails = detailsMatchActive && activeIncidentMatchesScope ? incidentDetails : null;
+  const canActOnActiveIncident = Boolean(
+    displayedDetails && !loadingDetails && !detailError && !busy && displayedDetails.incident.status !== "CLOSED",
+  );
+
   async function handleSubmitPlan() {
-    if (!activeIncidentId) return;
+    const targetId = displayedDetails?.incident.id;
+    // Khóa chặt: chỉ gửi khi chi tiết đang hiển thị khớp đúng hồ sơ đang chọn và đã tải xong không lỗi
+    if (!targetId || targetId !== activeIncidentId || targetId !== activeIncidentIdRef.current || loadingDetails || detailError) {
+      return;
+    }
     setBusy(true);
     setError(null);
     setInfoMsg(null);
@@ -278,49 +328,61 @@ export function IncidentManagementPanel() {
         .split("\n")
         .map((s) => s.trim())
         .filter(Boolean);
-      const res = await incidentApi.submitHandlingPlan(planRequestId, activeIncidentId, {
+      const res = await incidentApi.submitHandlingPlan(planRequestId, targetId, {
         actionType,
         allocationChanges: changes.length > 0 ? changes : ["NOTIFY_AFFECTED_USERS"],
       });
+      if (activeIncidentIdRef.current !== targetId) return;
       setInfoMsg(res.message);
       setPlanRequestId(newRequestId());
       setAllocationChangesText("");
-      await refreshOverview(activeIncidentId);
+      await refreshOverview(targetId);
     } catch (err) {
-      setError(err);
+      if (activeIncidentIdRef.current === targetId) setError(err);
     } finally {
       setBusy(false);
     }
   }
 
   async function handleVerifyResolution() {
-    if (!activeIncidentId || !evidence.trim()) return;
+    const targetId = displayedDetails?.incident.id;
+    // Khóa chặt: chỉ gửi khi chi tiết đang hiển thị khớp đúng hồ sơ đang chọn và đã tải xong không lỗi
+    if (
+      !targetId ||
+      targetId !== activeIncidentId ||
+      targetId !== activeIncidentIdRef.current ||
+      loadingDetails ||
+      detailError ||
+      !evidence.trim()
+    ) {
+      return;
+    }
     setBusy(true);
     setError(null);
     setInfoMsg(null);
     try {
-      const res = await incidentApi.submitResolutionResult(resolutionRequestId, activeIncidentId, {
+      const res = await incidentApi.submitResolutionResult(resolutionRequestId, targetId, {
         isResolved,
         evidence: evidence.trim(),
       });
+      if (activeIncidentIdRef.current !== targetId) return;
       setInfoMsg(res.message);
       setEvidence("");
       setResolutionRequestId(newRequestId());
-      await refreshOverview(activeIncidentId);
+      await refreshOverview(targetId);
       if (selectedResourceId) {
         await loadResourceContext(selectedResourceId);
       }
     } catch (err) {
-      setError(err);
+      if (activeIncidentIdRef.current === targetId) setError(err);
     } finally {
       setBusy(false);
     }
   }
 
-  const activeResInfo = incidentDetails ? resourceById.get(incidentDetails.incident.resourceId) : undefined;
-  const activeIncidentMatchesScope =
-    !incidentDetails || !contextHubId || activeResInfo?.hubId === contextHubId;
-  const displayedDetails = activeIncidentMatchesScope ? incidentDetails : null;
+  const effectiveChosenFaultId = faultyWithoutOpenIncident.some((r) => r.id === chosenFaultResourceId)
+    ? chosenFaultResourceId
+    : (faultyWithoutOpenIncident[0]?.id ?? "");
 
   return (
     <div className="space-y-4">
@@ -330,11 +392,8 @@ export function IncidentManagementPanel() {
           <div>
             <p className="font-bold">Ngữ cảnh xử lý từ Giám sát: {contextHubName}</p>
             <p className="mt-0.5 opacity-85">
-              {openIncidents.length > 0
-                ? `Đang có ${openIncidents.length} hồ sơ sự cố mở tại ${contextHubName}.`
-                : faultyWithoutOpenIncident.length > 0
-                  ? `Phát hiện ${faultyWithoutOpenIncident.length} tài nguyên đang lỗi/bảo trì nhưng chưa có hồ sơ sự cố UC11.`
-                  : `Hiện không còn sự cố mở hoặc tài nguyên lỗi tại ${contextHubName}.`}
+              Hồ sơ đang mở: <strong>{openIncidents.length}</strong> · Tài nguyên lỗi/bảo trì chưa có hồ sơ:{" "}
+              <strong>{faultyWithoutOpenIncident.length}</strong>
             </p>
           </div>
           <Button variant="outline" onClick={clearHubContext} className="px-3 py-1.5 text-xs">
@@ -370,24 +429,22 @@ export function IncidentManagementPanel() {
               <button
                 type="button"
                 onClick={() => setStatusFilter("OPEN")}
-                className={`cursor-pointer rounded-xl border py-2 text-xs font-semibold transition ${
-                  statusFilter === "OPEN"
-                    ? "border-brand bg-brand/5 text-brand dark:border-lime dark:bg-lime/10 dark:text-lime"
-                    : "border-neutral-200 text-neutral-500 hover:bg-neutral-50 dark:border-white/10"
-                }`}
+                className={`cursor-pointer rounded-xl border py-2 text-xs font-semibold transition ${statusFilter === "OPEN"
+                  ? "border-brand bg-brand/5 text-brand dark:border-lime dark:bg-lime/10 dark:text-lime"
+                  : "border-neutral-200 text-neutral-500 hover:bg-neutral-50 dark:border-white/10"
+                  }`}
               >
-                Đang mở ({openIncidents.length})
+                Hồ sơ đang mở ({openIncidents.length})
               </button>
               <button
                 type="button"
                 onClick={() => setStatusFilter("CLOSED")}
-                className={`cursor-pointer rounded-xl border py-2 text-xs font-semibold transition ${
-                  statusFilter === "CLOSED"
-                    ? "border-brand bg-brand/5 text-brand dark:border-lime dark:bg-lime/10 dark:text-lime"
-                    : "border-neutral-200 text-neutral-500 hover:bg-neutral-50 dark:border-white/10"
-                }`}
+                className={`cursor-pointer rounded-xl border py-2 text-xs font-semibold transition ${statusFilter === "CLOSED"
+                  ? "border-brand bg-brand/5 text-brand dark:border-lime dark:bg-lime/10 dark:text-lime"
+                  : "border-neutral-200 text-neutral-500 hover:bg-neutral-50 dark:border-white/10"
+                  }`}
               >
-                Đã đóng ({closedIncidents.length})
+                Hồ sơ đã đóng ({closedIncidents.length})
               </button>
             </div>
 
@@ -411,11 +468,10 @@ export function IncidentManagementPanel() {
                       key={inc.id}
                       type="button"
                       onClick={() => void handleOpenIncident(inc.id)}
-                      className={`w-full cursor-pointer space-y-1.5 rounded-xl border p-3.5 text-left transition ${
-                        isSelected
-                          ? "border-brand bg-emerald-50/50 dark:border-lime dark:bg-lime/10"
-                          : "border-neutral-200 hover:bg-neutral-50 dark:border-white/10 dark:hover:bg-white/5"
-                      }`}
+                      className={`w-full cursor-pointer space-y-1.5 rounded-xl border p-3.5 text-left transition ${isSelected
+                        ? "border-brand bg-emerald-50/50 dark:border-lime dark:bg-lime/10"
+                        : "border-neutral-200 hover:bg-neutral-50 dark:border-white/10 dark:hover:bg-white/5"
+                        }`}
                     >
                       <p className="text-xs font-bold">
                         {resInfo ? `[${resInfo.hubName}] ${resInfo.label}` : inc.resourceId}
@@ -533,9 +589,34 @@ export function IncidentManagementPanel() {
                   </Button>
                 </div>
               </div>
-            ) : displayedDetails || faultyWithoutOpenIncident.length > 0 ? (
+            ) : displayedDetails || loadingDetails || Boolean(detailError) || faultyWithoutOpenIncident.length > 0 ? (
               <div className="space-y-6">
-                {displayedDetails && (
+                {activeIncidentId && loadingDetails && (
+                  <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-neutral-200 p-8 text-center dark:border-white/10">
+                    <Spinner label="Đang tải chi tiết hồ sơ sự cố…" />
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                      Các nút lưu phương án và đóng sự cố tạm khóa cho tới khi nạp đúng hồ sơ đang chọn.
+                    </p>
+                  </div>
+                )}
+
+                {activeIncidentId && !loadingDetails && Boolean(detailError) && (
+                  <div className="space-y-3 rounded-2xl border border-red-200 bg-red-50/70 p-4 dark:border-red-500/30 dark:bg-red-500/10">
+                    <ErrorMessage error={detailError} />
+                    <div className="flex items-center justify-between gap-2 text-xs text-red-900 dark:text-red-200">
+                      <span>Không thể thao tác khi chi tiết hồ sơ chưa tải thành công.</span>
+                      <Button
+                        variant="outline"
+                        onClick={() => void loadIncidentDetails(activeIncidentId, { resetForm: false })}
+                        className="text-xs"
+                      >
+                        Thử tải lại hồ sơ
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {displayedDetails && !loadingDetails && !detailError && (
                   <div className="space-y-5">
                     <div className="flex flex-wrap items-start justify-between gap-3 border-b border-neutral-200/80 pb-4 dark:border-white/10">
                       <div>
@@ -573,8 +654,9 @@ export function IncidentManagementPanel() {
                           <h3 className="text-sm font-bold">Bước 1 · Chọn phương án xử lý</h3>
                           <select
                             value={actionType}
+                            disabled={!canActOnActiveIncident}
                             onChange={(e) => setActionType(e.target.value)}
-                            className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-xs font-medium outline-none focus:border-brand dark:border-white/15 dark:bg-neutral-900"
+                            className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-xs font-medium outline-none focus:border-brand disabled:opacity-60 dark:border-white/15 dark:bg-neutral-900"
                           >
                             {ACTION_TYPE_OPTIONS.map((opt) => (
                               <option key={opt.value} value={opt.value}>
@@ -585,12 +667,19 @@ export function IncidentManagementPanel() {
                           <input
                             type="text"
                             value={allocationChangesText}
+                            disabled={!canActOnActiveIncident}
                             onChange={(e) => setAllocationChangesText(e.target.value)}
                             placeholder="Ghi chú thêm (tùy chọn, mặc định tự thông báo người bị ảnh hưởng)"
-                            className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2 text-xs outline-none focus:border-brand dark:border-white/15 dark:bg-neutral-900"
+                            className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2 text-xs outline-none focus:border-brand disabled:opacity-60 dark:border-white/15 dark:bg-neutral-900"
                           />
                           <div className="flex justify-end">
-                            <Button variant="outline" loading={busy} onClick={() => void handleSubmitPlan()} className="text-xs">
+                            <Button
+                              variant="outline"
+                              loading={busy}
+                              disabled={!canActOnActiveIncident}
+                              onClick={() => void handleSubmitPlan()}
+                              className="text-xs"
+                            >
                               Lưu phương án xử lý
                             </Button>
                           </div>
@@ -601,15 +690,17 @@ export function IncidentManagementPanel() {
                           <input
                             type="text"
                             value={evidence}
+                            disabled={!canActOnActiveIncident}
                             onChange={(e) => setEvidence(e.target.value)}
                             placeholder="Nhập minh chứng kỹ thuật (vd: Đã thay CB, đo điện áp ổn định 220V)..."
-                            className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3.5 py-2.5 text-xs outline-none focus:border-brand dark:border-white/15 dark:bg-white/5"
+                            className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3.5 py-2.5 text-xs outline-none focus:border-brand disabled:opacity-60 dark:border-white/15 dark:bg-white/5"
                           />
                           <div className="flex flex-wrap items-center justify-between gap-3">
                             <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-medium">
                               <input
                                 type="checkbox"
                                 checked={isResolved}
+                                disabled={!canActOnActiveIncident}
                                 onChange={(e) => setIsResolved(e.target.checked)}
                                 className="rounded border-neutral-300"
                               />
@@ -618,7 +709,7 @@ export function IncidentManagementPanel() {
                             <Button
                               variant="primary"
                               loading={busy}
-                              disabled={!evidence.trim()}
+                              disabled={!canActOnActiveIncident || !evidence.trim()}
                               onClick={() => void handleVerifyResolution()}
                               className="text-xs"
                             >
@@ -641,18 +732,15 @@ export function IncidentManagementPanel() {
                 {faultyWithoutOpenIncident.length > 0 && (
                   /* Hiển thị độc lập các tài nguyên đang lỗi/bảo trì chưa có hồ sơ sự cố UC11 để không bị che khi Hub đã có sự cố mở khác */
                   <div
-                    className={`space-y-4 ${
-                      displayedDetails ? "border-t border-neutral-200/80 pt-5 dark:border-white/10" : ""
-                    }`}
+                    className={`space-y-4 ${displayedDetails ? "border-t border-neutral-200/80 pt-5 dark:border-white/10" : ""
+                      }`}
                   >
                     <div className="border-b border-neutral-200/80 pb-3 dark:border-white/10">
                       <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
-                        Cảnh báo tài nguyên lỗi chưa có hồ sơ sự cố
+                        {contextHubName ? `Cảnh báo tổng hợp · ${contextHubName}` : "Cảnh báo tài nguyên lỗi"}
                       </p>
                       <h2 className="mt-0.5 text-base font-bold">
-                        {contextHubName
-                          ? `Tài nguyên lỗi / bảo trì tại ${contextHubName} (${faultyWithoutOpenIncident.length})`
-                          : `Tài nguyên đang lỗi / bảo trì chưa ghi nhận sự cố (${faultyWithoutOpenIncident.length})`}
+                        Tài nguyên lỗi/bảo trì chưa có hồ sơ ({faultyWithoutOpenIncident.length})
                       </h2>
                       <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                         Chọn đúng tài nguyên bên dưới và bấm <strong>Ghi nhận sự cố</strong> để tạo hồ sơ UC11 (hệ thống không tự tạo hồ sơ).
@@ -661,17 +749,16 @@ export function IncidentManagementPanel() {
 
                     <div className="max-h-72 space-y-2 overflow-y-auto pr-0.5">
                       {faultyWithoutOpenIncident.map((res) => {
-                        const selected = (chosenFaultResourceId || faultyWithoutOpenIncident[0]?.id) === res.id;
+                        const selected = effectiveChosenFaultId === res.id;
                         return (
                           <button
                             key={res.id}
                             type="button"
                             onClick={() => setChosenFaultResourceId(res.id)}
-                            className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-3 text-left text-xs transition ${
-                              selected
-                                ? "border-brand bg-emerald-50/60 dark:border-lime dark:bg-lime/10"
-                                : "border-neutral-200 hover:bg-neutral-50 dark:border-white/10 dark:hover:bg-white/5"
-                            }`}
+                            className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-3 text-left text-xs transition ${selected
+                              ? "border-brand bg-emerald-50/60 dark:border-lime dark:bg-lime/10"
+                              : "border-neutral-200 hover:bg-neutral-50 dark:border-white/10 dark:hover:bg-white/5"
+                              }`}
                           >
                             <div>
                               <p className="font-bold">
@@ -690,9 +777,9 @@ export function IncidentManagementPanel() {
                     <div className="flex flex-wrap items-center justify-end gap-2 border-t border-neutral-200/80 pt-3 dark:border-white/10">
                       <Button
                         variant="primary"
-                        onClick={() => openCreateWithResource(chosenFaultResourceId || faultyWithoutOpenIncident[0]?.id)}
+                        onClick={() => openCreateWithResource(effectiveChosenFaultId)}
                       >
-                        Ghi nhận sự cố cho tài nguyên đã chọn
+                        Ghi nhận sự cố
                       </Button>
                     </div>
                   </div>

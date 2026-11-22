@@ -261,6 +261,7 @@ export interface HubStatus {
   totalSlots: number;
   freeChargingPorts: number;
   totalChargingPorts: number;
+  inUseChargingPorts?: number;
   averageBattery: number;
   lastUpdatedAt: string;
 }
