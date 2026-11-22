@@ -7,6 +7,7 @@ import { validateBody } from "../middleware/validate";
 export const chargingScheduleRoutes = Router();
 chargingScheduleRoutes.use(requireAuth, requireRole("OPERATOR"));
 
+chargingScheduleRoutes.get("/latest", chargingScheduleController.getLatestAppliedSchedule);
 chargingScheduleRoutes.get("/context", chargingScheduleController.loadChargingContext);
 chargingScheduleRoutes.post("/proposals", validateBody(generateProposedScheduleBody), chargingScheduleController.generateProposedSchedule);
 chargingScheduleRoutes.post("/proposals/:planDraftId/validate", validateBody(validatePlanBody), chargingScheduleController.validatePlan);

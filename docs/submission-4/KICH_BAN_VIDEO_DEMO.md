@@ -1,110 +1,157 @@
 # Kịch bản quay Video Demo MVP — Smart E-Mobility Hub (Nhóm 17)
 
-- **Thời lượng mục tiêu:** 5 phút 30 giây – 6 phút 30 giây
-- **Độ phân giải khuyến nghị:** 1920×1080 (Full HD), zoom trình duyệt 100%
-- **Công cụ quay nhanh trên Windows:** `Win + Alt + R` (Xbox Game Bar) hoặc OBS Studio
-- **Chuẩn bị trước khi bấm quay:**
-  1. Chạy `npm run db:reset` để dữ liệu về trạng thái mẫu sạch nhất (5 Hub, 50 xe, 100 chỗ đỗ, 20 cổng sạc).
-  2. Chạy `npm run dev` và mở sẵn trình duyệt tại `http://localhost:5173`.
-  3. Chuẩn bị 3 tài khoản demo:
-     - Sinh viên 1 (đặt xe, đỗ xe, sạc xe): `student1@hub.local` / `student123`
-     - Sinh viên 2 (có sẵn chuyến đi đang diễn ra để demo trả xe): `student2@hub.local` / `student123`
-     - Nhân viên vận hành (Operator): `operator@hub.local` / `operator123`
+- **Thời lượng mục tiêu:** 6 phút 00 giây – 7 phút 00 giây (bao phủ đủ **14/14 Use Cases + Interactive Onboarding Tour + Dark/Light Mode + Mobile Guard**)
+- **Độ phân giải khuyến nghị:** 1920×1080 (Full HD), zoom trình duyệt **100%**
+- **Công cụ quay nhanh trên Windows:** `Win + Alt + R` (Xbox Game Bar) hoặc **OBS Studio**
+
+---
+
+## 0. Checklist chuẩn bị TRƯỚC KHI BẤM QUAY (bắt buộc làm đủ)
+
+1. **Chống lỗi thiết bị ngẫu nhiên:** Mở `server/.env`, đảm bảo dòng `SIMULATOR_DEVICE_RESULT=SUCCESS` (để lúc bấm mở khóa/khóa xe ở UC04–UC05 không bị xác suất 10% giả lập lỗi). *(Quay xong đổi lại `RANDOM` nếu muốn thử nhánh lỗi.)*
+2. **Làm sạch dữ liệu mẫu:** Chạy `npm run db:reset` để DB về trạng thái chuẩn (**5 Hub ĐHQG-HCM, 50 xe, 100 chỗ đỗ, 20 cổng sạc, 3 tài khoản demo**).
+3. **Khởi chạy hệ thống:** Chạy `npm run dev` và mở sẵn trình duyệt tại `http://localhost:5173`.
+4. **Mẹo xử lý Onboarding Tour (Hướng dẫn tương tác lần đầu):**
+   - Lần đầu mở mỗi trang sẽ tự hiện hộp **Hướng dẫn tương tác (spotlight)**.
+   - **Khuyến nghị khi quay:** Ở màn hình đầu tiên (Student Trang chủ hoặc Operator Giám sát), để Tour hiện ra ~3 giây rồi bấm **`Tiếp theo →`** 1 lần để khoe tính năng hướng dẫn tự động, sau đó bấm **`Bỏ qua`** để quay mượt. *(Hoặc mở sẵn qua các trang trước khi quay rồi lúc nào muốn khoe thì bấm nút `? Hướng dẫn ...`.)*
+5. **Tài khoản demo (có sẵn nút điền nhanh trên trang Đăng nhập ở chế độ dev):**
+   - **Sinh viên 1:** `student1@hub.local` / `student123` *(có sẵn xe cá nhân `59-X1 123.45` + lịch sạc mẫu `cr-demo-01` lúc 10:00–11:30 ngày mai)*
+   - **Sinh viên 2:** `student2@hub.local` / `student123` *(đang có sẵn chuyến đi để thử riêng UC05 nếu cần)*
+   - **Nhân viên vận hành (Operator):** `operator@hub.local` / `operator123`
+
+---
+
+## Bảng phân bổ thời lượng tổng quan
+
+| Phần | Thời gian | Vai trò | Use Cases bao phủ |
+| --- | --- | --- | --- |
+| **1. Giới thiệu & Đăng nhập** | 00:00 – 00:35 | Chung | Sign In, Demo quick-fill |
+| **2. Khám phá Hub, Tìm kiếm & Đặt/Hủy/Nhận/Trả xe** | 00:35 – 02:30 | Student | View Hub Status, **UC01, UC02, UC03, UC04, UC05** |
+| **3. Xe cá nhân: Đỗ xe, Lịch sạc, Sạc ngay & Theme** | 02:30 – 04:00 | Student | **UC06, UC07, UC08, UC09**, View My Reservations, Theme |
+| **4. Giám sát mạng lưới & Bản đồ sự cố** | 04:00 – 04:50 | Operator | **UC10**, FR-2.3.3 |
+| **5. Lịch sạc thông minh & Xử lý sự cố (2 Tab)** | 04:50 – 05:45 | Operator | **UC13, UC11** |
+| **6. Điều chuyển xe & Mô phỏng What-if** | 05:45 – 06:45 | Operator | **UC12, UC14** |
+| **7. Kết thúc** | 06:45 – 07:00 | Chung | Tổng kết kiến trúc & 14 UC |
 
 ---
 
 ## Phần 1: Giới thiệu & Đăng nhập (00:00 – 00:35)
 
-- **Màn hình:** Trang Đăng nhập (`/login`)
-- **Thao tác:**
-  1. Hiện màn hình đăng nhập sạch đẹp.
-  2. Nhập `student1@hub.local` / `student123` → bấm **Đăng nhập**.
-- **Lời thoại gợi ý:**
-  > "Xin chào thầy/cô, em đại diện Nhóm 17 xin trình bày bản demo MVP hệ thống **Smart E-Mobility Hub** hỗ trợ thuê xe điện dùng chung, đặt chỗ đỗ và quản lý sạc thông minh tại Khu đô thị ĐHQG-HCM. Trước tiên, em đăng nhập bằng tài khoản sinh viên Nguyễn Văn An."
+- **Màn hình:** `/login`
+- **Chỉ chuột & thao tác:**
+  1. Dừng 2 giây cho thấy màn hình đăng nhập sạch sẽ.
+  2. Bấm nút điền nhanh **Sinh viên** (ở khung *Tài khoản demo*) → bấm **Đăng nhập**.
+- **Lời thoại:**
+  > "Xin chào thầy/cô, em đại diện Nhóm 17 xin demo hệ thống **Smart E-Mobility Hub** — nền tảng điều phối xe điện dùng chung, chỗ đỗ và trạm sạc cho 5 Mobility Hub tại Khu đô thị ĐHQG-HCM. Hệ thống có 2 vai trò: **Sinh viên** tối ưu cho điện thoại/web và **Nhân viên vận hành** trên máy tính. Trước tiên em đăng nhập tài khoản Sinh viên Nguyễn Văn An."
 
 ---
 
-## Phần 2: Luồng Sinh viên — Tìm Hub, Đặt & Nhận xe (00:35 – 02:15)
+## Phần 2: Luồng Sinh viên — Tìm Hub, Đặt, Hủy, Nhận & Trả xe (00:35 – 02:30)
 
-### 2.1. Khám phá bản đồ ĐHQG-HCM & Tìm phương án (UC01)
-- **Màn hình:** Trang chủ (`/student`)
-- **Thao tác:**
-  1. Trỏ chuột vào các pin trên bản đồ thật ĐHQG-HCM (*Ga Metro ĐHQG, ĐH Bách Khoa, Thư viện Trung tâm, ĐH KHTN, KTX Khu B*).
-  2. Bấm chọn pin **ĐH Bách Khoa** → cho thấy thẻ chi tiết bên phải cập nhật số xe sẵn sàng, chỗ trống, cổng sạc và 3 xe pin cao nhất kèm biển số.
-  3. Mở khung **Tìm xe thuê (UC01)**, chọn loại xe / pin tối thiểu → bấm **Tìm phương án** → bấm **Chọn xe**.
-- **Lời thoại gợi ý:**
-  > "Ngay tại Trang chủ là bản đồ thực tế ĐHQG-HCM hiển thị trực tiếp trạng thái 5 Mobility Hub, tự động đồng bộ mỗi 3 giây. Sinh viên có thể bấm vào từng Hub trên bản đồ để xem xe pin cao nhất kèm biển số, hoặc dùng chức năng Tìm phương án theo loại xe và mức pin tối thiểu."
+### 2.1. Bản đồ 5 Hub, Hướng dẫn tương tác & Tìm phương án (`View Hub Status`, `UC01`)
+- **Màn hình:** `/student`
+- **Chỉ chuột & thao tác:**
+  1. *(Nếu Onboarding Tour tự hiện)* Bấm **`Tiếp theo →`** 1 lần để cho thấy khung spotlight chỉ từng tính năng, rồi bấm **`Bỏ qua`**.
+  2. Bấm chuyển nhanh 3 nút chế độ trên góc phải: **`Thuê xe`** → **`Đỗ xe`** → **`Sạc xe`** rồi quay về **`Thuê xe`**.
+  3. Bấm trực tiếp vào pin **ĐH Bách Khoa** trên bản đồ → chỉ vào nhóm **Xe pin cao sẵn sàng nhận ngay** (có thể bấm trực tiếp từng xe để mở thẳng xác nhận, hoặc bấm **`Xem tất cả xe →`**).
+  4. Cuộn xuống khung **Tìm xe thuê (UC01)**: chọn loại xe + mức pin tối thiểu → bấm **`Tìm`** → cho thấy nhóm 3 kết quả đầu gọn (có nút **`Xem thêm`**) → bấm **`Chọn xe`** ở một kết quả (có thể chọn xe ở Hub khác để thấy mở đúng cả Hub lẫn xe).
+- **Lời thoại:**
+  > "Ngay lần đầu truy cập từng màn hình, hệ thống có sẵn **hướng dẫn tương tác từng bước**. Tại Trang chủ là bản đồ thật ĐHQG-HCM gồm 5 Hub đồng bộ mỗi 3 giây. Sinh viên có thể bấm trực tiếp một xe trong nhóm gợi ý pin cao, bấm **Xem tất cả xe**, hoặc dùng bộ lọc **Tìm xe thuê (UC01)** để mở thẳng màn hình xác nhận đúng chiếc xe và Hub đó."
 
-### 2.2. Đặt xe & Mở khóa nhận xe (UC02, UC03, UC04)
-- **Màn hình:** Đặt xe tại Hub (`/student/hubs/:hubId/reserve`) → Chuyến đi (`/student/trips`)
-- **Thao tác:**
-  1. Chọn 1 xe → xem màn hình xác nhận (biển số, % pin, hạn giữ xe 15 phút) → bấm **Xác nhận đặt xe**.
-  2. Chuyển sang **Chuyến đi** (`/student/trips`): cho thấy thẻ xe đã đặt có **biển số xe**, thanh pin và đồng hồ đếm ngược.
-  3. Bấm **Nhận xe** → **Mở khóa và nhận xe** → chuyển sang trạng thái **Đang trong chuyến đi**.
-- **Lời thoại gợi ý:**
-  > "Sau khi xác nhận đặt xe, hệ thống giữ xe trong 15 phút với cơ chế chống đặt trùng giao dịch. Tại trang Chuyến đi, sinh viên đối chiếu đúng biển số trên thân xe, bấm Mở khóa để bắt đầu hành trình."
+### 2.2. Đặt xe, Hủy đặt & Mở khóa nhận xe (`UC02`, `UC03`, `UC04`)
+- **Màn hình:** `/student/hubs/:hubId/reserve?vehicleId=...` → `/student/trips`
+- **Chỉ chuột & thao tác:**
+  1. Bước **Xác nhận đặt xe** mở sẵn cho đúng xe vừa chọn (hiện rõ Hub, biển số, mã xe, % pin, hạn giữ **30 phút**) → bấm **`Xác nhận đặt xe`** (**UC02**).
+  2. Bấm nút xanh **`Đến trang Chuyến đi để xem xe & mở khóa`**.
+  3. Tại `/student/trips`, chỉ vào thẻ **Xe đã đặt** (biển số, đồng hồ đếm ngược 30 phút) → bấm **`Hủy đặt xe`** → xác nhận hủy (**UC03** — màn hình chuyển về 1 trạng thái trống duy nhất).
+  4. Quay lại **Khám phá Hub** → bấm thẳng 1 xe trong nhóm gợi ý pin cao → bấm **`Xác nhận đặt xe`** → sang **Chuyến đi**.
+  5. Bấm **`Nhận xe`** → **`Mở khóa và nhận xe`** (**UC04**) → giao diện chuyển sang ưu tiên thẻ **Xe đang thuê** và form **Trả xe** (không còn hiện thông báo trống về đặt xe).
+- **Lời thoại:**
+  > "Khi chọn xe, hệ thống mở thẳng màn hình xác nhận đúng Hub và biển số, chỉ tạo lượt đặt khi sinh viên bấm **Xác nhận đặt xe (UC02)**. Tại trang Chuyến đi, sinh viên có thể **hủy đặt xe (UC03)** hoặc **mở khóa nhận xe (UC04)** để chuyển sang trạng thái **Xe đang thuê**."
 
-### 2.3. Trả xe tại Hub đích (UC05)
-- **Màn hình:** Chuyến đi (`/student/trips`) *(tiếp tục luôn trên chuyến vừa nhận, hoặc đăng nhập `student2@hub.local` nếu muốn demo tách riêng)*
-- **Thao tác:**
-  1. Chọn Hub trả xe (vd: **Ga Metro ĐHQG**) → bấm **Chuẩn bị trả xe** (hệ thống tự cấp 1 ô đỗ trống).
-  2. Bấm **Xác nhận trả xe & khóa xe** → hiện kết quả trả xe thành công.
-- **Lời thoại gợi ý:**
-  > "Khi đến Hub đích, sinh viên yêu cầu trả xe. Hệ thống tự phân bổ vị trí đỗ trống, gửi lệnh khóa xe an toàn và kết thúc chuyến đi."
-
----
-
-## Phần 3: Luồng Sinh viên — Xe cá nhân: Đỗ xe & Sạc xe (02:15 – 03:45)
-
-- **Màn hình:** Xe của tôi (`/student/my-vehicle`) & Sạc ngay (`/student/charging-request`)
-- **Thao tác:**
-  1. **UC06 — Đặt chỗ đỗ:** Chọn Hub, xe cá nhân (`59-X1 123.45`), khung giờ → **Tìm vị trí trống** → chọn ô → **Giữ chỗ tạm** (hiện đếm ngược) → **Xác nhận đặt chỗ**.
-  2. **UC08 — Đặt lịch sạc:** Chọn Hub, khung giờ, % pin → **Tìm khung giờ sạc phù hợp** → chọn cổng → **Xác nhận đặt lịch**.
-  3. **UC09 — Quản lý lịch sạc:** Xem lịch sạc vừa tạo hoặc lịch mẫu → bấm **Đổi khung giờ** (hoặc **Hủy lịch sạc**).
-  4. **UC07 — Sạc ngay tại Hub:** Bấm **Sạc ngay →** sang `/student/charging-request` → bấm **Kiểm tra khả năng sạc ngay** → **Xác nhận nhận cổng sạc**.
-  5. Bật nhanh **Cài đặt** (`/student/settings`) chuyển **Giao diện Sáng ↔ Tối** (cho thấy bản đồ và toàn bộ giao diện đổi mượt mà).
-- **Lời thoại gợi ý:**
-  > "Với xe điện cá nhân, sinh viên có thể giữ trước ô đỗ theo cơ chế giữ tạm chống tranh chấp, đặt lịch sạc trước hoặc yêu cầu sạc ngay tại Hub, đồng thời đổi hoặc hủy lịch linh hoạt. Ứng dụng cũng hỗ trợ đầy đủ chế độ Sáng và Tối."
+### 2.3. Trả xe tại Hub đích (`UC05`)
+- **Màn hình:** `/student/trips` *(trên chính chuyến đi vừa mở khóa)*
+- **Chỉ chuột & thao tác:**
+  1. Ở khối **Trả xe**, chọn Hub đích (vd: **Ga Metro ĐHQG**) → bấm **`Nhận vị trí đỗ`** (hệ thống tự cấp 1 ô đỗ thường trống, không lấy ô sạc).
+  2. Bấm **`Đã đỗ xe – Khóa và trả xe`** → hiện thông báo trả xe thành công.
+- **Lời thoại:**
+  > "Khi tới Hub đích, sinh viên thực hiện **UC05 — Trả xe**. Hệ thống kiểm tra và cấp riêng một vị trí đỗ trống, gửi lệnh khóa xe an toàn và kết thúc chuyến đi."
 
 ---
 
-## Phần 4: Luồng Nhân viên vận hành — Operator Console (03:45 – 05:45)
+## Phần 3: Luồng Sinh viên — Xe cá nhân: Đỗ xe, Sạc xe & Giao diện (02:30 – 04:00)
 
-- **Thao tác:** Đăng xuất `student1` → đăng nhập `operator@hub.local` / `operator123`.
-
-### 4.1. Giám sát mạng lưới & Cảnh báo theo thời gian thực (UC10)
-- **Màn hình:** Giám sát mạng lưới (`/operator/monitoring`)
-- **Thao tác:**
-  1. Chỉ 4 thẻ KPI tổng quan, **Bản đồ mạng lưới 5 Hub ĐHQG-HCM** (Hub có cảnh báo hiện nổi bật màu vàng), và khu vực **Cảnh báo vận hành**.
-  2. Bấm trực tiếp vào 1 Hub trên bản đồ → mở bảng chi tiết phương tiện & đặt chỗ của Hub đó.
-- **Lời thoại gợi ý:**
-  > "Ở giao diện Nhân viên vận hành, bảng Giám sát mạng lưới cập nhật tự động mỗi 3 giây, trực quan hóa trạng thái 5 Hub trên bản đồ và tự động phát hiện cảnh báo thiếu xe, sắp đầy chỗ hoặc tài nguyên lỗi."
-
-### 4.2. Điều phối lịch sạc thông minh & Xử lý sự cố (UC13 & UC11)
-- **Màn hình:** Lịch sạc và sự cố (`/operator/charging-incidents`)
-- **Thao tác:**
-  1. Bên trái (UC13): cho thấy danh sách yêu cầu sạc / lịch sạc đang chờ và thao tác điều phối cổng sạc.
-  2. Bên phải (UC11): chọn 1 tài nguyên → ghi nhận sự cố → xem các đặt chỗ bị ảnh hưởng & phương án xử lý → đóng sự cố.
-- **Lời thoại gợi ý:**
-  > "Tại trang Lịch sạc và sự cố, nhân viên có thể điều phối cổng sạc thông minh khi quá tải và xử lý sự cố tài nguyên có kiểm soát xung đột phiên bản, tự động bảo vệ các lượt đặt xe đang hiệu lực."
-
-### 4.3. Điều chuyển xe giữa các Hub (UC12)
-- **Màn hình:** Điều chuyển xe (`/operator/redistribution`)
-- **Thao tác:**
-  1. Chọn Hub nguồn (nhiều xe) và Hub đích (thiếu xe) → chọn xe cần chuyển → tạo lệnh điều chuyển → xác nhận xuất phát & tiếp nhận.
-- **Lời thoại gợi ý:**
-  > "Khi một Hub thiếu xe, nhân viên tạo lệnh điều chuyển xe từ Hub dư sang Hub thiếu. Sức chứa tại Hub đích được giữ trước đồng bộ với luồng trả xe và đặt chỗ đỗ."
-
-### 4.4. Mô phỏng What-if (UC14)
-- **Màn hình:** Mô phỏng What-if (`/operator/simulation`)
-- **Thao tác:**
-  1. Chọn kịch bản (vd: tăng nhu cầu giờ cao điểm + điều chỉnh phân bổ xe/cổng sạc) → bấm **Chạy mô phỏng** → chỉ bảng so sánh KPI Trước / Sau và khuyến nghị.
-- **Lời thoại gợi ý:**
-  > "Cuối cùng là công cụ Mô phỏng What-if, cho phép nhân viên vận hành giả lập kịch bản tăng nhu cầu hoặc thay đổi tài nguyên trên bản chụp dữ liệu hiện tại để đánh giá trước hiệu quả trước khi áp dụng ngoài thực tế."
+- **Màn hình:** `/student/my-vehicle` → `/student/charging-request` → `/student/settings`
+- **Chỉ chuột & thao tác:**
+  1. Bấm tab **`Xe của tôi`** trên thanh menu — chỉ 3 tab gọn (**`Đặt chỗ đỗ`**, **`Đặt lịch sạc`**, **`Quản lý lịch sạc`**) và lối tắt **`Sạc ngay →`** nổi bật ở đầu trang.
+  2. **Tab `Đặt chỗ đỗ` (UC06):** Chọn xe `59-X1 123.45`, Hub (vd **ĐH Bách Khoa**), khung giờ → bấm **`Tìm vị trí trống`** → chọn 1 ô → bấm **`Giữ chỗ tạm`** → bấm **`Xác nhận đặt chỗ`**.
+  3. **Tab `Đặt lịch sạc` (UC08):** Chuyển sang tab **`Đặt lịch sạc`**, chọn Hub và khung giờ *(cách hiện tại > 2 giờ và **tránh khung 10:00–11:30 ngày mai**)*, nhập % pin → bấm **`Tìm khung giờ phù hợp`** → chọn cổng → bấm **`Xác nhận đặt lịch`**.
+  4. **Tab `Quản lý lịch sạc` (UC09):** Chuyển sang tab **`Quản lý lịch sạc`** — chỉ lịch vừa đặt đã hiện ngay trong danh sách → bấm **`Đổi lịch`** (hoặc **`Hủy lịch`**).
+  5. **Lối tắt `Sạc ngay →` (UC07):** Bấm thẻ **`Sạc ngay →`** ở đầu trang sang `/student/charging-request` → bấm **`Kiểm tra khả năng sạc ngay`** → bấm **`Xác nhận nhận cổng sạc`** *(hoặc Xác nhận vào hàng đợi)*.
+  6. Bấm tab **`Cài đặt`** (`/student/settings`) → bấm chuyển **`Tối`** → bấm lại **`Sáng`** → bấm **`Đăng xuất`**.
+- **Lời thoại:**
+  > "Với xe điện cá nhân tại trang **Xe của tôi**, sinh viên có thể giữ tạm và đặt chỗ đỗ (**UC06**), đặt lịch sạc trước theo đúng chuẩn đầu cắm (**UC08**), đổi hoặc hủy lịch có kiểm soát xung đột phiên bản (**UC09**), hoặc gửi yêu cầu **Sạc ngay (UC07)** để nhận cổng trống hoặc xếp hàng đợi ưu tiên pin thấp. Ngoài ra sinh viên có thể đổi giao diện **Sáng/Tối** lưu trực tiếp lên tài khoản."
 
 ---
 
-## Phần 5: Kết thúc (05:45 – 06:00)
+## Phần 4: Operator — Giám sát mạng lưới & Bản đồ sự cố (04:00 – 04:50)
 
-- **Lời thoại gợi ý:**
-  > "Trên đây là toàn bộ luồng hoạt động MVP của hệ thống Smart E-Mobility Hub với đầy đủ 14 Use Cases theo kiến trúc 4 tầng từ Submission 3. Cảm ơn thầy/cô đã theo dõi!"
+- **Màn hình:** `/login` → `/operator/monitoring`
+- **Chỉ chuột & thao tác:**
+  1. Ở `/login`, bấm nút điền nhanh **`Vận hành`** → bấm **`Đăng nhập`**.
+  2. Chỉ nhanh thanh **4 thẻ KPI** trên cùng + huy hiệu **`● Live · 3s`**.
+  3. **Điểm nhấn ăn điểm — Bản đồ sự cố tương tác:** Trỏ chuột vào bản đồ 5 Hub, bấm trực tiếp vào **1 pin Hub màu vàng có cảnh báo** (hoặc 1 Hub bất kỳ) → chỉ sang **khung Xem nhanh bên phải** vừa hiện ra ngay lập tức: 3 ô số liệu, cảnh báo đang mở, sự cố/xe bảo trì, và 2 nút **`Xử lý sự cố`** / **`Điều chuyển xe`**.
+  4. Cuộn nhẹ xuống chỉ **Bảng tổng quan 5 Hub** (bấm vào 1 dòng để mở nhanh danh sách xe & đặt chỗ).
+- **Lời thoại:**
+  > "Chuyển sang vai trò **Nhân viên vận hành (Operator)** dành riêng cho màn hình máy tính. Tại **Giám sát mạng lưới (UC10)**, 4 chỉ số KPI và bản đồ 5 Hub tự làm mới mỗi 3 giây. Các Hub có cảnh báo theo ngưỡng từ tác vụ nền **2.3.3** hiển thị nổi bật màu vàng — chỉ cần **bấm trực tiếp vào pin trên bản đồ**, khung bên phải sẽ hiện ngay chi tiết cảnh báo, sự cố và nút đi thẳng sang xử lý."
+
+---
+
+## Phần 5: Operator — Lịch sạc thông minh & Xử lý sự cố (04:50 – 05:45)
+
+- **Màn hình:** `/operator/charging-incidents` (gồm **2 Tab lớn** ở góc trên bên phải)
+- **Chỉ chuột & thao tác:**
+  1. **Tab 1 — `Lịch sạc thông minh` (UC13):**
+     - Chỉ vào **Stepper 3 bước** ở đầu trang.
+     - Cột trái: chọn **Trạm sạc (Hub)** (vd: **Ga Metro ĐHQG** — chỉ 3 ô trạng thái cổng `Cổng đang rảnh`, `Đang có xe sạc`, `Đang lỗi / bảo trì`), bấm chip **`2 giờ tới`**, chọn quy tắc **`Pin thấp trước (< 25%)`** → bấm **`Tạo đề xuất lịch sạc`**.
+     - Cột phải: chỉ **thanh tải điện kW 2 màu** (`Đang sạc sẵn` xanh dương vs `Phân bổ mới` xanh lá) và nhãn **`Giảm tải tự động`** nếu cổng bị hạ công suất để giữ trong giới hạn điện Hub → *(tùy chọn)* đổi sang **`Đến trước sạc trước (FIFO)`** bấm **`Tạo đề xuất lịch sạc`** để cho thấy danh sách xe ưu tiên thay đổi ngay → bấm **`Kiểm tra hợp lệ`** → bấm **`Áp dụng lịch sạc`**.
+     - Chỉ thẻ **Lịch sạc đang áp dụng (`Phiên bản vN`)** vẫn được lưu giữ và hiển thị rõ ràng khi quay lại trang.
+  2. **Tab 2 — `Xử lý sự cố` (UC11):**
+     - Từ cảnh báo tổng hợp **`Thư viện Trung tâm — 3 tài nguyên lỗi/bảo trì`** ở Giám sát mạng lưới bấm **`Xử lý`** (hoặc chuyển sang tab **`Xử lý sự cố`**): chỉ rõ giao diện phân tách **`Hồ sơ đang mở (0)`** / **`Hồ sơ đã đóng`** với danh sách **`Tài nguyên lỗi/bảo trì chưa có hồ sơ (3)`** (không tự tạo hồ sơ ảo).
+     - Chọn 1 trong 3 tài nguyên lỗi → bấm **`Xử lý tài nguyên này`** (tài nguyên được khóa sẵn, có nút **`Đổi tài nguyên khác`**), chọn mức độ **Cao**, nhập mô tả ngắn *"Mất nguồn đầu ra"* → bấm **`Ghi nhận & Hạn chế tài nguyên`** → chỉ **`Hồ sơ đang mở (1)`** và **`Tài nguyên lỗi/bảo trì chưa có hồ sơ (2)`** hiển thị đồng thời.
+     - Cột phải (hồ sơ vừa tạo tự được mở):
+       - **Phương án xử lý (*Tùy chọn*):** Chọn phương án xử lý → bấm **`Lưu phương án xử lý`** → chỉ **Nhật ký xử lý sự cố** vừa cập nhật theo dòng thời gian.
+       - **Xác minh khắc phục:** Nhập minh chứng (*tối thiểu 5 ký tự*, vd: *"Đã thay CB nguồn, đo ổn định 220V"*), giữ tích *Đã khắc phục xong* → bấm **`Đóng sự cố & Khôi phục`** (nếu xe dùng chung có pin `< 25%`, hệ thống tự chuyển sang `Đang sạc`).
+- **Lời thoại:**
+  > "Trang **Lịch sạc & Sự cố** tách gọn thành 2 tab rõ ràng. Ở **UC13 — Lịch sạc thông minh**, nhân viên chọn Hub & khung giờ, chọn quy tắc ưu tiên, kiểm tra thanh tải điện 2 màu giữa phiên đang sạc sẵn và phân bổ mới — hệ thống tự giảm tải công suất nếu chạm ngưỡng Hub — rồi áp dụng phiên bản lịch sạc mới và lưu trực quan ngay trên màn hình. Sang tab **UC11 — Xử lý sự cố**, nhân viên ghi nhận lỗi để tự động khóa đặt mới tài nguyên hỏng, lưu phương án vào nhật ký xử lý, và xác minh minh chứng kỹ thuật để đóng sự cố, khôi phục dịch vụ."
+
+---
+
+## Phần 6: Operator — Điều chuyển xe & Mô phỏng What-if (05:45 – 06:45)
+
+### 6.1. Điều chuyển xe giữa các Hub (`UC12`)
+- **Màn hình:** `/operator/redistribution`
+- **Chỉ chuột & thao tác:**
+  1. Chọn **Hub nguồn** (Hub nhiều xe), **Hub đích** (Hub khác) và giờ dự kiến → bấm **`Xem phương án`** (chỉ dòng báo sức chứa tiếp nhận của Hub đích).
+  2. Tích chọn 1–2 xe → bấm **`Xác nhận điều chuyển`**.
+  3. Cuộn xuống mục *Lệnh điều chuyển*: bấm **`Đã rời Hub nguồn`** → bấm **`Đã tới Hub đích`** → bấm **`Đóng lệnh`**.
+- **Lời thoại:**
+  > "Ở **UC12 — Điều chuyển xe**, khi cần cân bằng đội xe giữa các Hub, nhân viên chọn Hub nguồn và Hub đích, hệ thống kiểm tra và giữ trước sức chứa tiếp nhận tại Hub đích, rồi theo dõi xuyên suốt từ lúc xe xuất phát đến khi tiếp nhận hoàn tất."
+
+### 6.2. Mô phỏng tình huống What-if (`UC14`)
+- **Màn hình:** `/operator/simulation`
+- **Chỉ chuột & thao tác:**
+  1. Chỉ vào huy hiệu **`● Bản nháp độc lập DB`** và nút **`Phạm vi: 5 Hub`** ở đầu trang.
+  2. Cột trái: bấm chọn thẻ kịch bản **`Tăng nhu cầu`**, chọn **Hub áp dụng** (**ĐH Bách Khoa** — chỉ 3 ô *Xe sẵn sàng / Nhu cầu / Hiện trạng*), kéo **thanh trượt** lên **`2.4x`** (hoặc `3.0x`) → bấm **`Chạy mô phỏng`**.
+  3. Cột phải: chỉ **3 thẻ KPI tổng toàn mạng (Trước → Sau)** và **Bảng chi tiết từng Hub** → tại **Các phương án điều phối độc lập**, bấm **`Thử nghiệm`** để xem dự đoán KPI ngay trên bản chụp không sửa DB thật (chỉ thêm nút **`Mở Điều chuyển →`** / **`Mở Lịch sạc →`** khi cần chuyển ngữ cảnh sang UC12/UC13).
+  4. Cuộn xuống bảng **Lịch sử mô phỏng**: bấm **`Xem kết quả`** trên một lượt đã lưu trước đó để cho thấy có thể xem lại kết quả mà không cần chạy lại.
+- **Lời thoại:**
+  > "Cuối cùng là **UC14 — Mô phỏng What-if**. Hệ thống chụp bản sao độc lập hoàn toàn với dữ liệu thật, hiển thị rõ KPI toàn mạng lẫn bảng chi tiết từng Hub, cho phép bấm **Thử nghiệm** từng phương án điều phối độc lập ngay trên bản chụp hoặc mở thẳng sang **Điều chuyển xe / Lịch sạc**, và xem lại các lượt đã lưu trong **Lịch sử mô phỏng**."
+
+---
+
+## Phần 7: Kết thúc (06:45 – 07:00)
+
+- **Màn hình:** Giữ ở trang Giám sát mạng lưới hoặc Mô phỏng What-if (bấm nhanh nút **`? Hướng dẫn ...`** ở góc dưới sidebar để nhắc lại tính năng hỗ trợ người mới).
+- **Lời thoại:**
+  > "Như vậy nhóm đã demo trọn vẹn **14/14 Use Cases** cùng các tác vụ nền tự động của hệ thống **Smart E-Mobility Hub**, bám sát kiến trúc 4 tầng và Class Diagram ở Submission #3, kèm hướng dẫn tương tác trực tiếp trên từng màn hình. Cảm ơn thầy/cô đã theo dõi!"

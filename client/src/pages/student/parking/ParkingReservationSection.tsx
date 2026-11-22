@@ -263,9 +263,9 @@ function ParkingReservations() {
                   ))}
                 </select>
               </div>
-              <div className="col-span-2">
+              <div>
                 <label htmlFor="parking-vehicle" className="label">
-                  Phương tiện
+                  Biển số xe
                 </label>
                 <select
                   id="parking-vehicle"
@@ -275,10 +275,20 @@ function ParkingReservations() {
                 >
                   {vehicles.data?.map((v) => (
                     <option key={v.id} value={v.id}>
-                      {v.plate} · {v.type === "E_BIKE" ? "Xe đạp điện" : "Xe máy điện"}
+                      {v.plate}
                     </option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <span className="label">Loại phương tiện</span>
+                <div className="input flex items-center bg-neutral-50 text-neutral-700 dark:bg-white/5 dark:text-neutral-200">
+                  {(() => {
+                    const current = vehicles.data?.find((v) => v.id === vehicleId);
+                    if (!current) return "—";
+                    return current.type === "E_BIKE" ? "Xe đạp điện" : "Xe máy điện";
+                  })()}
+                </div>
               </div>
               <div className="col-span-2">
                 <label htmlFor="parking-date" className="label">

@@ -38,10 +38,10 @@ Bản MVP hiện thực đầy đủ **14/14 Use Cases** trên kiến trúc 4 t�
 - **Hình 4.3 — Tìm phương án phù hợp (UC01):** Sinh viên chọn mục đích (*Thuê xe / Đỗ xe / Sạc xe*), loại xe và mức pin tối thiểu để hệ thống lọc và điều hướng thẳng sang màn đặt dịch vụ tương ứng.
 
 ![Đặt xe tại Hub UC02](screenshots/04_student_uc02_reserve.png)
-- **Hình 4.4 — Chọn & Đặt xe dùng chung (UC02):** Hiển thị danh sách xe khả dụng kèm biển số, mã xe, % pin và quãng đường ước tính; hỗ trợ xem trước hạn giữ xe 15 phút trước khi xác nhận.
+- **Hình 4.4 — Chọn & Đặt xe dùng chung (UC02):** Hiển thị danh sách xe khả dụng kèm biển số, mã xe, % pin và quãng đường ước tính; hỗ trợ xem trước hạn giữ xe 30 phút trước khi xác nhận.
 
 ![Nhận xe & Chuyến đi UC03 UC04 UC05](screenshots/05_student_uc04_booked_vehicle.png)
-- **Hình 4.5 — Chuyến đi: Mở khóa nhận xe & Trả xe (UC03, UC04, UC05):** Hiển thị nổi bật biển số xe đã đặt, đồng hồ đếm ngược 15 phút, cho phép hủy đặt xe (UC03), mở khóa bắt đầu chuyến đi (UC04) và chọn Hub đích để phân bổ ô đỗ + khóa xe kết thúc chuyến (UC05).
+- **Hình 4.5 — Chuyến đi: Mở khóa nhận xe & Trả xe (UC03, UC04, UC05):** Hiển thị nổi bật biển số xe đã đặt, đồng hồ đếm ngược 30 phút, cho phép hủy đặt xe (UC03), mở khóa bắt đầu chuyến đi (UC04) và chọn Hub đích để phân bổ ô đỗ + khóa xe kết thúc chuyến (UC05).
 
 ![Chuyến đi đang diễn ra sau khi mở khóa xe (UC04)](screenshots/12_student_uc04_pickup_success.png)
 
@@ -58,14 +58,17 @@ Bản MVP hiện thực đầy đủ **14/14 Use Cases** trên kiến trúc 4 t�
 ![Giám sát mạng lưới UC10](screenshots/08_operator_uc10_monitoring.png)
 - **Hình 4.8 — Giám sát mạng lưới (`/operator/monitoring`, UC10):** Tổng hợp 4 chỉ số KPI, bản đồ trực quan 5 Hub (tô vàng Hub đang có cảnh báo), danh sách cảnh báo theo ngưỡng (`LOW_VEHICLE`, `NEAR_FULL`, `RESOURCE_FAULT`, `DATA_STALE`) và bảng chi tiết từng Hub cập nhật mỗi 3 giây.
 
-![Lịch sạc và sự cố UC11 UC13](screenshots/09_operator_uc11_uc13_charging_incidents.png)
-- **Hình 4.9 — Điều phối lịch sạc thông minh & Xử lý sự cố (`/operator/charging-incidents`, UC13 & UC11):** Bên trái hỗ trợ phân bổ cổng sạc cho yêu cầu đang chờ và điều chỉnh lịch khi quá tải; bên phải hỗ trợ ghi nhận sự cố tài nguyên, xử lý đặt chỗ bị ảnh hưởng và đóng sự cố.
+![Lịch sạc thông minh UC13](screenshots/09_operator_uc11_uc13_charging_incidents.png)
+- **Hình 4.9a — Điều phối lịch sạc thông minh (`/operator/charging-incidents` — Tab 1, UC13):** Hiển thị trạng thái cổng theo Hub, thanh tải điện kW 2 màu (*Đang sạc sẵn* vs *Phân bổ mới*), giảm tải công suất tự động và lưu lịch sạc đang áp dụng theo phiên bản.
+
+![Xử lý sự cố UC11](screenshots/14_operator_uc11_incidents.png)
+- **Hình 4.9b — Xử lý sự cố tài nguyên (`/operator/charging-incidents?tab=incidents` — Tab 2, UC11):** Bố cục Master–Detail tách rõ hồ sơ đang mở/đã đóng với tài nguyên lỗi chưa có hồ sơ, nhật ký xử lý sự cố theo thời gian, đóng sự cố và khôi phục tài nguyên (tự chuyển xe pin `< 25%` sang `CHARGING`).
 
 ![Điều chuyển xe UC12](screenshots/10_operator_uc12_redistribution.png)
 - **Hình 4.10 — Điều chuyển xe (`/operator/redistribution`, UC12):** Tạo lệnh chuyển xe từ Hub dư sang Hub thiếu, theo dõi trạng thái xuất phát – tiếp nhận và đồng bộ sức chứa tại Hub đích với luồng trả xe/đặt chỗ.
 
 ![Mô phỏng What-if UC14](screenshots/11_operator_uc14_simulation.png)
-- **Hình 4.11 — Mô phỏng What-if (`/operator/simulation`, UC14):** Chạy kịch bản giả lập tăng nhu cầu hoặc thay đổi phân bổ tài nguyên trên bản chụp hiện tại, so sánh KPI Trước/Sau để hỗ trợ ra quyết định vận hành.
+- **Hình 4.11 — Mô phỏng What-if (`/operator/simulation`, UC14):** Chạy kịch bản giả lập trên bản chụp độc lập DB, hiển thị KPI tổng toàn mạng Trước/Sau kèm bảng chi tiết từng Hub, thử nghiệm các phương án điều phối độc lập ngay trên bản chụp hoặc chuyển ngữ cảnh sang UC12/UC13, và lưu lịch sử mô phỏng.
 
 ---
 

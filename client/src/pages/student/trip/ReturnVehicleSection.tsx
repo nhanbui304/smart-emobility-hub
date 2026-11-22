@@ -51,7 +51,15 @@ function savePendingConfirm(value: PendingConfirm | null): void {
   }
 }
 
-export function ReturnVehicleSection() {
+export function ReturnVehicleSection({
+  hideEmpty = false,
+  reloadSignal,
+  onStatusChange,
+}: {
+  hideEmpty?: boolean;
+  reloadSignal?: string;
+  onStatusChange?: (state: { loading: boolean; hasTrip: boolean; hasReturnResult: boolean }) => void;
+}) {
   const current = useAsync(() => returnApi.getCurrentTrip(), [], { refreshEveryMs: 5000 });
   const hubs = useAsync(() => hubApi.list(), []);
   const [hubId, setHubId] = useState("");
@@ -167,6 +175,28 @@ export function ReturnVehicleSection() {
 
   const info = current.data ?? null;
   const selectedHubId = hubId || hubs.data?.[0]?.id || "";
+  const lastReloadSignal = useRef<string | undefined>(reloadSignal);
+
+  useEffect(() => {
+    if (!reloadSignal || reloadSignal === lastReloadSignal.current) return;
+    lastReloadSignal.current = reloadSignal;
+    setResult(null);
+    setError(null);
+    void current.reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reloadSignal]);
+
+  useEffect(() => {
+    onStatusChange?.({
+      loading: current.loading && current.data === undefined,
+      hasTrip: Boolean(info || pendingConfirm),
+      hasReturnResult: result?.outcome === "SUCCESS",
+    });
+  }, [current.loading, current.data, info, pendingConfirm, result, onStatusChange]);
+
+  if (!info && !pendingConfirm && result?.outcome !== "SUCCESS" && !error && !current.error && hideEmpty) {
+    return null;
+  }
 
   return (
     <section className="space-y-3">
@@ -184,9 +214,9 @@ export function ReturnVehicleSection() {
               Kiểm tra lại kết quả trả xe
             </Button>
           </Card>
-        ) : !result && (
+        ) : !result && !hideEmpty && (
           <Card tone="highlight">
-            <p className="text-sm text-white/70">Chuyến đi hiện tại</p>
+            <p className="text-sm text-white/70">Xe đang thuê</p>
             <p className="mt-1 text-lg font-semibold">{current.loading ? "Đang tải…" : "Chưa có chuyến đi"}</p>
           </Card>
         ))
@@ -194,7 +224,7 @@ export function ReturnVehicleSection() {
         <Card tone="highlight" className="space-y-1 p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm text-white/70">Chuyến đi hiện tại</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-lime">Xe đang thuê</p>
               <div className="mt-1 flex flex-wrap items-center gap-2.5">
                 <span className="rounded-lg bg-white px-2.5 py-1 font-mono text-sm font-extrabold text-neutral-900">
                   {sharedVehiclePlate(info.vehicleCode)}

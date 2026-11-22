@@ -13,7 +13,7 @@
 | Mức kiểm thử | Công cụ / Cách thực hiện | Phạm vi chính |
 | --- | --- | --- |
 | **Static Analysis** | TypeScript (`npm run typecheck`) + ESLint (`npm run lint`) | Toàn bộ `server/src/` và `client/src/`. |
-| **Unit & Integration Tests** | **Vitest** + `@vitest/coverage-v8` (`npm test`) | Nghiệp vụ lõi trên SQLite test riêng (`server/data/test.db`, không chạm `dev.db`): `AuthService`, `ReservationService`, `ParkingService` (kèm transaction, idempotency `requestId`, phân quyền và hết hạn giữ chỗ). |
+| **Unit & Integration Tests** | **Vitest** + `@vitest/coverage-v8` (`npm test`) | 4 bộ test tự động (20 test case) trên SQLite test riêng (`server/data/test.db`, không chạm `dev.db`): `AuthService`, `ReservationService`, `ParkingService` (kèm transaction, idempotency `requestId`, phân quyền và hết hạn giữ chỗ) và `SimulationEngine` (toán học cổng sạc/đội xe & đóng Hub UC14). |
 | **Production Build Verification** | Vite (`npm run build`) | Kiểm tra đóng gói toàn bộ frontend React + TypeScript không lỗi. |
 | **System / E2E Manual Demo** | Kịch bản 6 phút ([KICH_BAN_VIDEO_DEMO.md](submission-4/KICH_BAN_VIDEO_DEMO.md)) | Toàn bộ 14 UC trên trình duyệt (Student + Operator), đồng bộ polling 3 giây, chế độ Sáng/Tối và nhánh lỗi thiết bị giả lập. |
 
@@ -40,7 +40,7 @@
 | **UC11** | `TC-UC11-01..04` | Ghi nhận sự cố, lập phương án xử lý, đóng sự cố và khôi phục tài nguyên. | Manual E2E |
 | **UC12** | `TC-UC12-01..04` | Chọn Hub nguồn/đích, kiểm tra sức chứa tiếp nhận, hoàn tất điều chuyển xe. | Manual E2E |
 | **UC13** | `TC-UC13-01..04` | Sinh và áp dụng lịch sạc thông minh với kiểm tra `baseVersion`. | Manual E2E |
-| **UC14** | `TC-UC14-01..04` | Chụp snapshot độc lập, chạy kịch bản What-if, so sánh KPI cơ sở vs kịch bản (không ghi đè bảng vận hành). | Manual E2E |
+| **UC14** | `TC-UC14-01..04` | Chụp snapshot độc lập, chạy kịch bản What-if, so sánh KPI cơ sở vs kịch bản và bảng chi tiết từng Hub (không ghi đè bảng vận hành). | Automated (Vitest — `SimulationEngine`) + Manual E2E |
 | **2.3.2** | `TC-2.3.2-01` | Hết hạn nhận xe, giải phóng xe về danh sách khả dụng. | Manual E2E |
 
 ## 4. Hướng dẫn chạy kiểm thử tự động & xem Coverage

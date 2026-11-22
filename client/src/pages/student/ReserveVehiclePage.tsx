@@ -1,59 +1,8 @@
-/* // Owner: Lê Quốc Linh – UC02 Reserve Shared Vehicle
-import { Link, useParams } from "react-router-dom";
-import { hubApi } from "../../api/hubs";
-import { Card } from "../../components/Card";
-import { ErrorMessage } from "../../components/ErrorMessage";
-import { PageHeader } from "../../components/PageHeader";
-import { Spinner } from "../../components/Spinner";
-import { StatusBadge } from "../../components/StatusBadge";
-import { StubNotice } from "../../components/StubNotice";
-import { useAsync } from "../../hooks/useAsync";
-
-export function ReserveVehiclePage() {
-  const { hubId = "" } = useParams();
-  // Tạm dùng chi tiết Hub (đã chạy) để hiển thị xe; khi làm UC02 thay bằng reservationApi.getReservableVehicles(hubId)
-  const { data: hub, loading, error, reload } = useAsync(() => hubApi.detail(hubId), [hubId]);
-
-  return (
-    <div className="space-y-4">
-      <Link to="/student" className="text-sm text-neutral-500">
-        ← Quay lại
-      </Link>
-      <PageHeader title="Đặt xe dùng chung" subtitle={hub?.name} />
-      <StubNotice
-        owner="Lê Quốc Linh"
-        useCases="UC02"
-        todo={[
-          "Lấy danh sách xe có thể đặt: reservationApi.getReservableVehicles(hubId)",
-          "Chọn xe → prepareReservation → màn hình xác nhận (hạn nhận xe)",
-          "Xác nhận → reservationApi.confirmReservation(requestId, hubId, vehicleId); xe vừa bị người khác đặt thì báo lỗi rõ ràng",
-        ]}
-      />
-      {loading && <Spinner />}
-      <ErrorMessage error={error} onRetry={() => void reload()} />
-      <ul className="space-y-2">
-        {hub?.vehicles.map((v) => (
-          <li key={v.id}>
-            <Card className="flex items-center justify-between p-4">
-              <div>
-                <p className="font-semibold">{v.code}</p>
-                <p className="text-xs text-neutral-500">
-                  {v.type === "E_BIKE" ? "Xe đạp điện" : "Xe máy điện"} · Pin {v.batteryLevel}%
-                </p>
-              </div>
-              <StatusBadge status={v.status} />
-            </Card>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
- */
-import { useRef, useState } from "react";
+// Owner: Lê Quốc Linh – UC02 Reserve Shared Vehicle
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { hubApi } from "../../api/hubs";
 import { ApiError } from "../../api/client";
+import { hubApi } from "../../api/hubs";
 import { reservationApi } from "../../api/reservation";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
@@ -62,30 +11,78 @@ import { ErrorMessage } from "../../components/ErrorMessage";
 import { PageHeader } from "../../components/PageHeader";
 import { Spinner } from "../../components/Spinner";
 import { useAsync } from "../../hooks/useAsync";
-import type { ReservationPreview, SharedVehicle, VehicleReservation } from "../../types";
+import type { ReservationPreview, VehicleReservation } from "../../types";
 import { estimateRangeKm, sharedVehiclePlate, vehicleTypeLabel } from "../../utils/display";
 import { newRequestId } from "../../utils/requestId";
 
-const typeLabel = (t: SharedVehicle["type"]) => vehicleTypeLabel(t);
-const timeOf = (iso: string) => new Date(iso).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+function timeOf(iso: string): string {
+  return new Date(iso).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+}
 
 export function ReserveVehiclePage() {
   const { hubId = "" } = useParams();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const suggestedVehicleId = searchParams.get("vehicleId");
-  const { data: hub } = useAsync(() => hubApi.detail(hubId), [hubId]);
-  const vehicles = useAsync(() => reservationApi.getReservableVehicles(hubId), [hubId], { refreshEveryMs: 3000 });
+
+  const hubs = useAsync(() => hubApi.list(), []);
+  const vehicles = useAsync(() => reservationApi.getReservableVehicles(hubId), [hubId]);
+  const hub = hubs.data?.find((h) => h.id === hubId);
 
   const available = vehicles.data ?? [];
   const suggested = available.find((vehicle) => vehicle.id === suggestedVehicleId);
-  const orderedVehicles = suggested ? [suggested, ...available.filter((vehicle) => vehicle.id !== suggested.id)] : available;
+  const orderedVehicles = suggested
+    ? [suggested, ...available.filter((vehicle) => vehicle.id !== suggested.id)]
+    : available;
 
   const [preview, setPreview] = useState<ReservationPreview | null>(null);
   const [result, setResult] = useState<VehicleReservation | null>(null);
   const [error, setError] = useState<unknown>(null);
+  const [unavailableNotice, setUnavailableNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [autoPreparing, setAutoPreparing] = useState(Boolean(suggestedVehicleId));
+
   // requestId sinh MỘT lần cho mỗi lần mở màn hình xác nhận; mất mạng thì gửi lại cùng mã.
   const requestId = useRef(newRequestId());
+
+  /** Khi đi từ chọn xe trực tiếp (URL có ?vehicleId=...), tự động mở thẳng bước xác nhận đúng xe đó. */
+  useEffect(() => {
+    if (!hubId || !suggestedVehicleId) {
+      setAutoPreparing(false);
+      return;
+    }
+
+    let cancelled = false;
+    setAutoPreparing(true);
+    setError(null);
+    setUnavailableNotice(null);
+    setPreview(null);
+
+    void reservationApi
+      .prepareReservation(hubId, suggestedVehicleId)
+      .then((res) => {
+        if (cancelled) return;
+        setPreview(res);
+        requestId.current = newRequestId();
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        // Xe vừa hết khả dụng hoặc không thuộc Hub này -> báo rõ, không tự thay bằng xe khác
+        const reason = err instanceof Error ? err.message : "Xe không còn khả dụng để đặt.";
+        setUnavailableNotice(
+          `Xe bạn vừa chọn hiện không còn khả dụng (${reason}). Vui lòng chọn một xe khác trong danh sách bên dưới.`,
+        );
+        setSearchParams({}, { replace: true });
+        void vehicles.reload();
+      })
+      .finally(() => {
+        if (!cancelled) setAutoPreparing(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hubId, suggestedVehicleId]);
 
   /** Lỗi do server từ chối (không phải mất mạng) thì lần bấm sau dùng mã mới. */
   function renewIfRejected(err: unknown) {
@@ -94,31 +91,47 @@ export function ReserveVehiclePage() {
 
   async function onSelect(vehicleId: string) {
     setError(null);
+    setUnavailableNotice(null);
     setBusy(true);
     try {
       setPreview(await reservationApi.prepareReservation(hubId, vehicleId));
       requestId.current = newRequestId();
     } catch (err) {
-      setError(err);
+      const reason = err instanceof Error ? err.message : "Xe vừa hết khả dụng.";
+      setUnavailableNotice(`Không thể chuẩn bị đặt xe này (${reason}). Vui lòng chọn xe khác.`);
       void vehicles.reload();
     } finally {
       setBusy(false);
     }
   }
 
+  function backToList() {
+    setPreview(null);
+    setError(null);
+    if (suggestedVehicleId) {
+      setSearchParams({}, { replace: true });
+    }
+  }
+
   async function onConfirm() {
     if (!preview) return;
     setError(null);
+    setUnavailableNotice(null);
     setBusy(true);
     try {
       setResult(await reservationApi.confirmReservation(requestId.current, hubId, preview.vehicle.id));
       setPreview(null);
     } catch (err) {
-      setError(err);
       renewIfRejected(err);
-      if (err instanceof ApiError && err.code === "CONFLICT") {
-        setPreview(null); // xe vừa bị người khác đặt → quay lại danh sách đã làm mới
+      if (err instanceof ApiError && (err.code === "CONFLICT" || err.code === "NOT_FOUND")) {
+        setPreview(null);
+        setUnavailableNotice(
+          `${err.message || "Xe vừa hết khả dụng."} Vui lòng chọn lại một xe khác trong danh sách đã làm mới.`,
+        );
+        if (suggestedVehicleId) setSearchParams({}, { replace: true });
         void vehicles.reload();
+      } else {
+        setError(err);
       }
     } finally {
       setBusy(false);
@@ -157,30 +170,70 @@ export function ReserveVehiclePage() {
 
   return (
     <div className="space-y-4">
-      <Link to="/student" className="text-sm text-neutral-500">
-        ← Quay lại
+      <Link to="/student" className="text-sm text-neutral-500 hover:underline">
+        ← Quay lại Khám phá Hub
       </Link>
       <PageHeader title="Đặt xe dùng chung" subtitle={hub?.name} />
       <ErrorMessage error={error} />
 
-      {preview ? (
-        <Card className="space-y-3">
-          <h2 className="text-lg font-bold">Xác nhận đặt xe</h2>
-          <dl className="grid grid-cols-2 gap-2 text-sm">
-            <dt className="text-neutral-500">Xe</dt>
-            <dd className="font-semibold">{preview.vehicle.code}</dd>
-            <dt className="text-neutral-500">Loại</dt>
-            <dd>{typeLabel(preview.vehicle.type)}</dd>
-            <dt className="text-neutral-500">Mức pin</dt>
-            <dd>{preview.vehicle.batteryLevel}%</dd>
-            <dt className="text-neutral-500">Hub nhận xe</dt>
-            <dd>{hub?.name}</dd>
-            <dt className="text-neutral-500">Giữ xe đến</dt>
-            <dd className="font-semibold">{timeOf(preview.pickupDeadline)}</dd>
+      {unavailableNotice && (
+        <div
+          role="alert"
+          className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+        >
+          {unavailableNotice}
+        </div>
+      )}
+
+      {autoPreparing ? (
+        <Card className="flex items-center justify-center gap-3 p-8">
+          <Spinner />
+          <span className="text-sm text-neutral-500">Đang kiểm tra trạng thái xe bạn đã chọn...</span>
+        </Card>
+      ) : preview ? (
+        <Card className="space-y-4 p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand dark:text-lime">
+                Xác nhận đặt xe
+              </p>
+              <h2 className="mt-0.5 text-lg font-bold">{hub?.name ?? "Mobility Hub"}</h2>
+            </div>
+            <div className="rounded-xl border-2 border-brand bg-emerald-50/70 px-3.5 py-2 text-center dark:border-lime dark:bg-lime/10">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-brand dark:text-lime">Biển số</p>
+              <p className="font-mono text-sm font-extrabold">{sharedVehiclePlate(preview.vehicle.code)}</p>
+              <p className="text-[11px] font-semibold text-emerald-700 dark:text-lime">{preview.vehicle.code}</p>
+            </div>
+          </div>
+
+          <dl className="grid grid-cols-2 gap-3 rounded-xl bg-surface p-3.5 text-sm dark:bg-white/5">
+            <div>
+              <dt className="text-xs text-neutral-500 dark:text-neutral-400">Hub nhận xe</dt>
+              <dd className="font-semibold">{hub?.name ?? preview.hubId}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-neutral-500 dark:text-neutral-400">Loại xe</dt>
+              <dd className="font-semibold">{vehicleTypeLabel(preview.vehicle.type)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-neutral-500 dark:text-neutral-400">Mức pin</dt>
+              <dd className="font-semibold text-emerald-700 dark:text-lime">
+                {preview.vehicle.batteryLevel}% (~{estimateRangeKm(preview.vehicle.batteryLevel, preview.vehicle.type)} km)
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-neutral-500 dark:text-neutral-400">Giữ xe đến</dt>
+              <dd className="font-semibold">{timeOf(preview.pickupDeadline)}</dd>
+            </div>
           </dl>
+
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
+            Lượt đặt chỉ được tạo khi bạn bấm <strong>Xác nhận đặt xe</strong>.
+          </p>
+
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setPreview(null)} disabled={busy}>
-              Quay lại
+            <Button variant="outline" onClick={backToList} disabled={busy}>
+              Chọn xe khác
             </Button>
             <Button fullWidth loading={busy} onClick={() => void onConfirm()}>
               Xác nhận đặt xe
@@ -194,7 +247,7 @@ export function ReserveVehiclePage() {
           {vehicles.data?.length === 0 && (
             <EmptyState title="Hub này hiện không còn xe có thể đặt" description="Hãy chọn Hub khác ở Trang chủ." />
           )}
-          <ul className="grid gap-3 md:grid-cols-2">
+          <ul data-tour="st-reserve-list" className="grid gap-3 md:grid-cols-2">
             {orderedVehicles.map((v) => (
               <li key={v.id}>
                 <Card className="flex items-center justify-between gap-3 p-4">
@@ -204,7 +257,7 @@ export function ReserveVehiclePage() {
                       <p className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">{v.code}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-bold">{typeLabel(v.type)}</p>
+                      <p className="text-sm font-bold">{vehicleTypeLabel(v.type)}</p>
                       <p className="text-xs text-neutral-500 dark:text-neutral-400">
                         Pin <strong className="text-emerald-700 dark:text-lime">{v.batteryLevel}%</strong> · ~
                         {estimateRangeKm(v.batteryLevel, v.type)} km

@@ -17,6 +17,15 @@ export const submitScenarioBody = z.object({
 });
 export const runSimulationBody = z.object({ requestId: requestIdField, scenarioDraftId: z.string().min(1) });
 export const prepareOperationalHandoffBody = z.object({ recommendationId: z.string().min(1) });
+export const simulateActionImpactBody = z.object({
+  recommendationId: z.string().min(1).optional(),
+  actionType: z.enum(["REDISTRIBUTE_VEHICLES", "PRIORITIZE_LOW_BATTERY_CHARGING"]),
+  sourceHubId: z.string().min(1).optional(),
+  targetHubId: z.string().min(1).optional(),
+  vehicleCount: z.number().int().min(0).max(50).optional(),
+  hubId: z.string().min(1).optional(),
+  priorityTurnaroundVehicles: z.number().int().min(0).max(20).optional(),
+});
 
 export const simulationController = {
   /** POST /api/simulations/snapshots */
@@ -49,10 +58,22 @@ export const simulationController = {
     sendOk(res, await simulationService.stopRun(runId));
   },
 
+  /** GET /api/simulations/runs */
+  async listRuns(_req: Request, res: Response): Promise<void> {
+    sendOk(res, await simulationService.listRuns());
+  },
+
   /** GET /api/simulations/runs/:runId */
   async getRunResult(req: Request, res: Response): Promise<void> {
     const { runId } = parseOrThrow(z.object({ runId: z.string().min(1) }), req.params);
     sendOk(res, await simulationService.getRunResult(runId));
+  },
+
+  /** POST /api/simulations/runs/:runId/simulate-action */
+  async simulateActionImpact(req: Request, res: Response): Promise<void> {
+    const { runId } = parseOrThrow(z.object({ runId: z.string().min(1) }), req.params);
+    const body = req.body as z.infer<typeof simulateActionImpactBody>;
+    sendOk(res, await simulationService.simulateActionImpact(runId, body));
   },
 
   /** POST /api/simulations/runs/:runId/retry-save */

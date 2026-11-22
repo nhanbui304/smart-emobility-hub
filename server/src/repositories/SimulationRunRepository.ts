@@ -1,6 +1,6 @@
 // Owner: Nguyễn Hoàng Nhân – UC14 Run What-if Simulation
 // Chữ ký method khớp class diagram Submission #3 (docs/hoangnhan_submission3/UC14.drawio). Đổi chữ ký thì sửa cả sơ đồ.
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { systemConfig } from "../config/systemConfig";
 import {
   processedRequests,
@@ -23,6 +23,7 @@ import type {
   ScenarioAssumptions,
   SimulationComparison,
   SimulationResult,
+  SimulationRunHistoryItem,
   SnapshotInfo,
 } from "../types/dto";
 import { commonOps } from "./operational/common";
@@ -56,7 +57,51 @@ export function saveRecommendations(recs: Recommendation[]): void {
 }
 
 export function getRecommendationById(recommendationId: string): Recommendation | undefined {
-  return recommendationStore.get(recommendationId);
+  const cached = recommendationStore.get(recommendationId);
+  if (cached) return cached;
+  // Nạp lại từ bảng simulation_runs để nút bàn giao vẫn hoạt động sau khi reload/restart server
+  const storedRuns = db.select().from(simulationRuns).orderBy(desc(simulationRuns.createdAt)).all();
+  for (const run of storedRuns) {
+    const found = run.result?.recommendations?.find((r) => r.recommendationId === recommendationId);
+    if (found) {
+      recommendationStore.set(found.recommendationId, found);
+      return found;
+    }
+  }
+  return undefined;
+}
+
+export function listSimulationRuns(): SimulationRunHistoryItem[] {
+  const rows = db
+    .select({
+      run: simulationRuns,
+      snapshot: simulationSnapshots,
+    })
+    .from(simulationRuns)
+    .leftJoin(simulationSnapshots, eq(simulationRuns.snapshotId, simulationSnapshots.id))
+    .orderBy(desc(simulationRuns.createdAt))
+    .all();
+
+  return rows.map(({ run, snapshot }) => {
+    const hubIds = snapshot?.hubIds ?? [];
+    const hubNames = snapshot?.operationalState?.hubs?.map((h) => h.name) ?? hubIds;
+    const timeRange = snapshot?.timeRange ?? {
+      startTime: run.createdAt,
+      endTime: run.createdAt,
+    };
+    return {
+      runId: run.id,
+      snapshotId: run.snapshotId,
+      status: run.status,
+      scenarioType: run.scenario.scenarioType,
+      assumptions: run.scenario.assumptions,
+      hubIds,
+      hubNames,
+      timeRange,
+      createdAt: run.createdAt,
+      comparison: run.result?.comparison,
+    };
+  });
 }
 
 export function getFailedRunReason(runId: string): string | undefined {

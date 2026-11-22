@@ -106,7 +106,7 @@ export function HomePage() {
             <h1 className="text-xl font-bold tracking-tight md:text-2xl">Khám phá Mobility Hub tại ĐHQG-HCM</h1>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div data-tour="st-home-modes" className="flex flex-wrap items-center gap-2">
             <div
               className="inline-flex rounded-xl border border-neutral-200 bg-white p-1 dark:border-white/10 dark:bg-panel-dark"
               role="radiogroup"
@@ -147,7 +147,7 @@ export function HomePage() {
         {/* Bố cục Map-First: Bản đồ thật bên trái (7/12) + Thẻ xem nhanh Hub bên phải (5/12) */}
         {hubs && hubs.length > 0 && (
           <div className="grid gap-4 lg:grid-cols-12">
-            <div className="relative lg:col-span-7 xl:col-span-8">
+            <div data-tour="st-home-map" className="relative lg:col-span-7 xl:col-span-8">
               <CampusHubMap
                 hubs={filteredHubs}
                 selectedHubId={selectedHub?.id ?? null}
@@ -226,7 +226,7 @@ export function HomePage() {
             </div>
 
             {/* Thẻ chi tiết Hub đang chọn bên phải */}
-            <div className="lg:col-span-5 xl:col-span-4">
+            <div data-tour="st-home-hubcard" className="lg:col-span-5 xl:col-span-4">
               {selectedHub ? (
                 <Card className="flex h-full flex-col justify-between space-y-5 p-5">
                   <div className="space-y-4">
@@ -272,28 +272,35 @@ export function HomePage() {
                       ) : (
                         <ul className="space-y-2">
                           {topAvailableVehicles.map((v, idx) => (
-                            <li
-                              key={v.id}
-                              className={`flex items-center justify-between rounded-xl border px-3 py-2.5 transition ${
-                                idx === 0
-                                  ? "border-emerald-500/50 bg-emerald-50/60 dark:border-lime/40 dark:bg-lime/5"
-                                  : "border-neutral-200/80 bg-surface/60 dark:border-white/10 dark:bg-white/5"
-                              }`}
-                            >
-                              <div>
-                                <p className="font-mono text-xs font-bold">
-                                  {sharedVehiclePlate(v.code)}{" "}
-                                  <span className="font-sans font-semibold text-neutral-500 dark:text-neutral-400">
-                                    · {v.code}
+                            <li key={v.id}>
+                              <Link
+                                to={`/student/hubs/${selectedHub.id}/reserve?vehicleId=${v.id}`}
+                                className={`group flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 transition ${
+                                  idx === 0
+                                    ? "border-emerald-500/50 bg-emerald-50/60 hover:border-brand hover:bg-emerald-50 dark:border-lime/40 dark:bg-lime/5 dark:hover:border-lime dark:hover:bg-lime/10"
+                                    : "border-neutral-200/80 bg-surface/60 hover:border-brand hover:bg-neutral-50 dark:border-white/10 dark:bg-white/5 dark:hover:border-lime/60 dark:hover:bg-white/10"
+                                }`}
+                              >
+                                <div className="min-w-0">
+                                  <p className="font-mono text-xs font-bold">
+                                    {sharedVehiclePlate(v.code)}{" "}
+                                    <span className="font-sans font-semibold text-neutral-500 dark:text-neutral-400">
+                                      · {v.code}
+                                    </span>
+                                  </p>
+                                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                                    {vehicleTypeLabel(v.type)} · ~{estimateRangeKm(v.batteryLevel, v.type)} km
+                                  </p>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-2">
+                                  <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300">
+                                    Pin {v.batteryLevel}%
                                   </span>
-                                </p>
-                                <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                                  {vehicleTypeLabel(v.type)} · ~{estimateRangeKm(v.batteryLevel, v.type)} km
-                                </p>
-                              </div>
-                              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300">
-                                Pin {v.batteryLevel}%
-                              </span>
+                                  <span className="text-xs font-semibold text-brand transition group-hover:translate-x-0.5 dark:text-lime">
+                                    Chọn →
+                                  </span>
+                                </div>
+                              </Link>
                             </li>
                           ))}
                         </ul>
@@ -308,12 +315,12 @@ export function HomePage() {
                         to={`/student/hubs/${selectedHub.id}/reserve`}
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-lime transition hover:bg-brand-light dark:bg-lime dark:text-brand-dark dark:hover:bg-lime-dark"
                       >
-                        Chọn &amp; Đặt xe tại {selectedHub.name} →
+                        Xem tất cả xe →
                       </Link>
                     )}
                     {mode === "PARK" && (
                       <Link
-                        to={`/student/my-vehicle?hubId=${selectedHub.id}`}
+                        to={`/student/my-vehicle?hubId=${selectedHub.id}&tab=parking`}
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-lime transition hover:bg-brand-light dark:bg-lime dark:text-brand-dark dark:hover:bg-lime-dark"
                       >
                         Đặt chỗ đỗ cho xe cá nhân →
@@ -321,7 +328,7 @@ export function HomePage() {
                     )}
                     {mode === "CHARGE" && (
                       <Link
-                        to={`/student/my-vehicle?hubId=${selectedHub.id}`}
+                        to={`/student/my-vehicle?hubId=${selectedHub.id}&tab=schedule`}
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-lime transition hover:bg-brand-light dark:bg-lime dark:text-brand-dark dark:hover:bg-lime-dark"
                       >
                         Quản lý &amp; Đặt lịch sạc →
@@ -344,7 +351,9 @@ export function HomePage() {
       </section>
 
       {selectedHub && hubs && (
-        <MobilitySearchPanel key={`${mode}:${selectedHub.id}`} purpose={mode} origin={selectedHub} hubs={hubs} />
+        <div data-tour="st-home-search">
+          <MobilitySearchPanel key={`${mode}:${selectedHub.id}`} purpose={mode} origin={selectedHub} hubs={hubs} />
+        </div>
       )}
 
       {/* Dải chọn nhanh tất cả các Hub */}

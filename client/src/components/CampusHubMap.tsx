@@ -98,8 +98,8 @@ export function CampusHubMap({
       const isSelected = hub.id === selectedHubId;
       const alerts = alertCountByHubId?.get(hub.id) ?? 0;
 
-      let pillBg = isSelected ? "#123b2c" : isDark ? "#17221d" : "#ffffff";
-      let pillText = isSelected ? "#ffffff" : isDark ? "#f3f4f6" : "#111827";
+      const pillBg = isSelected ? "#123b2c" : isDark ? "#17221d" : "#ffffff";
+      const pillText = isSelected ? "#ffffff" : isDark ? "#f3f4f6" : "#111827";
       let pillBorder = isSelected ? "#c8f169" : isDark ? "#2c423a" : "#d1dbd5";
       let badgeBg = isSelected ? "#c8f169" : "#dcfce7";
       let badgeText = "#123b2c";

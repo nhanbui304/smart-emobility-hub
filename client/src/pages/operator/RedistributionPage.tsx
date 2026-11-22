@@ -20,7 +20,8 @@ export function RedistributionPage() {
 }
  */
 // Owner: Lê Quốc Linh – UC12 Coordinate Vehicle Redistribution
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { HANDOFF_UC12_KEY } from "./SimulationPage";
 import { ApiError } from "../../api/client";
 import { hubApi } from "../../api/hubs";
 import { redistributionApi } from "../../api/redistribution";
@@ -85,6 +86,39 @@ export function RedistributionPage() {
   const [pending, setPending] = useState<Command | null>(() => loadCommand(storageKey));
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(HANDOFF_UC12_KEY);
+      if (!raw) return;
+      sessionStorage.removeItem(HANDOFF_UC12_KEY);
+      const parsed = JSON.parse(raw) as {
+        sourceHubId?: string;
+        targetHubId?: string;
+        vehicleCount?: number;
+      };
+      if (parsed.sourceHubId && parsed.targetHubId && parsed.sourceHubId !== parsed.targetHubId) {
+        setSourceHubId(parsed.sourceHubId);
+        setTargetHubId(parsed.targetHubId);
+        const count = Math.max(1, parsed.vehicleCount ?? 3);
+        void run(() =>
+          redistributionApi.getRedistributionOptions(
+            parsed.sourceHubId!,
+            parsed.targetHubId!,
+            new Date(eta).toISOString(),
+          ),
+        ).then((res) => {
+          if (res) {
+            setPreview(res);
+            setSelected(res.vehicles.slice(0, Math.min(count, res.availableCapacity)).map((v) => v.id));
+          }
+        });
+      }
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const hubName = (id: string) => hubs.data?.find((h) => h.id === id)?.name ?? "Hub";
 
@@ -167,8 +201,9 @@ export function RedistributionPage() {
         </Card>
       )}
 
-      <Card className="space-y-4">
-        <h2 className="text-lg font-bold">1. Chọn Hub và thời điểm</h2>
+      <div data-tour="uc12-scope">
+        <Card className="space-y-4">
+          <h2 className="text-lg font-bold">1. Chọn Hub và thời điểm</h2>
         <div className="grid gap-3 md:grid-cols-3">
           <HubSelect label="Hub nguồn" value={sourceHubId} onChange={setSourceHubId} hubs={hubs.data ?? []} />
           <HubSelect label="Hub đích" value={targetHubId} onChange={setTargetHubId} hubs={hubs.data ?? []} />
@@ -186,6 +221,7 @@ export function RedistributionPage() {
           Xem phương án
         </Button>
       </Card>
+      </div>
 
       {preview && (
         <Card className="space-y-3">
@@ -219,7 +255,7 @@ export function RedistributionPage() {
         </Card>
       )}
 
-      <section className="space-y-3">
+      <section data-tour="uc12-orders" className="space-y-3">
         <h2 className="text-lg font-bold">Lệnh điều chuyển</h2>
         <ErrorMessage error={orders.error} onRetry={() => void orders.reload()} />
         {orders.data?.length === 0 && <p className="text-sm text-neutral-500">Chưa có lệnh nào.</p>}

@@ -16,6 +16,7 @@ import {
   redistributionItems,
   sharedVehicles,
   trips,
+  users,
   vehicleReservations,
   type Incident,
 } from "../../db/schema";
@@ -52,6 +53,7 @@ export interface IncidentResourceOption {
   id: string;
   resourceType: ResourceType;
   status: string;
+  hubId: string | null;
   hubName: string;
   label: string;
 }
@@ -69,6 +71,18 @@ function findRecordedIncidentId(
   return previousId;
 }
 
+function connectorLabel(connectorType: string): string {
+  if (connectorType === "STANDARD_PLUG") return "AC thường";
+  if (connectorType === "TYPE2") return "Type 2";
+  return connectorType;
+}
+
+function vehicleTypeLabel(vehicleType: string): string {
+  if (vehicleType === "E_BIKE") return "Xe đạp điện";
+  if (vehicleType === "E_MOTORBIKE") return "Xe máy điện";
+  return vehicleType;
+}
+
 function resolveResource(resourceId: string): ResolvedResource | undefined {
   const port = db.select().from(chargingPorts).where(eq(chargingPorts.id, resourceId)).get();
   if (port) {
@@ -80,7 +94,7 @@ function resolveResource(resourceId: string): ResolvedResource | undefined {
       hubId: slot?.hubId ?? null,
       slotId: port.slotId,
       connectorType: port.connectorType,
-      label: `Cổng sạc ${slot?.code ?? port.id.slice(0, 8)} (${port.connectorType})`,
+      label: `Cổng sạc ${slot?.code ?? port.id.slice(0, 8)} (${connectorLabel(port.connectorType)})`,
     };
   }
 
@@ -187,15 +201,17 @@ function restoreResourceOperationalStatus(resource: ResolvedResource, now: Date)
 
   if (resource.resourceType === "SHARED_VEHICLE" && resource.status === "UNDER_MAINTENANCE") {
     const commitment = findBlockingVehicleReservation(resource.id)?.status;
-    const status = commitment === "RESERVED" || commitment === "HANDING_OVER" || commitment === "PENDING_VERIFICATION"
-      ? commitment
-      : "AVAILABLE";
-    if (status === "AVAILABLE" && (resource.batteryLevel ?? 0) < systemConfig.reservableBatteryThreshold) return false;
+    const status =
+      commitment === "RESERVED" || commitment === "HANDING_OVER" || commitment === "PENDING_VERIFICATION"
+        ? commitment
+        : (resource.batteryLevel ?? 0) < systemConfig.reservableBatteryThreshold
+          ? "CHARGING"
+          : "AVAILABLE";
     db.update(sharedVehicles)
       .set({ status, lastUpdatedAt: now, updatedAt: now })
       .where(eq(sharedVehicles.id, resource.id))
       .run();
-    return status === "AVAILABLE";
+    return status === "AVAILABLE" || status === "CHARGING";
   }
 
   return false;
@@ -260,8 +276,9 @@ export function listIncidentsAndResources(): {
       id: port.id,
       resourceType: "CHARGING_PORT",
       status: port.status,
+      hubId: slot.hubId,
       hubName: hubById.get(slot.hubId) ?? slot.hubId,
-      label: `Cổng sạc ${slot.code} (${port.connectorType}, ${port.maxPowerKw} kW)`,
+      label: `Cổng sạc ${slot.code} (${connectorLabel(port.connectorType)}, ${port.maxPowerKw} kW)`,
     });
   }
 
@@ -271,6 +288,7 @@ export function listIncidentsAndResources(): {
       id: slot.id,
       resourceType: "PARKING_SLOT",
       status: slot.status,
+      hubId: slot.hubId,
       hubName: hubById.get(slot.hubId) ?? slot.hubId,
       label: `Vị trí đỗ ${slot.code}${slot.hasCharger ? " (có sạc)" : ""}`,
     });
@@ -282,8 +300,9 @@ export function listIncidentsAndResources(): {
       id: v.id,
       resourceType: "SHARED_VEHICLE",
       status: v.status,
+      hubId: v.hubId,
       hubName: v.hubId ? (hubById.get(v.hubId) ?? v.hubId) : "Đang di chuyển",
-      label: `Xe ${v.code} (${v.type}, pin ${v.batteryLevel}%)`,
+      label: `Xe ${v.code} (${vehicleTypeLabel(v.type)}, pin ${v.batteryLevel}%)`,
     });
   }
 
@@ -589,11 +608,47 @@ export const incidentOps = {
       }
 
       const now = new Date();
+      const operator = db
+        .select({ fullName: users.fullName })
+        .from(users)
+        .where(eq(users.id, operatorId))
+        .get();
+      const operatorName = operator?.fullName ?? operatorId;
+
+      const existingHistory = current.handlingPlan?.history
+        ? [...current.handlingPlan.history]
+        : current.handlingPlan
+          ? [
+              {
+                version: current.version,
+                actionType: current.handlingPlan.actionType,
+                allocationChanges: current.handlingPlan.allocationChanges,
+                updatedBy: operatorName,
+                updatedAt: current.updatedAt.toISOString(),
+              },
+            ]
+          : [];
+
+      const planWithHistory: HandlingPlan = {
+        actionType: plan.actionType,
+        allocationChanges: plan.allocationChanges,
+        history: [
+          ...existingHistory,
+          {
+            version: expectedVersion + 1,
+            actionType: plan.actionType,
+            allocationChanges: plan.allocationChanges,
+            updatedBy: operatorName,
+            updatedAt: now.toISOString(),
+          },
+        ],
+      };
+
       const updated = db
         .update(incidents)
         .set({
           status: "IN_PROGRESS",
-          handlingPlan: plan,
+          handlingPlan: planWithHistory,
           consentPlan,
           version: expectedVersion + 1,
           updatedAt: now,
@@ -773,14 +828,20 @@ export const incidentOps = {
       const resource = resolveResource(current.resourceId);
       const hasOtherRestrictions = this.checkOtherActiveIncidentsOrRestrictions(this.queryResourceAndRemainingImpacts(incidentId));
       const restored = resource && !hasOtherRestrictions && restoreResourceOperationalStatus(resource, now);
+      const movedToCharging =
+        restored &&
+        resource?.resourceType === "SHARED_VEHICLE" &&
+        (resource.batteryLevel ?? 0) < systemConfig.reservableBatteryThreshold;
 
       recordProcessedRequest(requestId, operatorId, "VERIFY_INCIDENT_RESOLUTION", updated.id);
 
       return {
         success: true,
-        message: restored
-          ? "Đã xác nhận khắc phục, đóng sự cố và khôi phục trạng thái phục vụ của tài nguyên."
-          : "Đã đóng sự cố. Tài nguyên vẫn tuân theo các cam kết và hạn chế còn hiệu lực.",
+        message: movedToCharging
+          ? "Đã xác nhận khắc phục và đóng sự cố; xe được chuyển sang Đang sạc do pin dưới 25%."
+          : restored
+            ? "Đã xác nhận khắc phục, đóng sự cố và khôi phục trạng thái phục vụ của tài nguyên."
+            : "Đã đóng sự cố. Tài nguyên vẫn tuân theo các cam kết và hạn chế còn hiệu lực.",
         incidentId: updated.id,
       };
     });

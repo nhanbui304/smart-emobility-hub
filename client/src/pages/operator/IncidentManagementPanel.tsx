@@ -1,23 +1,20 @@
 // Owner: Ngô Minh Triết – UC11 Handle Operational Incident
-// Tách thành panel riêng để nhúng vào ChargingIncidentPage mà không xung đột với UC13 (Hoàng Nhân).
-import { newRequestId } from "../../api/requestId";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { incidentApi, type IncidentResourceOption } from "../../api/incident";
+import { newRequestId } from "../../api/requestId";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
 import { ErrorMessage } from "../../components/ErrorMessage";
+import { Spinner } from "../../components/Spinner";
 import { StatusBadge } from "../../components/StatusBadge";
-import type {
-  Incident,
-  IncidentContext,
-  IncidentDetails,
-  IncidentImpact,
-} from "../../types";
+import { statusLabels } from "../../statusLabels";
+import type { Incident, IncidentContext, IncidentDetails, IncidentImpact } from "../../types";
 
 const IMPACT_OPTIONS: Array<{ value: IncidentImpact; label: string }> = [
-  { value: "LOW", label: "Thấp (LOW)" },
-  { value: "MEDIUM", label: "Trung bình (MEDIUM)" },
-  { value: "HIGH", label: "Cao (HIGH – Ưu tiên xử lý)" },
+  { value: "LOW", label: "Thấp" },
+  { value: "MEDIUM", label: "Trung bình" },
+  { value: "HIGH", label: "Cao (Ưu tiên)" },
 ];
 
 const ACTION_TYPE_OPTIONS = [
@@ -26,11 +23,52 @@ const ACTION_TYPE_OPTIONS = [
   { value: "SCHEDULE_MAINTENANCE", label: "Đưa đi bảo trì kỹ thuật" },
 ] as const;
 
-export function IncidentManagementPanel() {
+function isFaultyStatus(status: string): boolean {
+  return status === "UNDER_MAINTENANCE" || status === "OUT_OF_SERVICE";
+}
+
+function actionTypeLabel(code: string): string {
+  return ACTION_TYPE_OPTIONS.find((opt) => opt.value === code)?.label ?? code;
+}
+
+function impactLevelLabel(level: string): string {
+  if (level === "LOW") return "Thấp";
+  if (level === "MEDIUM") return "Trung bình";
+  if (level === "HIGH") return "Cao";
+  if (level === "CRITICAL") return "Nghiêm trọng";
+  return level;
+}
+
+function formatAllocationChange(change: string): string {
+  return change === "NOTIFY_AFFECTED_USERS" ? "Thông báo người dùng bị ảnh hưởng" : change;
+}
+
+function formatLogTime(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "2-digit",
+    month: "2-digit",
+  });
+}
+
+export function IncidentManagementPanel({ onChanged }: { onChanged?: () => void } = {}) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const contextHubId = searchParams.get("hubId");
+  const contextIncidentId = searchParams.get("incidentId");
+  const contextResourceId = searchParams.get("resourceId");
+
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [resources, setResources] = useState<IncidentResourceOption[]>([]);
+  const [statusFilter, setStatusFilter] = useState<"OPEN" | "CLOSED">("OPEN");
+  const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
+  const [lockSelectedResource, setLockSelectedResource] = useState<boolean>(false);
+  const [chosenFaultResourceId, setChosenFaultResourceId] = useState<string>("");
 
-  // Form báo cáo sự cố mới
+  // Form ghi nhận sự cố mới
   const [selectedResourceId, setSelectedResourceId] = useState<string>("");
   const [resourceContext, setResourceContext] = useState<IncidentContext | null>(null);
   const [description, setDescription] = useState<string>("");
@@ -38,9 +76,14 @@ export function IncidentManagementPanel() {
   const [affectedScope, setAffectedScope] = useState<string>("Tài nguyên đơn lẻ tại Hub");
   const [reportRequestId, setReportRequestId] = useState<string>(newRequestId);
 
-  // Chi tiết sự cố đang chọn để xử lý & xác minh khắc phục
+  // Chi tiết sự cố đang chọn
   const [activeIncidentId, setActiveIncidentId] = useState<string>("");
   const [incidentDetails, setIncidentDetails] = useState<IncidentDetails | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState<boolean>(false);
+  const [detailError, setDetailError] = useState<unknown>(null);
+  const detailSeqRef = useRef<number>(0);
+  const activeIncidentIdRef = useRef<string>("");
+
   const [actionType, setActionType] = useState<string>(ACTION_TYPE_OPTIONS[0].value);
   const [allocationChangesText, setAllocationChangesText] = useState<string>("");
   const [planRequestId, setPlanRequestId] = useState<string>(newRequestId);
@@ -53,44 +96,175 @@ export function IncidentManagementPanel() {
   const [error, setError] = useState<unknown>(null);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
 
-  const resourceById = useMemo(
-    () => new Map(resources.map((r) => [r.id, r])),
-    [resources],
+  const resourceById = useMemo(() => new Map(resources.map((r) => [r.id, r])), [resources]);
+
+  const contextHubName = useMemo(() => {
+    if (!contextHubId) return null;
+    return resources.find((r) => r.hubId === contextHubId)?.hubName ?? contextHubId;
+  }, [contextHubId, resources]);
+
+  const scopedResources = useMemo(
+    () => (contextHubId ? resources.filter((r) => r.hubId === contextHubId) : resources),
+    [contextHubId, resources],
   );
+
+  const scopedIncidents = useMemo(() => {
+    if (!contextHubId) return incidents;
+    return incidents.filter((inc) => resourceById.get(inc.resourceId)?.hubId === contextHubId);
+  }, [contextHubId, incidents, resourceById]);
+
+  const openIncidents = useMemo(() => scopedIncidents.filter((i) => i.status !== "CLOSED"), [scopedIncidents]);
+  const closedIncidents = useMemo(() => scopedIncidents.filter((i) => i.status === "CLOSED"), [scopedIncidents]);
+  const visibleIncidents = statusFilter === "OPEN" ? openIncidents : closedIncidents;
+
+  // Các tài nguyên lỗi/bảo trì thuộc Hub ngữ cảnh nhưng chưa có hồ sơ sự cố mở nào
+  const faultyWithoutOpenIncident = useMemo(() => {
+    const openResIds = new Set(incidents.filter((i) => i.status !== "CLOSED").map((i) => i.resourceId));
+    return scopedResources.filter((r) => isFaultyStatus(r.status) && !openResIds.has(r.id));
+  }, [incidents, scopedResources]);
+
+  // Sắp xếp dropdown tài nguyên: đưa tài nguyên lỗi/bảo trì lên đầu để dễ chọn
+  const orderedFormResources = useMemo(() => {
+    const base = scopedResources.length > 0 ? scopedResources : resources;
+    return [...base].sort((a, b) => Number(isFaultyStatus(b.status)) - Number(isFaultyStatus(a.status)));
+  }, [scopedResources, resources]);
+
+  function clearHubContext() {
+    const next = new URLSearchParams(searchParams);
+    next.delete("hubId");
+    next.delete("incidentId");
+    next.delete("resourceId");
+    setSearchParams(next, { replace: true });
+  }
+
+  async function loadResourceContext(resId: string) {
+    setSelectedResourceId(resId);
+    setResourceContext(null);
+    if (!resId) return;
+    try {
+      const ctx = await incidentApi.openIncidentManagement(resId);
+      setResourceContext(ctx);
+    } catch (err) {
+      setError(err);
+    }
+  }
+
+  function resetDetailForm() {
+    setActionType(ACTION_TYPE_OPTIONS[0].value);
+    setAllocationChangesText("");
+    setIsResolved(true);
+    setEvidence("");
+    setPlanRequestId(newRequestId());
+    setResolutionRequestId(newRequestId());
+  }
+
+  /**
+   * Nạp chi tiết hồ sơ có kiểm soát thứ tự phản hồi (detailSeqRef) và đối chiếu đúng activeIncidentId.
+   * Khi đổi hồ sơ mới (resetForm = true), xóa ngay chi tiết & dữ liệu nhập cũ để tránh gửi nhầm sang hồ sơ mới.
+   */
+  async function loadIncidentDetails(incidentId: string, opts?: { resetForm?: boolean }) {
+    const seq = ++detailSeqRef.current;
+    activeIncidentIdRef.current = incidentId;
+    setActiveIncidentId(incidentId);
+    setDetailError(null);
+
+    if (opts?.resetForm) {
+      setIncidentDetails(null);
+      resetDetailForm();
+    }
+
+    if (!incidentId) {
+      setIncidentDetails(null);
+      setLoadingDetails(false);
+      return;
+    }
+
+    setLoadingDetails(true);
+    try {
+      const details = await incidentApi.openExistingIncident(incidentId);
+      // Bỏ qua phản hồi đến muộn nếu người dùng đã chuyển sang hồ sơ khác
+      if (detailSeqRef.current !== seq || activeIncidentIdRef.current !== incidentId) return;
+      setIncidentDetails(details);
+      if (details.incident.handlingPlan?.actionType) {
+        setActionType(details.incident.handlingPlan.actionType);
+      }
+    } catch (err) {
+      if (detailSeqRef.current !== seq || activeIncidentIdRef.current !== incidentId) return;
+      setIncidentDetails(null);
+      setDetailError(err);
+    } finally {
+      if (detailSeqRef.current === seq) {
+        setLoadingDetails(false);
+      }
+    }
+  }
 
   async function refreshOverview(keepIncidentId?: string) {
     const overview = await incidentApi.listOverview();
     setIncidents(overview.incidents);
     setResources(overview.resources);
-    setSelectedResourceId((prev) => prev || overview.resources[0]?.id || "");
-    const targetIncId = keepIncidentId ?? activeIncidentId;
-    if (targetIncId) {
-      try {
-        const det = await incidentApi.openExistingIncident(targetIncId);
-        setIncidentDetails(det);
-      } catch {
-        setIncidentDetails(null);
-      }
+    const targetIncId = keepIncidentId ?? activeIncidentIdRef.current;
+    if (targetIncId && targetIncId === activeIncidentIdRef.current) {
+      await loadIncidentDetails(targetIncId, { resetForm: false });
     }
   }
 
   useEffect(() => {
     let active = true;
+    setError(null);
     void incidentApi
       .listOverview()
       .then((overview) => {
         if (!active) return;
         setIncidents(overview.incidents);
         setResources(overview.resources);
-        const firstResId = overview.resources[0]?.id ?? "";
-        setSelectedResourceId(firstResId);
-        if (firstResId) {
+
+        const resMap = new Map(overview.resources.map((r) => [r.id, r]));
+        const inHubResources = contextHubId
+          ? overview.resources.filter((r) => r.hubId === contextHubId)
+          : overview.resources;
+        const inHubIncidents = contextHubId
+          ? overview.incidents.filter((inc) => resMap.get(inc.resourceId)?.hubId === contextHubId)
+          : overview.incidents;
+        const openInScope = inHubIncidents.filter((inc) => inc.status !== "CLOSED");
+
+        // Xác định tài nguyên mặc định cho form tạo mới (ưu tiên resourceId từ URL -> tài nguyên lỗi trong Hub -> đầu danh sách)
+        const faultyInScope = inHubResources.filter((r) => isFaultyStatus(r.status));
+        const defaultResId =
+          (contextResourceId && resMap.has(contextResourceId) ? contextResourceId : "") ||
+          faultyInScope[0]?.id ||
+          inHubResources[0]?.id ||
+          overview.resources[0]?.id ||
+          "";
+
+        setChosenFaultResourceId(
+          (contextResourceId && faultyInScope.some((r) => r.id === contextResourceId) ? contextResourceId : "") ||
+          faultyInScope[0]?.id ||
+          "",
+        );
+        setSelectedResourceId(defaultResId);
+        if (defaultResId) {
           void incidentApi
-            .openIncidentManagement(firstResId)
+            .openIncidentManagement(defaultResId)
             .then((ctx) => {
               if (active) setResourceContext(ctx);
             })
             .catch(() => undefined);
+        }
+
+        // Chỉ mở mặc định hồ sơ ĐANG MỞ trong đúng ngữ cảnh (hoặc đúng incidentId đang mở).
+        // KHÔNG bao giờ tự chọn sự cố đã đóng hoặc sự cố của Hub khác làm chi tiết mặc định!
+        const requestedOpen = contextIncidentId
+          ? openInScope.find((inc) => inc.id === contextIncidentId)
+          : undefined;
+        const defaultOpen = requestedOpen ?? openInScope[0];
+
+        setShowCreateForm(false);
+        setStatusFilter("OPEN");
+        if (defaultOpen) {
+          void loadIncidentDetails(defaultOpen.id, { resetForm: true });
+        } else {
+          void loadIncidentDetails("", { resetForm: true });
         }
       })
       .catch((err) => {
@@ -98,19 +272,29 @@ export function IncidentManagementPanel() {
       });
     return () => {
       active = false;
+      detailSeqRef.current += 1;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contextHubId, contextIncidentId, contextResourceId]);
 
   async function handleSelectResource(resId: string) {
-    setSelectedResourceId(resId);
-    setResourceContext(null);
     setError(null);
-    if (!resId) return;
-    try {
-      const ctx = await incidentApi.openIncidentManagement(resId);
-      setResourceContext(ctx);
-    } catch (err) {
-      setError(err);
+    await loadResourceContext(resId);
+  }
+
+  function openCreateWithResource(resId?: string, lockResource = false) {
+    setShowCreateForm(true);
+    setLockSelectedResource(Boolean(resId && lockResource));
+    setError(null);
+    setInfoMsg(null);
+    setReportRequestId(newRequestId());
+    const targetId = resId || chosenFaultResourceId || orderedFormResources[0]?.id || "";
+    if (targetId) {
+      const targetRes = resourceById.get(targetId);
+      if (targetRes) {
+        setAffectedScope(`${targetRes.label} · ${targetRes.hubName}`);
+      }
+      void loadResourceContext(targetId);
     }
   }
 
@@ -130,11 +314,16 @@ export function IncidentManagementPanel() {
       setInfoMsg(res.message);
       setDescription("");
       setReportRequestId(newRequestId());
+      setShowCreateForm(false);
+      setStatusFilter("OPEN");
       if (res.incidentId) {
+        activeIncidentIdRef.current = res.incidentId;
         setActiveIncidentId(res.incidentId);
+        resetDetailForm();
       }
       await refreshOverview(res.incidentId);
-      await handleSelectResource(selectedResourceId);
+      await loadResourceContext(selectedResourceId);
+      onChanged?.();
     } catch (err) {
       setError(err);
     } finally {
@@ -142,22 +331,30 @@ export function IncidentManagementPanel() {
     }
   }
 
-  async function handleOpenIncident(incidentId: string) {
-    setActiveIncidentId(incidentId);
+  function handleOpenIncident(incidentId: string) {
+    setShowCreateForm(false);
     setError(null);
     setInfoMsg(null);
-    setPlanRequestId(newRequestId());
-    setResolutionRequestId(newRequestId());
-    try {
-      const details = await incidentApi.openExistingIncident(incidentId);
-      setIncidentDetails(details);
-    } catch (err) {
-      setError(err);
-    }
+    void loadIncidentDetails(incidentId, { resetForm: true });
   }
 
+  const activeResInfo = incidentDetails ? resourceById.get(incidentDetails.incident.resourceId) : undefined;
+  const activeIncidentMatchesScope =
+    !incidentDetails || !contextHubId || activeResInfo?.hubId === contextHubId;
+  const detailsMatchActive = Boolean(
+    activeIncidentId && incidentDetails && incidentDetails.incident.id === activeIncidentId,
+  );
+  const displayedDetails = detailsMatchActive && activeIncidentMatchesScope ? incidentDetails : null;
+  const canActOnActiveIncident = Boolean(
+    displayedDetails && !loadingDetails && !detailError && !busy && displayedDetails.incident.status !== "CLOSED",
+  );
+
   async function handleSubmitPlan() {
-    if (!activeIncidentId) return;
+    const targetId = displayedDetails?.incident.id;
+    // Khóa chặt: chỉ gửi khi chi tiết đang hiển thị khớp đúng hồ sơ đang chọn và đã tải xong không lỗi
+    if (!targetId || targetId !== activeIncidentId || targetId !== activeIncidentIdRef.current || loadingDetails || detailError) {
+      return;
+    }
     setBusy(true);
     setError(null);
     setInfoMsg(null);
@@ -166,281 +363,648 @@ export function IncidentManagementPanel() {
         .split("\n")
         .map((s) => s.trim())
         .filter(Boolean);
-      const res = await incidentApi.submitHandlingPlan(planRequestId, activeIncidentId, {
+      const res = await incidentApi.submitHandlingPlan(planRequestId, targetId, {
         actionType,
         allocationChanges: changes.length > 0 ? changes : ["NOTIFY_AFFECTED_USERS"],
       });
+      if (activeIncidentIdRef.current !== targetId) return;
       setInfoMsg(res.message);
       setPlanRequestId(newRequestId());
       setAllocationChangesText("");
-      await refreshOverview(activeIncidentId);
+      await refreshOverview(targetId);
     } catch (err) {
-      setError(err);
+      if (activeIncidentIdRef.current === targetId) setError(err);
     } finally {
       setBusy(false);
     }
   }
 
   async function handleVerifyResolution() {
-    if (!activeIncidentId || !evidence.trim()) return;
+    const targetId = displayedDetails?.incident.id;
+    // Khóa chặt: chỉ gửi khi chi tiết đang hiển thị khớp đúng hồ sơ đang chọn và đã tải xong không lỗi
+    if (
+      !targetId ||
+      targetId !== activeIncidentId ||
+      targetId !== activeIncidentIdRef.current ||
+      loadingDetails ||
+      detailError ||
+      !evidence.trim()
+    ) {
+      return;
+    }
     setBusy(true);
     setError(null);
     setInfoMsg(null);
     try {
-      const res = await incidentApi.submitResolutionResult(resolutionRequestId, activeIncidentId, {
+      const res = await incidentApi.submitResolutionResult(resolutionRequestId, targetId, {
         isResolved,
         evidence: evidence.trim(),
       });
+      if (activeIncidentIdRef.current !== targetId) return;
       setInfoMsg(res.message);
       setEvidence("");
       setResolutionRequestId(newRequestId());
-      await refreshOverview(activeIncidentId);
+      await refreshOverview(targetId);
       if (selectedResourceId) {
-        await handleSelectResource(selectedResourceId);
+        await loadResourceContext(selectedResourceId);
       }
+      onChanged?.();
     } catch (err) {
-      setError(err);
+      if (activeIncidentIdRef.current === targetId) setError(err);
     } finally {
       setBusy(false);
     }
   }
 
+  const effectiveChosenFaultId = faultyWithoutOpenIncident.some((r) => r.id === chosenFaultResourceId)
+    ? chosenFaultResourceId
+    : (faultyWithoutOpenIncident[0]?.id ?? "");
+
   return (
-    <Card className="space-y-4 p-4">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
-          Sự cố vận hành
-        </p>
-        <h2 className="mt-0.5 text-base font-bold">Ghi nhận, xử lý &amp; xác minh khắc phục sự cố</h2>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">
-          Hạn chế phân bổ mới cho tài nguyên hỏng, lưu phương án xử lý và khôi phục phục vụ khi khắc phục xong.
-        </p>
-      </div>
+    <div className="space-y-4">
+      {/* Banner ngữ cảnh khi đi từ cảnh báo Giám sát mạng lưới */}
+      {contextHubId && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-300/80 bg-amber-50/75 px-4 py-3 text-xs text-amber-950 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-200">
+          <div>
+            <p className="font-bold">Ngữ cảnh xử lý từ Giám sát: {contextHubName}</p>
+            <p className="mt-0.5 opacity-85">
+              Hồ sơ đang mở: <strong>{openIncidents.length}</strong> · Tài nguyên lỗi/bảo trì chưa có hồ sơ:{" "}
+              <strong>{faultyWithoutOpenIncident.length}</strong>
+            </p>
+          </div>
+          <Button variant="outline" onClick={clearHubContext} className="px-3 py-1.5 text-xs">
+            Xem tất cả Hub
+          </Button>
+        </div>
+      )}
 
       <ErrorMessage error={error} />
       {infoMsg && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-medium text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
           {infoMsg}
         </div>
       )}
 
-      {/* Phần 1: Ghi nhận sự cố mới */}
-      <div className="space-y-3 rounded-xl border border-neutral-200 p-3.5 text-xs dark:border-white/10">
-        <h3 className="text-sm font-bold">1. Ghi nhận sự cố tài nguyên</h3>
-
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <label className="mb-1 block font-medium">Chọn tài nguyên</label>
-            <select
-              value={selectedResourceId}
-              onChange={(e) => void handleSelectResource(e.target.value)}
-              className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-neutral-900"
+      {/* Bố cục Master–Detail 2 cột (Trái danh sách 5 | Phải xử lý / tạo mới 7) */}
+      <div className="grid gap-5 lg:grid-cols-12">
+        {/* Cột trái: Danh sách sự cố */}
+        <Card className="space-y-4 lg:col-span-5">
+          <div data-tour="uc11-create">
+            <Button
+              type="button"
+              variant="primary"
+              fullWidth
+              onClick={() => openCreateWithResource()}
             >
-              {resources.map((r) => (
-                <option key={r.id} value={r.id}>
-                  [{r.hubName}] {r.label} — {r.status}
-                </option>
-              ))}
-            </select>
+              + Ghi nhận sự cố mới
+            </Button>
           </div>
 
-          {resourceContext && (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-neutral-50 px-3 py-2 sm:col-span-2 dark:bg-white/5">
-              <span>
-                Trạng thái hiện tại: <StatusBadge status={resourceContext.resourceStatus} />
-              </span>
-              <span className="text-neutral-500">
-                Sự cố đang mở: <strong>{resourceContext.openIncidents.length}</strong>
-              </span>
-            </div>
-          )}
-
-          <div>
-            <label className="mb-1 block font-medium">Mức độ ảnh hưởng</label>
-            <select
-              value={impactLevel}
-              onChange={(e) => setImpactLevel(e.target.value as IncidentImpact)}
-              className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-neutral-900"
-            >
-              {IMPACT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-1 block font-medium">Phạm vi ảnh hưởng</label>
-            <input
-              type="text"
-              value={affectedScope}
-              onChange={(e) => setAffectedScope(e.target.value)}
-              placeholder="Vd: Cổng sạc số 01 tại Hub"
-              className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-neutral-900"
-            />
-          </div>
-
-          <div className="sm:col-span-2">
-            <label className="mb-1 block font-medium">Mô tả sự cố</label>
-            <textarea
-              rows={2}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Nhập mô tả chi tiết tình trạng lỗi của cổng sạc / chỗ đỗ / xe..."
-              className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-neutral-900"
-            />
-          </div>
-        </div>
-
-        <Button
-          type="button"
-          variant="danger"
-          fullWidth
-          loading={busy}
-          disabled={!selectedResourceId || description.trim().length < 3}
-          onClick={() => void handleReportIncident()}
-          className="py-2 text-xs"
-        >
-          Ghi nhận sự cố &amp; hạn chế tài nguyên
-        </Button>
-      </div>
-
-      {/* Phần 2: Danh sách sự cố đã ghi nhận */}
-      <div className="space-y-2 text-xs">
-        <h3 className="text-sm font-bold">2. Danh sách sự cố ({incidents.length})</h3>
-        {incidents.length === 0 ? (
-          <p className="text-neutral-500">Chưa có sự cố nào được ghi nhận.</p>
-        ) : (
-          <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
-            {incidents.map((inc) => {
-              const resInfo = resourceById.get(inc.resourceId);
-              const isSelected = activeIncidentId === inc.id;
-              return (
-                <button
-                  key={inc.id}
-                  type="button"
-                  onClick={() => void handleOpenIncident(inc.id)}
-                  className={`flex w-full items-start justify-between gap-2 rounded-xl border p-3 text-left transition ${
-                    isSelected
-                      ? "border-brand bg-brand/5 dark:border-lime dark:bg-lime/10"
-                      : "border-neutral-200 hover:bg-neutral-50 dark:border-white/10 dark:hover:bg-white/5"
+          <div data-tour="uc11-list" className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setStatusFilter("OPEN")}
+                className={`cursor-pointer rounded-xl border py-2 text-xs font-semibold transition ${statusFilter === "OPEN"
+                  ? "border-brand bg-brand/5 text-brand dark:border-lime dark:bg-lime/10 dark:text-lime"
+                  : "border-neutral-200 text-neutral-500 hover:bg-neutral-50 dark:border-white/10"
                   }`}
-                >
-                  <div className="space-y-0.5">
-                    <p className="font-semibold">
-                      {resInfo ? `[${resInfo.hubName}] ${resInfo.label}` : inc.resourceId}
-                    </p>
-                    <p className="text-neutral-600 dark:text-neutral-300">{inc.description}</p>
-                    <p className="text-[11px] text-neutral-500">
-                      Mức độ: {inc.impactLevel} · v{inc.version}
-                    </p>
-                  </div>
-                  <StatusBadge status={inc.status} />
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Phần 3: Xử lý phương án & xác minh khắc phục cho sự cố đang chọn */}
-      {incidentDetails && (
-        <div className="space-y-3 rounded-xl border border-amber-300 bg-amber-50/50 p-3.5 text-xs dark:border-amber-500/40 dark:bg-amber-500/10">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p className="text-sm font-bold">Chi tiết &amp; xử lý sự cố</p>
-              <p className="font-mono text-[11px] text-neutral-500">{incidentDetails.incident.id}</p>
+              >
+                Hồ sơ đang mở ({openIncidents.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter("CLOSED")}
+                className={`cursor-pointer rounded-xl border py-2 text-xs font-semibold transition ${statusFilter === "CLOSED"
+                  ? "border-brand bg-brand/5 text-brand dark:border-lime dark:bg-lime/10 dark:text-lime"
+                  : "border-neutral-200 text-neutral-500 hover:bg-neutral-50 dark:border-white/10"
+                  }`}
+              >
+                Hồ sơ đã đóng ({closedIncidents.length})
+              </button>
             </div>
-            <StatusBadge status={incidentDetails.incident.status} />
-          </div>
 
-          <div className="rounded-lg bg-white/80 p-2.5 dark:bg-black/20">
-            <p className="font-semibold">
-              Dịch vụ / đặt chỗ bị ảnh hưởng ({incidentDetails.affectedServices.length}):
-            </p>
-            {incidentDetails.affectedServices.length === 0 ? (
-              <p className="text-neutral-500">Không có đặt chỗ hay lịch sạc nào đang bị ảnh hưởng.</p>
+            {visibleIncidents.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-neutral-200 px-3 py-8 text-center text-xs text-neutral-500 dark:border-white/10">
+                {statusFilter === "OPEN"
+                  ? contextHubName
+                    ? `Chưa có hồ sơ sự cố nào đang mở tại ${contextHubName}.`
+                    : "Không có sự cố nào đang mở."
+                  : contextHubName
+                    ? `Chưa có sự cố đã đóng tại ${contextHubName}.`
+                    : "Chưa có sự cố đã đóng."}
+              </div>
             ) : (
-              <ul className="mt-1 list-disc pl-4 font-mono text-[11px]">
-                {incidentDetails.affectedServices.map((s) => (
-                  <li key={s}>{s}</li>
-                ))}
-              </ul>
+              <div className="max-h-[520px] space-y-2.5 overflow-y-auto pr-0.5">
+                {visibleIncidents.map((inc) => {
+                  const resInfo = resourceById.get(inc.resourceId);
+                  const isSelected = !showCreateForm && activeIncidentId === inc.id;
+                  return (
+                    <button
+                      key={inc.id}
+                      type="button"
+                      onClick={() => void handleOpenIncident(inc.id)}
+                      className={`w-full cursor-pointer space-y-1.5 rounded-xl border p-3.5 text-left transition ${isSelected
+                        ? "border-brand bg-emerald-50/50 dark:border-lime dark:bg-lime/10"
+                        : "border-neutral-200 hover:bg-neutral-50 dark:border-white/10 dark:hover:bg-white/5"
+                        }`}
+                    >
+                      <p className="text-xs font-bold">
+                        {resInfo ? `[${resInfo.hubName}] ${resInfo.label}` : inc.resourceId}
+                      </p>
+                      <p className="line-clamp-2 text-xs text-neutral-600 dark:text-neutral-300">{inc.description}</p>
+                      <div className="flex items-center justify-between pt-0.5">
+                        <StatusBadge status={inc.status} />
+                        <span className="text-[11px] font-medium text-neutral-400">
+                          {impactLevelLabel(inc.impactLevel)} · v{inc.version}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             )}
           </div>
+        </Card>
 
-          {incidentDetails.incident.status !== "CLOSED" && (
-            <>
-              <div className="space-y-2 rounded-lg border border-neutral-200 bg-white p-3 dark:border-white/10 dark:bg-panel-dark">
-                <p className="font-bold">Bước A: Áp dụng phương án xử lý</p>
-                <select
-                  value={actionType}
-                  onChange={(e) => setActionType(e.target.value)}
-                  className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-neutral-900"
-                >
-                  {ACTION_TYPE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <textarea
-                  rows={2}
-                  value={allocationChangesText}
-                  onChange={(e) => setAllocationChangesText(e.target.value)}
-                  placeholder="Ghi chú thay đổi phân bổ (mỗi dòng 1 mục, vd: NOTIFY_AFFECTED_USERS hoặc REASSIGN:<resourceId>)"
-                  className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-neutral-900"
-                />
-                <Button
-                  type="button"
-                  variant="dark"
-                  loading={busy}
-                  onClick={() => void handleSubmitPlan()}
-                  className="w-full py-2 text-xs"
-                >
-                  Lưu phương án xử lý &amp; thông báo
-                </Button>
+        {/* Cột phải: Tạo sự cố mới HOẶC Xử lý sự cố đang chọn HOẶC Danh sách tài nguyên lỗi chưa có hồ sơ */}
+        <Card className="lg:col-span-7">
+          <div data-tour="uc11-detail" className="h-full">
+            {showCreateForm ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-neutral-200/80 pb-3 dark:border-white/10">
+                  <h2 className="text-base font-bold">
+                    Ghi nhận sự cố mới{contextHubName ? ` — ${contextHubName}` : ""}
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateForm(false)}
+                    className="cursor-pointer rounded-lg px-2 py-1 text-xs text-neutral-500 hover:bg-neutral-100 dark:hover:bg-white/10"
+                  >
+                    Đóng
+                  </button>
+                </div>
+
+                <div className="grid gap-3.5 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <label className="block text-xs font-semibold">Tài nguyên gặp lỗi</label>
+                      {lockSelectedResource && (
+                        <button
+                          type="button"
+                          onClick={() => setLockSelectedResource(false)}
+                          className="cursor-pointer text-[11px] font-semibold text-brand underline dark:text-lime"
+                        >
+                          Đổi tài nguyên khác
+                        </button>
+                      )}
+                    </div>
+                    {lockSelectedResource && resourceById.get(selectedResourceId) ? (
+                      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-brand/30 bg-emerald-50/50 px-3.5 py-2.5 text-sm dark:border-lime/30 dark:bg-lime/10">
+                        <span className="font-semibold">
+                          [{resourceById.get(selectedResourceId)!.hubName}] {resourceById.get(selectedResourceId)!.label}
+                        </span>
+                        <StatusBadge status={resourceById.get(selectedResourceId)!.status} />
+                      </div>
+                    ) : (
+                      <select
+                        value={selectedResourceId}
+                        onChange={(e) => void handleSelectResource(e.target.value)}
+                        className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3.5 py-2.5 text-sm outline-none focus:border-brand dark:border-white/15 dark:bg-white/5"
+                      >
+                        {orderedFormResources.some((r) => isFaultyStatus(r.status)) && (
+                          <optgroup label="Tài nguyên đang lỗi / bảo trì">
+                            {orderedFormResources
+                              .filter((r) => isFaultyStatus(r.status))
+                              .map((r) => (
+                                <option key={r.id} value={r.id}>
+                                  [{r.hubName}] {r.label} — {statusLabels[r.status] ?? r.status}
+                                </option>
+                              ))}
+                          </optgroup>
+                        )}
+                        <optgroup label="Tài nguyên khác">
+                          {orderedFormResources
+                            .filter((r) => !isFaultyStatus(r.status))
+                            .map((r) => (
+                              <option key={r.id} value={r.id}>
+                                [{r.hubName}] {r.label} — {statusLabels[r.status] ?? r.status}
+                              </option>
+                            ))}
+                        </optgroup>
+                      </select>
+                    )}
+                  </div>
+
+                  {resourceContext && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-neutral-100/80 px-3.5 py-2 text-xs sm:col-span-2 dark:bg-white/5">
+                      <span>
+                        Trạng thái: <StatusBadge status={resourceContext.resourceStatus} />
+                      </span>
+                      <span className="text-neutral-500">
+                        Sự cố đang mở: <strong>{resourceContext.openIncidents.length}</strong>
+                      </span>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold">Mức độ</label>
+                    <select
+                      value={impactLevel}
+                      onChange={(e) => setImpactLevel(e.target.value as IncidentImpact)}
+                      className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3.5 py-2.5 text-sm outline-none focus:border-brand dark:border-white/15 dark:bg-white/5"
+                    >
+                      {IMPACT_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold">Phạm vi ảnh hưởng</label>
+                    <input
+                      type="text"
+                      value={affectedScope}
+                      onChange={(e) => setAffectedScope(e.target.value)}
+                      placeholder="Vd: Cổng sạc số 01"
+                      className="w-full rounded-xl border border-neutral-200 bg-transparent px-3 py-2.5 text-sm outline-none focus:border-brand dark:border-white/15"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="mb-1 block text-xs font-semibold">Mô tả tình trạng lỗi</label>
+                    <textarea
+                      rows={3}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Nhập ngắn gọn lỗi của cổng sạc / chỗ đỗ / xe..."
+                      className="w-full rounded-xl border border-neutral-200 bg-transparent px-3.5 py-2.5 text-sm outline-none focus:border-brand dark:border-white/15"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setShowCreateForm(false)}>
+                    Hủy
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="danger"
+                    loading={busy}
+                    disabled={!selectedResourceId || description.trim().length < 3}
+                    onClick={() => void handleReportIncident()}
+                  >
+                    Ghi nhận &amp; Hạn chế tài nguyên
+                  </Button>
+                </div>
               </div>
+            ) : displayedDetails || loadingDetails || Boolean(detailError) || faultyWithoutOpenIncident.length > 0 ? (
+              <div className="space-y-6">
+                {activeIncidentId && loadingDetails && (
+                  <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-neutral-200 p-8 text-center dark:border-white/10">
+                    <Spinner label="Đang tải chi tiết hồ sơ sự cố…" />
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                      Các nút lưu phương án và đóng sự cố tạm khóa cho tới khi nạp đúng hồ sơ đang chọn.
+                    </p>
+                  </div>
+                )}
 
-              <div className="space-y-2 rounded-lg border border-neutral-200 bg-white p-3 dark:border-white/10 dark:bg-panel-dark">
-                <p className="font-bold">Bước B: Xác minh kết quả khắc phục</p>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={isResolved}
-                    onChange={(e) => setIsResolved(e.target.checked)}
-                  />
-                  <span>Đã khắc phục hoàn toàn và sẵn sàng đưa tài nguyên vào phục vụ lại</span>
-                </label>
-                <input
-                  type="text"
-                  value={evidence}
-                  onChange={(e) => setEvidence(e.target.value)}
-                  placeholder="Nhập bằng chứng / ghi chú kiểm tra kỹ thuật..."
-                  className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-xs dark:border-white/15 dark:bg-neutral-900"
-                />
-                <Button
-                  type="button"
-                  variant="primary"
-                  loading={busy}
-                  disabled={!evidence.trim()}
-                  onClick={() => void handleVerifyResolution()}
-                  className="w-full py-2 text-xs"
-                >
-                  {isResolved ? "Xác nhận khắc phục & đóng sự cố" : "Lưu tiến độ (giữ đang xử lý)"}
-                </Button>
+                {activeIncidentId && !loadingDetails && Boolean(detailError) && (
+                  <div className="space-y-3 rounded-2xl border border-red-200 bg-red-50/70 p-4 dark:border-red-500/30 dark:bg-red-500/10">
+                    <ErrorMessage error={detailError} />
+                    <div className="flex items-center justify-between gap-2 text-xs text-red-900 dark:text-red-200">
+                      <span>Không thể thao tác khi chi tiết hồ sơ chưa tải thành công.</span>
+                      <Button
+                        variant="outline"
+                        onClick={() => void loadIncidentDetails(activeIncidentId, { resetForm: false })}
+                        className="text-xs"
+                      >
+                        Thử tải lại hồ sơ
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {displayedDetails && !loadingDetails && !detailError && (
+                  <div className="space-y-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-neutral-200/80 pb-4 dark:border-white/10">
+                      <div>
+                        <h2 className="text-lg font-bold">
+                          {activeResInfo
+                            ? `[${activeResInfo.hubName}] ${activeResInfo.label}`
+                            : displayedDetails.incident.resourceId}
+                        </h2>
+                        <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+                          {displayedDetails.incident.description} · v{displayedDetails.incident.version}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-bold text-red-800 dark:bg-red-500/20 dark:text-red-300">
+                          {impactLevelLabel(displayedDetails.incident.impactLevel)}
+                        </span>
+                        <StatusBadge status={displayedDetails.incident.status} />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-amber-50/80 px-4 py-2.5 text-xs font-medium text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+                      <span>
+                        Đặt chỗ / lịch sạc bị ảnh hưởng: <strong>{displayedDetails.affectedServices.length}</strong>
+                      </span>
+                      {displayedDetails.affectedServices.length > 0 && (
+                        <span className="font-mono text-[11px] opacity-80">
+                          {displayedDetails.affectedServices.slice(0, 3).join(", ")}
+                        </span>
+                      )}
+                    </div>
+
+                    {displayedDetails.incident.status !== "CLOSED" ? (
+                      <div className="space-y-4">
+                        <div className="space-y-3 rounded-2xl border border-neutral-200 bg-neutral-50/70 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-sm font-bold">Phương án xử lý</h3>
+                                <span className="rounded-full bg-neutral-200/80 px-2 py-0.5 text-[10px] font-semibold text-neutral-600 dark:bg-white/10 dark:text-neutral-300">
+                                  Tùy chọn
+                                </span>
+                              </div>
+                              <p className="mt-0.5 text-[11px] text-neutral-500 dark:text-neutral-400">
+                                Dùng để ghi nhận hướng xử lý hoặc thông báo người dùng trong lúc chờ sửa. Có thể bỏ qua và đóng sự cố ngay bên dưới.
+                              </p>
+                            </div>
+                            {displayedDetails.incident.handlingPlan && (
+                              <span
+                                role="status"
+                                aria-atomic="true"
+                                className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300"
+                              >
+                                ✓ Đã lưu ({displayedDetails.incident.handlingPlan.history?.length ?? 1} lần)
+                              </span>
+                            )}
+                          </div>
+
+                          <select
+                            value={actionType}
+                            disabled={!canActOnActiveIncident}
+                            onChange={(e) => setActionType(e.target.value)}
+                            className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-xs font-medium outline-none focus:border-brand disabled:opacity-60 dark:border-white/15 dark:bg-neutral-900"
+                          >
+                            {ACTION_TYPE_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="text"
+                            value={allocationChangesText}
+                            disabled={!canActOnActiveIncident}
+                            onChange={(e) => setAllocationChangesText(e.target.value)}
+                            placeholder="Ghi chú thêm (tùy chọn, mặc định tự thông báo người bị ảnh hưởng)"
+                            className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2 text-xs outline-none focus:border-brand disabled:opacity-60 dark:border-white/15 dark:bg-neutral-900"
+                          />
+                          <div className="flex justify-end">
+                            <Button
+                              variant="outline"
+                              loading={busy}
+                              disabled={!canActOnActiveIncident}
+                              onClick={() => void handleSubmitPlan()}
+                              className="text-xs"
+                            >
+                              {displayedDetails.incident.handlingPlan ? "Cập nhật phương án" : "Lưu phương án xử lý"}
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3 rounded-2xl border-2 border-brand/25 p-4 dark:border-lime/25">
+                          <h3 className="text-sm font-bold">Xác minh khắc phục &amp; Đóng sự cố</h3>
+                          <input
+                            type="text"
+                            value={evidence}
+                            disabled={!canActOnActiveIncident}
+                            onChange={(e) => setEvidence(e.target.value)}
+                            placeholder="Nhập minh chứng kỹ thuật (vd: Đã thay CB, đo điện áp ổn định 220V)..."
+                            className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-3.5 py-2.5 text-xs outline-none focus:border-brand disabled:opacity-60 dark:border-white/15 dark:bg-white/5"
+                          />
+                          <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                            {isResolved && evidence.trim().length > 0 && evidence.trim().length < 5
+                              ? `Cần tối thiểu 5 ký tự minh chứng để đóng sự cố (hiện có ${evidence.trim().length}/5).`
+                              : "Không bắt buộc lưu phương án ở trên — nhập minh chứng kỹ thuật (tối thiểu 5 ký tự) là có thể đóng sự cố & khôi phục tài nguyên ngay."}
+                          </p>
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-medium">
+                              <input
+                                type="checkbox"
+                                checked={isResolved}
+                                disabled={!canActOnActiveIncident}
+                                onChange={(e) => setIsResolved(e.target.checked)}
+                                className="rounded border-neutral-300"
+                              />
+                              <span>Đã khắc phục xong, mở lại tài nguyên</span>
+                            </label>
+                            <Button
+                              variant="primary"
+                              loading={busy}
+                              disabled={
+                                !canActOnActiveIncident ||
+                                (isResolved ? evidence.trim().length < 5 : evidence.trim().length === 0)
+                              }
+                              onClick={() => void handleVerifyResolution()}
+                              className="text-xs"
+                            >
+                              {isResolved ? "Đóng sự cố & Khôi phục" : "Lưu tiến độ"}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 text-xs text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+                        <p className="font-bold">✓ Sự cố đã đóng và tài nguyên đã khôi phục</p>
+                        {displayedDetails.incident.resolutionNote && (
+                          <p className="mt-1 opacity-90">{displayedDetails.incident.resolutionNote}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Nhật ký xử lý sự cố — giúp nhân viên vận hành theo dõi toàn bộ các lần cập nhật phương án & tiến độ */}
+                    <div className="space-y-3 rounded-2xl border border-neutral-200/90 bg-white p-4 dark:border-white/10 dark:bg-white/[0.02]">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-xs font-bold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                          Nhật ký xử lý sự cố
+                        </h3>
+                        <span className="text-[11px] font-medium text-neutral-400">
+                          Phiên bản v{displayedDetails.incident.version}
+                        </span>
+                      </div>
+
+                      <ol className="relative ml-2 space-y-3.5 border-l-2 border-neutral-200 pl-4 dark:border-white/10">
+                        {/* Mốc 1: Ghi nhận sự cố */}
+                        <li className="relative text-xs">
+                          <span
+                            aria-hidden="true"
+                            className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-amber-500 dark:border-neutral-900"
+                          />
+                          <div className="flex flex-wrap items-center justify-between gap-1">
+                            <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                              Ghi nhận sự cố &amp; hạn chế tài nguyên
+                            </span>
+                            <span className="text-[11px] text-neutral-400">
+                              v1{displayedDetails.incident.createdAt ? ` · ${formatLogTime(displayedDetails.incident.createdAt)}` : ""}
+                            </span>
+                          </div>
+                          <p className="mt-0.5 text-[11px] text-neutral-600 dark:text-neutral-300">
+                            {displayedDetails.incident.description}
+                          </p>
+                        </li>
+
+                        {/* Các mốc cập nhật phương án xử lý */}
+                        {(displayedDetails.incident.handlingPlan?.history &&
+                        displayedDetails.incident.handlingPlan.history.length > 0
+                          ? displayedDetails.incident.handlingPlan.history
+                          : displayedDetails.incident.handlingPlan
+                            ? [
+                                {
+                                  version: displayedDetails.incident.version,
+                                  actionType: displayedDetails.incident.handlingPlan.actionType,
+                                  allocationChanges: displayedDetails.incident.handlingPlan.allocationChanges,
+                                  updatedBy: "Nhân viên vận hành",
+                                  updatedAt: displayedDetails.incident.updatedAt ?? "",
+                                },
+                              ]
+                            : []
+                        ).map((entry, idx) => (
+                          <li key={`${entry.version}-${entry.updatedAt}-${idx}`} className="relative text-xs">
+                            <span
+                              aria-hidden="true"
+                              className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-sky-500 dark:border-neutral-900"
+                            />
+                            <div className="flex flex-wrap items-center justify-between gap-1">
+                              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                                {idx === 0 ? "Lưu phương án xử lý" : "Cập nhật phương án xử lý"}
+                              </span>
+                              <span className="text-[11px] text-neutral-400">
+                                v{entry.version}
+                                {entry.updatedAt ? ` · ${formatLogTime(entry.updatedAt)}` : ""}
+                              </span>
+                            </div>
+                            <p className="mt-0.5 text-[11px] font-medium text-brand dark:text-lime">
+                              {actionTypeLabel(entry.actionType)}
+                            </p>
+                            {entry.allocationChanges.length > 0 && (
+                              <p className="mt-0.5 text-[11px] text-neutral-600 dark:text-neutral-300">
+                                Ghi chú: {entry.allocationChanges.map(formatAllocationChange).join(" · ")}
+                              </p>
+                            )}
+                            {entry.updatedBy && (
+                              <p className="mt-0.5 text-[10px] text-neutral-400">Thực hiện bởi: {entry.updatedBy}</p>
+                            )}
+                          </li>
+                        ))}
+
+                        {/* Mốc ghi nhận tiến độ / đóng sự cố */}
+                        {displayedDetails.incident.resolutionNote && (
+                          <li className="relative text-xs">
+                            <span
+                              aria-hidden="true"
+                              className={`absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-neutral-900 ${
+                                displayedDetails.incident.status === "CLOSED" ? "bg-emerald-500" : "bg-amber-500"
+                              }`}
+                            />
+                            <div className="flex flex-wrap items-center justify-between gap-1">
+                              <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+                                {displayedDetails.incident.status === "CLOSED"
+                                  ? "Xác minh khắc phục & Đóng sự cố"
+                                  : "Ghi nhận tiến độ khắc phục"}
+                              </span>
+                              <span className="text-[11px] text-neutral-400">
+                                {formatLogTime(
+                                  displayedDetails.incident.resolvedAt ?? displayedDetails.incident.updatedAt,
+                                )}
+                              </span>
+                            </div>
+                            <p className="mt-0.5 text-[11px] text-neutral-600 dark:text-neutral-300">
+                              {displayedDetails.incident.resolutionNote}
+                            </p>
+                          </li>
+                        )}
+                      </ol>
+                    </div>
+                  </div>
+                )}
+
+                {faultyWithoutOpenIncident.length > 0 && (
+                  /* Hiển thị độc lập các tài nguyên đang lỗi/bảo trì chưa có hồ sơ sự cố UC11 để không bị che khi Hub đã có sự cố mở khác */
+                  <div
+                    className={`space-y-4 ${displayedDetails ? "border-t border-neutral-200/80 pt-5 dark:border-white/10" : ""
+                      }`}
+                  >
+                    <div className="border-b border-neutral-200/80 pb-3 dark:border-white/10">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
+                        {contextHubName ? `Cảnh báo tổng hợp · ${contextHubName}` : "Cảnh báo tài nguyên lỗi"}
+                      </p>
+                      <h2 className="mt-0.5 text-base font-bold">
+                        Tài nguyên lỗi/bảo trì chưa có hồ sơ ({faultyWithoutOpenIncident.length})
+                      </h2>
+                      <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                        Chọn đúng tài nguyên bên dưới và bấm <strong>Ghi nhận sự cố</strong> để tạo hồ sơ UC11 (hệ thống không tự tạo hồ sơ).
+                      </p>
+                    </div>
+
+                    <div className="max-h-72 space-y-2 overflow-y-auto pr-0.5">
+                      {faultyWithoutOpenIncident.map((res) => {
+                        const selected = effectiveChosenFaultId === res.id;
+                        return (
+                          <button
+                            key={res.id}
+                            type="button"
+                            onClick={() => setChosenFaultResourceId(res.id)}
+                            className={`flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-3.5 py-3 text-left text-xs transition ${selected
+                              ? "border-brand bg-emerald-50/60 dark:border-lime dark:bg-lime/10"
+                              : "border-neutral-200 hover:bg-neutral-50 dark:border-white/10 dark:hover:bg-white/5"
+                              }`}
+                          >
+                            <div>
+                              <p className="font-bold">
+                                [{res.hubName}] {res.label}
+                              </p>
+                              <p className="mt-0.5 text-[11px] text-neutral-500 dark:text-neutral-400">
+                                Chưa có hồ sơ sự cố UC11 đang mở
+                              </p>
+                            </div>
+                            <StatusBadge status={res.status} />
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-end gap-2 border-t border-neutral-200/80 pt-3 dark:border-white/10">
+                      <Button
+                        variant="primary"
+                        onClick={() => openCreateWithResource(effectiveChosenFaultId, true)}
+                      >
+                        Xử lý tài nguyên này
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
-            </>
-          )}
-
-          {incidentDetails.incident.status === "CLOSED" && incidentDetails.incident.resolutionNote && (
-            <p className="rounded-lg bg-emerald-50 p-2.5 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200">
-              <strong>Kết quả đóng sự cố:</strong> {incidentDetails.incident.resolutionNote}
-            </p>
-          )}
-        </div>
-      )}
-    </Card>
+            ) : (
+              <div className="flex h-full min-h-[380px] flex-col items-center justify-center rounded-2xl border border-dashed border-neutral-200 p-8 text-center dark:border-white/10">
+                <p className="text-sm font-semibold">
+                  {contextHubName
+                    ? `Không có sự cố đang mở tại ${contextHubName}`
+                    : "Chưa chọn hồ sơ sự cố nào"}
+                </p>
+                <p className="mt-1 max-w-sm text-xs text-neutral-500 dark:text-neutral-400">
+                  Chọn một sự cố trong danh sách bên trái, hoặc bấm <strong>+ Ghi nhận sự cố mới</strong> để tạo hồ sơ mới.
+                </p>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+    </div>
   );
 }

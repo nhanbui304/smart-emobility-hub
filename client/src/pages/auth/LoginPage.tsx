@@ -86,19 +86,22 @@ export function LoginPage() {
         <div className="mt-8 rounded-xl border border-neutral-200 p-3 text-xs dark:border-white/10">
           <p className="mb-2 font-semibold text-neutral-600 dark:text-neutral-300">Tài khoản demo</p>
           <div className="flex gap-2">
-            {DEMO_ACCOUNTS.map((a) => (
-              <button
-                key={a.email}
-                type="button"
-                onClick={() => {
-                  setEmail(a.email);
-                  setPassword(a.password);
-                }}
-                className="flex-1 rounded-lg bg-neutral-100 px-2 py-2 font-medium hover:bg-neutral-200 dark:bg-white/5 dark:hover:bg-white/10"
-              >
-                {a.label}
-              </button>
-            ))}
+            {DEMO_ACCOUNTS.map((a) => {
+              const isOperator = a.email.startsWith("operator@");
+              return (
+                <button
+                  key={a.email}
+                  type="button"
+                  onClick={() => {
+                    setEmail(a.email);
+                    setPassword(a.password);
+                  }}
+                  className={`${isOperator ? "hidden md:block " : ""}flex-1 cursor-pointer rounded-lg bg-neutral-100 px-2 py-2 font-medium hover:bg-neutral-200 dark:bg-white/5 dark:hover:bg-white/10`}
+                >
+                  {a.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

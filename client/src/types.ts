@@ -122,6 +122,7 @@ export interface Incident {
   notificationPending: boolean;
   resolutionNote: string | null;
   createdAt: string;
+  updatedAt?: string;
   resolvedAt: string | null;
   version: number;
 }
@@ -261,6 +262,7 @@ export interface HubStatus {
   totalSlots: number;
   freeChargingPorts: number;
   totalChargingPorts: number;
+  inUseChargingPorts?: number;
   averageBattery: number;
   lastUpdatedAt: string;
 }
@@ -423,9 +425,18 @@ export interface CreateRunResult {
   created: boolean;
 }
 
+export interface HandlingPlanLogEntry {
+  version: number;
+  actionType: string;
+  allocationChanges: string[];
+  updatedBy: string;
+  updatedAt: string;
+}
+
 export interface HandlingPlan {
   actionType: string;
   allocationChanges: string[];
+  history?: HandlingPlanLogEntry[];
 }
 
 export interface HubAcceptance {
@@ -688,10 +699,39 @@ export interface RunCancelled {
   runId: string;
 }
 
+export interface SimulatedHubBreakdown {
+  hubId: string;
+  hubName: string;
+  closed: boolean;
+  baselineAvailable: number;
+  baselineDemand: number;
+  baselineDeficit: number;
+  baselineSurplus: number;
+  baselineFreeSlots: number;
+  scenarioAvailable: number;
+  scenarioDemand: number;
+  scenarioDeficit: number;
+  scenarioSurplus: number;
+  scenarioFreeSlots: number;
+  isTargetHub: boolean;
+  isOverloaded: boolean;
+  inUseChargingPorts?: number;
+  freeChargingPorts: number;
+  totalChargingPorts: number;
+}
+
 export interface RunOutcome {
   status: SimulationRunStatus;
   result?: SimulationResult;
   failureReason?: string;
+  runId?: string;
+  snapshotId?: string;
+  scenario?: Scenario;
+  hubIds?: string[];
+  hubNames?: string[];
+  timeRange?: TimeRange;
+  createdAt?: string;
+  hubBreakdowns?: SimulatedHubBreakdown[];
 }
 
 export interface RunStarted {
@@ -832,4 +872,48 @@ export interface CurrentTripInfo {
   batteryLevel: number;
   returnHubName?: string;
   returnSlotCode?: string;
+}
+
+export interface SimulationRunHistoryItem {
+  runId: string;
+  snapshotId: string;
+  status: SimulationRunStatus;
+  scenarioType: ScenarioType;
+  assumptions: ScenarioAssumptions;
+  hubIds: string[];
+  hubNames: string[];
+  timeRange: TimeRange;
+  createdAt: string;
+  comparison?: SimulationComparison;
+}
+
+export type SimulatedActionType = "REDISTRIBUTE_VEHICLES" | "PRIORITIZE_LOW_BATTERY_CHARGING";
+
+export interface ActionImpactRequest {
+  recommendationId?: string;
+  actionType: SimulatedActionType;
+  sourceHubId?: string;
+  targetHubId?: string;
+  vehicleCount?: number;
+  hubId?: string;
+  priorityTurnaroundVehicles?: number;
+}
+
+export interface ActionImpactResult {
+  runId: string;
+  snapshotId: string;
+  actionType: SimulatedActionType;
+  beforeAction: SimulationMetrics;
+  afterAction: SimulationMetrics;
+  assumptionsUsed: string[];
+  unavailableKpis: string[];
+  limitations: string[];
+  appliedParams: {
+    sourceHubId?: string;
+    targetHubId?: string;
+    vehicleCount?: number;
+    hubId?: string;
+    priorityTurnaroundVehicles?: number;
+  };
+  hubBreakdowns?: SimulatedHubBreakdown[];
 }

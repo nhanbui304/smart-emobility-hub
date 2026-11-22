@@ -26,7 +26,7 @@ export function SettingsPage() {
         <p className="text-sm text-neutral-500 dark:text-neutral-400">{user?.email}</p>
       </Card>
 
-      <section aria-labelledby="theme-heading">
+      <section data-tour="st-theme" aria-labelledby="theme-heading">
         <h2 id="theme-heading" className="mb-2 text-sm font-semibold text-neutral-600 dark:text-neutral-300">
           Giao diện
         </h2>

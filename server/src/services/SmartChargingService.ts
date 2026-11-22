@@ -7,6 +7,7 @@ import { hubRepository } from "../repositories/HubRepository";
 import { operationalRepository } from "../repositories/OperationalRepository";
 import {
   committedChargingPortIds,
+  getLatestAppliedSchedule,
   getLatestScheduleVersionNumber,
   getStoredPlanDraft,
   listHubChargingPortsWithSlots,
@@ -35,6 +36,15 @@ export const ALLOWED_PRIORITY_RULES = [
 let currentPlanningMeta: { hubId: string; timeRange: TimeRange; ruleId: string } | null = null;
 
 export const smartChargingService = {
+  /** Hỗ trợ UI Operator xem phiên bản lịch sạc đang áp dụng mới nhất tại Hub. */
+  async getLatestAppliedSchedule(hubId: string) {
+    const hub = hubRepository.findById(hubId);
+    if (!hub) {
+      throw new AppError("NOT_FOUND", "Không tìm thấy Mobility Hub.");
+    }
+    return getLatestAppliedSchedule(hubId);
+  },
+
   /**
    * UC13 bước 1–2: Đọc bối cảnh sạc tại Hub trong khoảng thời gian điều phối,
    * sau đó đánh giá độ đầy đủ và tính mới của dữ liệu (assessDataCompleteness).

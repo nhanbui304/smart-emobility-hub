@@ -22,15 +22,30 @@ function formatRemaining(ms: number): string {
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
-export function VehicleReservationPanel({ onTripStarted }: { onTripStarted: (trip: Trip) => void }) {
+export function VehicleReservationPanel({
+  onTripStarted,
+  hideEmpty = false,
+  onStatusChange,
+}: {
+  onTripStarted: (trip: Trip) => void;
+  hideEmpty?: boolean;
+  onStatusChange?: (state: { loading: boolean; count: number }) => void;
+}) {
   const { data, loading, error, reload } = useAsync(() => reservationApi.getMyReservations(), [], {
     refreshEveryMs: 3000,
   });
 
+  useEffect(() => {
+    onStatusChange?.({ loading: loading && data === undefined, count: data?.length ?? 0 });
+  }, [loading, data, onStatusChange]);
+
+  const hasItems = (data?.length ?? 0) > 0;
+  if (!error && !hasItems && hideEmpty) return null;
+
   return (
     <div className="space-y-3">
       <ErrorMessage error={error} onRetry={() => void reload()} />
-      {!loading && !error && data?.length === 0 && (
+      {!loading && !error && data?.length === 0 && !hideEmpty && (
         <EmptyState title="Chưa có đặt xe" description="Đặt xe ở Trang chủ, rồi quay lại đây để nhận xe." />
       )}
       {data?.map((r) => (
@@ -166,13 +181,11 @@ function ReservationCard({
             {vehicle && <p className="text-[11px] font-semibold text-emerald-700 dark:text-lime">{vehicle.code}</p>}
           </div>
           <div>
-            <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
-              {vehicle ? vehicleTypeLabel(vehicle.type) : "Xe dùng chung đã đặt"}
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand dark:text-lime">Xe đã đặt</p>
             <p className="text-lg font-bold">{hub.data?.name ?? "Đang tải Hub..."}</p>
             {vehicle && (
               <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                Pin {vehicle.batteryLevel}% · Quãng đường ước tính ~{estimateRangeKm(vehicle.batteryLevel, vehicle.type)} km
+                {vehicleTypeLabel(vehicle.type)} · Pin {vehicle.batteryLevel}% · ~{estimateRangeKm(vehicle.batteryLevel, vehicle.type)} km
               </p>
             )}
           </div>
