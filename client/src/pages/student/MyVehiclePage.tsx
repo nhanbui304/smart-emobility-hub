@@ -1,8 +1,11 @@
 // Owner: Bùi Quang Nhân (UC06), Ngô Minh Triết (UC08), Nguyễn Hoàng Nhân (UC09)
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { authApi } from "../../api/auth";
 import { PageHeader } from "../../components/PageHeader";
+import { useAsync } from "../../hooks/useAsync";
 import { ManageChargingSchedulePanel } from "./ManageChargingSchedulePanel";
+import { PrivateVehiclesCard } from "./PrivateVehiclesCard";
 import { ScheduleChargingPanel } from "./ScheduleChargingPanel";
 import { ParkingReservationSection } from "./parking/ParkingReservationSection";
 
@@ -22,10 +25,37 @@ function parseTab(raw: string | null): VehicleTab {
 export function MyVehiclePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = parseTab(searchParams.get("tab"));
+  const manageFromUrl = searchParams.get("manageVehicles") === "1";
+
   const [latestReservationId, setLatestReservationId] = useState<string>("init");
   const [justCreated, setJustCreated] = useState(false);
+  const [vehicleVersion, setVehicleVersion] = useState(0);
+  const [manageOpen, setManageOpen] = useState<boolean>(manageFromUrl);
+
+  const myVehicles = useAsync(() => authApi.myVehicles(), []);
+  const vehicles = myVehicles.data ?? [];
 
   const hubIdParam = searchParams.get("hubId");
+
+  useEffect(() => {
+    if (manageFromUrl) setManageOpen(true);
+  }, [manageFromUrl]);
+
+  // Chỉ tự mở khung quản lý xe khi tải xong mà sinh viên chưa đăng ký xe nào (0 xe)
+  useEffect(() => {
+    if (!myVehicles.loading && myVehicles.data !== null && myVehicles.data.length === 0) {
+      setManageOpen(true);
+    }
+  }, [myVehicles.loading, myVehicles.data]);
+
+  function toggleManageVehicles(nextOpen?: boolean) {
+    const resolved = nextOpen ?? !manageOpen;
+    setManageOpen(resolved);
+    const next = new URLSearchParams(searchParams);
+    if (resolved) next.set("manageVehicles", "1");
+    else next.delete("manageVehicles");
+    setSearchParams(next, { replace: true });
+  }
 
   function switchTab(tab: VehicleTab) {
     const next = new URLSearchParams(searchParams);
@@ -41,9 +71,43 @@ export function MyVehiclePage() {
     setJustCreated(true);
   }
 
+  async function handleVehiclesChanged() {
+    await myVehicles.reload();
+    setVehicleVersion((v) => v + 1);
+  }
+
   return (
     <div className="space-y-5">
-      <PageHeader title="Xe của tôi" subtitle="Đặt chỗ đỗ, đặt lịch sạc và quản lý lịch cho xe cá nhân" />
+      <PageHeader
+        title="Xe của tôi"
+        subtitle="Đặt chỗ đỗ, đặt lịch sạc và quản lý lịch cho xe cá nhân"
+        actions={
+          <button
+            type="button"
+            data-tour="st-vehicle-manage-btn"
+            aria-expanded={manageOpen}
+            onClick={() => toggleManageVehicles()}
+            className={`cursor-pointer rounded-xl border px-3.5 py-2 text-xs font-semibold transition active:scale-[0.99] ${
+              manageOpen
+                ? "border-brand bg-brand text-lime dark:border-lime dark:bg-lime dark:text-brand-dark"
+                : "border-neutral-200 bg-white text-neutral-700 hover:border-brand hover:text-brand dark:border-white/15 dark:bg-panel-dark dark:text-neutral-200 dark:hover:border-lime dark:hover:text-lime"
+            }`}
+          >
+            Quản lý xe cá nhân ({vehicles.length} xe)
+          </button>
+        }
+      />
+
+      {manageOpen && (
+        <PrivateVehiclesCard
+          vehicles={vehicles}
+          loading={myVehicles.loading}
+          loadError={myVehicles.error}
+          onRetryLoad={() => void myVehicles.reload()}
+          onChanged={handleVehiclesChanged}
+          onClose={() => toggleManageVehicles(false)}
+        />
+      )}
 
       {/* Lối tắt Sạc ngay (UC07) riêng và dễ thấy trên cả desktop lẫn điện thoại */}
       <Link
@@ -106,11 +170,11 @@ export function MyVehiclePage() {
         </div>
       )}
 
-      {activeTab === "parking" && <ParkingReservationSection />}
+      {activeTab === "parking" && <ParkingReservationSection key={vehicleVersion} />}
 
-      {activeTab === "schedule" && <ScheduleChargingPanel onCreated={handleChargingCreated} />}
+      {activeTab === "schedule" && <ScheduleChargingPanel key={vehicleVersion} onCreated={handleChargingCreated} />}
 
-      {activeTab === "manage" && <ManageChargingSchedulePanel key={latestReservationId} />}
+      {activeTab === "manage" && <ManageChargingSchedulePanel key={`${vehicleVersion}:${latestReservationId}`} />}
     </div>
   );
 }

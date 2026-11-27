@@ -73,10 +73,18 @@ function getStudentPageTour(pathname: string): PageTourConfig {
       buttonLabel: "Hướng dẫn Xe cá nhân",
       steps: [
         {
-          ucTag: "UC06 – UC09",
-          title: "Đặt chỗ đỗ & Lịch sạc cho xe cá nhân",
+          ucTag: "Hồ sơ xe · UC06 – UC09",
+          title: "Quản lý xe cá nhân, chỗ đỗ & lịch sạc",
           content:
-            "Trang này gom đầy đủ tiện ích cho xe điện cá nhân của bạn tại 5 Mobility Hub ĐHQG-HCM.",
+            "Đăng ký/cập nhật xe điện cá nhân ở góc trên bên phải và sử dụng trọn bộ tiện ích đỗ xe, sạc xe tại 5 Mobility Hub ĐHQG-HCM.",
+        },
+        {
+          target: '[data-tour="st-vehicle-manage-btn"]',
+          ucTag: "Hồ sơ phương tiện",
+          title: "Quản lý danh sách xe điện cá nhân",
+          content:
+            "Bấm để mở khung thêm xe mới, cập nhật biển số/chuẩn đầu cắm hoặc xóa phương tiện không còn sử dụng.",
+          placement: "bottom",
         },
         {
           target: '[data-tour="st-parking"]',
@@ -191,10 +199,10 @@ function getStudentPageTour(pathname: string): PageTourConfig {
       },
       {
         target: '[data-tour="st-home-modes"]',
-        ucTag: "Chế độ xem",
-        title: "Chọn nhu cầu: Thuê xe · Đỗ xe · Sạc xe",
+        ucTag: "2 Nhóm nhu cầu",
+        title: "Xe dùng chung (Thuê xe) & Xe cá nhân (Đỗ · Sạc)",
         content:
-          "Chuyển đổi giữa 3 nhu cầu để bản đồ hiển thị đúng số lượng tương ứng (số xe sẵn sàng, chỗ trống hoặc cổng sạc rảnh).",
+          "Chuyển đổi rõ ràng giữa nhu cầu Thuê xe dùng chung và nhóm tiện ích Xe cá nhân (Đỗ xe, Sạc xe) để bản đồ và thẻ Hub hiển thị đúng tài nguyên.",
         placement: "bottom",
       },
       {
@@ -208,9 +216,9 @@ function getStudentPageTour(pathname: string): PageTourConfig {
       {
         target: '[data-tour="st-home-hubcard"]',
         ucTag: "Đặt nhanh",
-        title: "Chọn thẳng 1 xe pin cao hoặc Xem tất cả xe",
+        title: "Chọn thẳng xe pin cao hoặc tiện ích xe cá nhân",
         content:
-          "Bấm trực tiếp vào bất kỳ xe nào trong top 3 để mở ngay bước xác nhận đặt xe (UC02), hoặc bấm Xem tất cả xe để duyệt toàn bộ xe tại Hub.",
+          "Ở chế độ Thuê xe, chọn ngay 1 xe trong top 3 pin cao (UC02). Ở chế độ Đỗ xe / Sạc xe, xem xe cá nhân của bạn kèm số chỗ đỗ và cổng sạc rảnh để thao tác ngay.",
         placement: "left",
       },
       {

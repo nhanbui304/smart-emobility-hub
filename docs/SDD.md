@@ -67,7 +67,7 @@ Tất cả endpoint có tiền tố `/api` và trả về JSON thống nhất `{
 | Prefix | Nhóm chức năng | Quyền truy cập |
 | --- | --- | --- |
 | `/api/health` | Kiểm tra trạng thái server | Công khai |
-| `/api/auth` | Đăng ký, đăng nhập, đăng xuất, thông tin cá nhân, đổi theme, danh sách xe cá nhân | Công khai / Đã đăng nhập |
+| `/api/auth` | Đăng ký, đăng nhập, đăng xuất, thông tin cá nhân, đổi theme; CRUD quản lý xe điện cá nhân (`GET/POST/PATCH/DELETE /api/auth/me/vehicles` — chuẩn hóa & chống trùng biển số, kiểm tra chủ sở hữu, khóa đổi chuẩn đầu cắm hoặc xóa xe khi còn lịch sạc/yêu cầu sạc/chỗ đỗ hiệu lực hoặc đã phát sinh lịch sử đặt sạc) | Công khai / Đã đăng nhập (`STUDENT` cho `/me/vehicles`) |
 | `/api/hubs` | Xem danh sách & chi tiết trạng thái các Hub | Đã đăng nhập |
 | `/api/me` | Xem danh sách lượt đặt của sinh viên hiện tại | `STUDENT` |
 | `/api/search` | Tìm kiếm phương án di chuyển phù hợp (UC01) | `STUDENT` |

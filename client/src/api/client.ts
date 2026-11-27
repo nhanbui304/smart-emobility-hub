@@ -42,7 +42,12 @@ function toApiError(err: unknown): ApiError {
   return new ApiError("UNKNOWN_ERROR", "Đã có lỗi xảy ra.");
 }
 
-async function request<T>(method: "get" | "post" | "patch", url: string, body?: unknown, params?: object): Promise<T> {
+async function request<T>(
+  method: "get" | "post" | "patch" | "delete",
+  url: string,
+  body?: unknown,
+  params?: object,
+): Promise<T> {
   try {
     const res = await http.request({ method, url, data: body, params });
     return res.data.data as T;
@@ -55,4 +60,5 @@ export const api = {
   get: <T>(url: string, params?: object) => request<T>("get", url, undefined, params),
   post: <T>(url: string, body?: unknown) => request<T>("post", url, body),
   patch: <T>(url: string, body?: unknown) => request<T>("patch", url, body),
+  del: <T>(url: string) => request<T>("delete", url),
 };

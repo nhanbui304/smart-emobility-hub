@@ -124,20 +124,29 @@ export function MobilitySearchPanel({ purpose, origin, hubs }: {
       )}
       {result && (result.options.length ? (
         <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-          {result.options.slice(0, limit).map((option) => (
-            <li key={option.optionId} className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl border border-neutral-200 p-3 dark:border-white/10">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold">{hubs.find((hub) => hub.id === option.hubId)?.name ?? "Mobility Hub"}</p>
-                {isRental && <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                  {sharedVehiclePlate(option.vehicle.code)} · {vehicleTypeLabel(option.vehicle.type)} · Pin {option.vehicle.batteryLevel}%
-                </p>}
-              </div>
-              <Button type="button" variant="outline" className="min-h-11 px-3 py-2"
-                disabled={!!confirming} loading={confirming === option.optionId} onClick={() => void chooseOption(option.optionId)}>
-                {labels[purpose].select}
-              </Button>
-            </li>
-          ))}
+          {result.options.slice(0, limit).map((option) => {
+            const hub = hubs.find((item) => item.id === option.hubId);
+            return (
+              <li key={option.optionId} className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-xl border border-neutral-200 p-3 dark:border-white/10">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">{hub?.name ?? "Mobility Hub"}</p>
+                  {isRental ? (
+                    <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                      {sharedVehiclePlate(option.vehicle.code)} · {vehicleTypeLabel(option.vehicle.type)} · Pin {option.vehicle.batteryLevel}%
+                    </p>
+                  ) : hub ? (
+                    <p className="text-xs text-neutral-600 dark:text-neutral-300">
+                      {hub.freeSlots} chỗ đỗ trống · {hub.freeChargingPorts}/{hub.totalChargingPorts} cổng sạc rảnh
+                    </p>
+                  ) : null}
+                </div>
+                <Button type="button" variant="outline" className="min-h-11 px-3 py-2"
+                  disabled={!!confirming} loading={confirming === option.optionId} onClick={() => void chooseOption(option.optionId)}>
+                  {labels[purpose].select}
+                </Button>
+              </li>
+            );
+          })}
         </ul>
       ) : <p role="status" className="text-sm text-neutral-600 dark:text-neutral-300">
         {isRental ? "Chưa có xe phù hợp. Thử giảm mức pin tối thiểu hoặc chọn loại xe khác." : "Chưa có tài nguyên phù hợp. Thử tìm lại sau hoặc chọn mục đích khác."}

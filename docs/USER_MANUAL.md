@@ -47,11 +47,11 @@ Mở **<http://localhost:5173>** (hoặc địa chỉ Local Vite in ra nếu c�
 | Vai trò | Màn hình / Đường dẫn | Mã Use Case | Chức năng dùng để làm gì? |
 | --- | --- | --- | --- |
 | **Chung** | `/login`, `/register`, `/student/settings` | Auth & Customize Theme | Đăng ký sinh viên, đăng nhập/đăng xuất, đổi giao diện Sáng / Tối / Theo hệ thống. |
-| **Student** | `/student` (Khám phá Hub) | **View Hub Status**, **UC01** | Xem trạng thái 5 Hub trực tiếp trên bản đồ ĐHQG-HCM (3s/lần) và lọc phương án thuê xe / đỗ xe / sạc xe phù hợp. |
+| **Student** | `/student` (Khám phá Hub) | **View Hub Status**, **UC01** | Xem trạng thái 5 Hub trực tiếp trên bản đồ ĐHQG-HCM (3s/lần); chuyển đổi rõ giữa **Xe dùng chung (Thuê xe)** và **Xe cá nhân (Đỗ xe · Sạc xe)** để lọc phương án phù hợp. |
 | **Student** | `/student/hubs/:hubId/reserve` | **UC02** | Chọn xe dùng chung khả dụng tại Hub và giữ xe trước trong 30 phút (chống đặt trùng). |
 | **Student** | `/student/trips` (Chuyến đi) | **UC03, UC04, UC05** | Hủy lượt đặt còn hạn (UC03), mở khóa nhận xe bắt đầu chuyến đi (UC04), và trả xe về Hub đích có chỗ trống (UC05). |
 | **Student** | `/student/reservations` | **View My Reservations** | Xem tập trung toàn bộ lượt đặt xe, đặt chỗ đỗ và lịch sạc hiện có của sinh viên. |
-| **Student** | `/student/my-vehicle` (Xe của tôi) | **UC06, UC08, UC09** | Quản lý xe cá nhân: giữ tạm & xác nhận chỗ đỗ (UC06), đặt lịch sạc trước (UC08), đổi giờ hoặc hủy lịch sạc (UC09). |
+| **Student** | `/student/my-vehicle` (Xe của tôi) | **Private Vehicles**, **UC06, UC08, UC09** | Quản lý hồ sơ xe điện cá nhân (thêm/cập nhật/xóa xe an toàn); giữ tạm & xác nhận chỗ đỗ (UC06), đặt lịch sạc trước (UC08), đổi giờ hoặc hủy lịch sạc (UC09). |
 | **Student** | `/student/charging-request` | **UC07** | Gửi yêu cầu sạc tức thời tại Hub (nhận cổng ngay hoặc vào hàng đợi có thời gian chờ dự kiến). |
 | **Operator** | `/operator/monitoring` | **UC10** | Giám sát KPI mạng lưới 5 Hub thời gian thực, bấm trực tiếp pin vàng trên bản đồ để xem ngay cảnh báo/sự cố và chuyển nhanh sang xử lý. |
 | **Operator** | `/operator/charging-incidents` (Tab 1) | **UC13** | Điều phối lịch sạc thông minh theo 3 bước (Hub/Khung giờ → Quy tắc ưu tiên → Kiểm tra tải điện kW & Áp dụng). |
@@ -66,10 +66,14 @@ Mở **<http://localhost:5173>** (hoặc địa chỉ Local Vite in ra nếu c�
 
 ### 3.1 Khám phá bản đồ Hub & Tìm phương án phù hợp (`View Hub Status` + `UC01`)
 - **Đường dẫn:** `/student`
-- **Thuộc Use Case nào:** **View Hub and Resource Status** (xem trạng thái trực tiếp 5 Hub) và **UC01 — Find Suitable Mobility Option** (tìm phương án di chuyển/đỗ/sạc phù hợp tiêu chí).
-- **Cách sử dụng:**
-  1. Trên bản đồ ĐHQG-HCM (tự cập nhật mỗi 3 giây), bấm vào bất kỳ pin Hub nào (*Ga Metro ĐHQG, ĐH Bách Khoa, Thư viện Trung tâm, ĐH KHTN, KTX Khu B*) để xem ngay số xe rảnh, chỗ trống, cổng sạc và **top 3 xe pin cao nhất** — có thể **bấm trực tiếp từng xe** để mở thẳng bước xác nhận đặt xe, hoặc bấm **`Xem tất cả xe →`** để xem toàn bộ danh sách xe của Hub.
-  2. Ở khung **Tìm xe thuê (UC01)**, chọn loại xe và mức pin tối thiểu → bấm **`Tìm`** → xem nhóm kết quả đầu gọn (có nút **`Xem thêm`**) → bấm **`Chọn xe`** để mở thẳng bước xác nhận của đúng Hub và xe đó.
+- **Thuộc Use Case nào:** **View Hub and Resource Status** (xem trạng thái trực tiếp 5 Hub) và **UC01 — Find Suitable Mobility Option** (tìm phương án di chuyển/đỗ/sạc phù hợp tiêu chí cho từng nhóm sinh viên).
+- **Cách sử dụng (tách rõ 2 phân nhóm Sinh viên ngay trên thanh chế độ góc trên phải):**
+  1. **Nhóm `Xe dùng chung (Thuê xe)` (mặc định):**
+     - Trên bản đồ ĐHQG-HCM (tự cập nhật mỗi 3 giây), bấm vào bất kỳ pin Hub nào (*Ga Metro ĐHQG, ĐH Bách Khoa, Thư viện Trung tâm, ĐH KHTN, KTX Khu B*) để xem ngay số xe rảnh, chỗ trống, cổng sạc và **top 3 xe pin cao sẵn sàng nhận ngay** — có thể **bấm trực tiếp từng xe** để mở thẳng bước xác nhận đặt xe, hoặc bấm **`Xem tất cả xe →`** để xem toàn bộ danh sách xe của Hub.
+     - Ở khung **Tìm phương án (UC01)** bên dưới, lọc theo loại xe và mức pin tối thiểu → bấm **`Tìm`** → bấm **`Chọn xe`** để mở thẳng bước xác nhận của đúng Hub và xe đó.
+  2. **Nhóm `Xe cá nhân (Đỗ xe · Sạc xe)`:**
+     - Khi chuyển sang **`Đỗ xe`** hoặc **`Sạc xe`**, thẻ xem nhanh Hub bên phải tự ẩn danh sách xe thuê dùng chung và chuyển sang khối **`Tiện ích cho xe điện cá nhân`**: hiển thị biển số, loại xe, chuẩn đầu cắm của xe cá nhân kèm lối tắt **`Quản lý xe →`** (hoặc lời nhắc **`+ Đăng ký xe cá nhân →`** nếu sinh viên chưa có xe), số chỗ đỗ thường đang trống và số cổng sạc đang rảnh tại Hub đang chọn, cùng nút hành động chính (**`Đặt chỗ đỗ tại Hub này →`** / **`Đặt lịch sạc trước →`**) và nút nhanh **`Yêu cầu sạc ngay (UC07) →`**.
+     - Kết quả tìm kiếm UC01 bên dưới cũng hiển thị phụ đề số chỗ đỗ trống và số cổng sạc rảnh dưới tên mỗi Hub để sinh viên đi xe cá nhân so sánh nhanh giữa các Hub.
 
 ![Trang chủ bản đồ Student](submission-4/screenshots/02_student_home_map.png)
 ![Tìm phương án phù hợp UC01](submission-4/screenshots/03_student_uc01_search.png)
@@ -95,7 +99,7 @@ Mở **<http://localhost:5173>** (hoặc địa chỉ Local Vite in ra nếu c�
   - **UC05 — Return Shared Vehicle:** Chọn Hub đích → cấp chỗ đỗ trống (không lấy ô có cổng sạc) → gửi lệnh khóa xe và kết thúc chuyến đi.
 - **Cách sử dụng:**
   1. Khi chưa có lượt nào: màn hình hiển thị 1 trạng thái trống duy nhất kèm nút về Trang chủ.
-  2. Khi đang giữ xe chưa nhận: hiển thị thẻ **Xe đã đặt** (biển số, đồng hồ đếm ngược 30 phút) cùng nút **`Hủy đặt xe` (UC03)** và **`Nhận xe → Mở khóa và nhận xe` (UC04)**.
+  2. Khi đang giữ xe chưa nhận: hiển thị thẻ **Xe đã đặt** (biển số, đồng hồ đếm ngược 30 phút) cùng nút **`Hủy đặt xe` (UC03)** và **`Nhận xe → Mở khóa và nhận xe` (UC04)** *(trong bước xác nhận nhận xe có thêm tiện ích tùy chọn **`Quét QR thân xe`** giúp đối chiếu nhanh mã xe ngoài bãi hoặc thử nghiệm chặn nhận nhầm xe trước khi gửi lệnh mở khóa)*.
   3. Khi đang thuê xe: ưu tiên hiển thị thẻ **Xe đang thuê** và form **Trả xe** (ẩn thông báo trống về đặt xe) → chọn Hub đích → **`Nhận vị trí đỗ`** → **`Đã đỗ xe – Khóa và trả xe` (UC05)**.
 
 ![Màn hình Chuyến đi UC03-UC05](submission-4/screenshots/05_student_uc04_booked_vehicle.png)
@@ -104,9 +108,13 @@ Mở **<http://localhost:5173>** (hoặc địa chỉ Local Vite in ra nếu c�
 
 ---
 
-### 3.4 Xe cá nhân — Đặt chỗ đỗ & Đặt/Đổi lịch sạc (`UC06`, `UC08`, `UC09`)
-- **Đường dẫn:** `/student/my-vehicle`
-- **Thuộc Use Case nào:** Tách gọn bằng **3 Tab** (**`Đặt chỗ đỗ`** · **`Đặt lịch sạc`** · **`Quản lý lịch sạc`**) kèm lối tắt nổi bật **`Sạc ngay →`** (UC07) ở đầu trang:
+### 3.4 Xe cá nhân — Quản lý xe, Đặt chỗ đỗ & Đặt/Đổi lịch sạc (`Manage Private Vehicles`, `UC06`, `UC08`, `UC09`)
+- **Đường dẫn:** `/student/my-vehicle` (hỗ trợ `?manageVehicles=1` để mở sẵn khung quản lý xe)
+- **Thuộc Use Case nào:** Gồm bảng **`Quản lý xe cá nhân`**, lối tắt nổi bật **`Sạc ngay →`** (UC07) ở đầu trang và **3 Tab nghiệp vụ** (**`Đặt chỗ đỗ`** · **`Đặt lịch sạc`** · **`Quản lý lịch sạc`**):
+  - **Quản lý xe cá nhân (`/api/auth/me/vehicles`):** Bấm nút **`Quản lý xe cá nhân (N xe)`** cạnh tiêu đề trang (tự động mở sẵn nếu tài khoản chưa có xe nào) để:
+    - **`+ Thêm xe mới`:** Nhập biển số (hệ thống tự chuẩn hóa chữ hoa và kiểm tra chống trùng biển số toàn hệ thống), chọn loại xe (*Xe đạp điện* / *Xe máy điện*) và chuẩn đầu cắm (*Ổ cắm tiêu chuẩn (AC)* / *Type 2*).
+    - **`Cập nhật`:** Chỉnh sửa biển số, loại xe hoặc chuẩn đầu cắm ngay trên dòng xe (hệ thống tự động chặn đổi chuẩn đầu cắm nếu xe đang có lịch sạc hoặc yêu cầu sạc còn hiệu lực).
+    - **`Xóa` (có xác nhận an toàn):** Chỉ cho phép xóa khi xe không vướng lượt đặt chỗ đỗ, yêu cầu sạc hoặc lịch sạc hiệu lực (và chưa phát sinh lịch sử đặt sạc ràng buộc đối soát). Mọi thao tác thêm/sửa/xóa tự động làm mới ngay danh sách chọn xe ở cả 3 tab bên dưới mà không cần tải lại trang.
   - **UC06 — Đặt chỗ đỗ (+ Hủy đặt chỗ):** Tìm ô đỗ thường (tách biệt ô sạc), giữ chỗ tạm (`HELD` trong 30 phút) rồi xác nhận (`CONFIRMED`), hoặc hủy đặt chỗ.
   - **UC08 — Đặt lịch sạc:** Chọn xe cá nhân, Hub, khung giờ, pin hiện tại/mục tiêu → tìm cổng tương thích đầu cắm → xác nhận đặt lịch sạc trước.
   - **UC09 — Quản lý lịch sạc:** Xem danh sách lịch sạc đã tạo, đổi khung giờ mới hoặc hủy lịch có kiểm tra xung đột `version` (optimistic locking).

@@ -1,9 +1,10 @@
 // Owner: Bùi Quang Nhân – Register Student Account, Sign In, Sign Out, Customize Interface Mode
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { THEME_PREFERENCES } from "../constants";
+import { CONNECTOR_TYPES, THEME_PREFERENCES, VEHICLE_TYPES } from "../constants";
 import { sendOk } from "../lib/response";
 import { currentUser } from "../middleware/auth";
+import { parseOrThrow } from "../middleware/validate";
 import { authService } from "../services/AuthService";
 import type { AuthUser } from "../types/dto";
 
@@ -20,6 +21,20 @@ export const loginSchema = z.object({
 
 export const themeSchema = z.object({
   themePreference: z.enum(THEME_PREFERENCES),
+});
+
+export const privateVehicleSchema = z.object({
+  plate: z
+    .string()
+    .trim()
+    .min(4, "Biển số xe tối thiểu 4 ký tự.")
+    .max(20, "Biển số xe tối đa 20 ký tự."),
+  type: z.enum(VEHICLE_TYPES),
+  connectorType: z.enum(CONNECTOR_TYPES),
+});
+
+const vehicleIdParams = z.object({
+  vehicleId: z.string().min(1),
 });
 
 /** Lưu người dùng vào phiên đăng nhập (tạo phiên mới để tránh dùng lại phiên cũ). */
@@ -63,6 +78,23 @@ export const authController = {
   /** GET /api/auth/me/vehicles – thêm ngoài sơ đồ: xe cá nhân để chọn khi đặt chỗ đỗ / lịch sạc */
   myVehicles(req: Request, res: Response): void {
     sendOk(res, authService.getMyVehicles(currentUser(req).id));
+  },
+
+  /** POST /api/auth/me/vehicles */
+  createMyVehicle(req: Request, res: Response): void {
+    sendOk(res, authService.createMyVehicle(currentUser(req).id, req.body), 201);
+  },
+
+  /** PATCH /api/auth/me/vehicles/:vehicleId */
+  updateMyVehicle(req: Request, res: Response): void {
+    const { vehicleId } = parseOrThrow(vehicleIdParams, req.params);
+    sendOk(res, authService.updateMyVehicle(currentUser(req).id, vehicleId, req.body));
+  },
+
+  /** DELETE /api/auth/me/vehicles/:vehicleId */
+  deleteMyVehicle(req: Request, res: Response): void {
+    const { vehicleId } = parseOrThrow(vehicleIdParams, req.params);
+    sendOk(res, authService.deleteMyVehicle(currentUser(req).id, vehicleId));
   },
 
   /** PATCH /api/auth/me/theme */

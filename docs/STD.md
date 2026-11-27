@@ -13,7 +13,7 @@
 | Mức kiểm thử | Công cụ / Cách thực hiện | Phạm vi chính |
 | --- | --- | --- |
 | **Static Analysis** | TypeScript (`npm run typecheck`) + ESLint (`npm run lint`) | Toàn bộ `server/src/` và `client/src/`. |
-| **Unit & Integration Tests** | **Vitest** + `@vitest/coverage-v8` (`npm test`) | 4 bộ test tự động (20 test case) trên SQLite test riêng (`server/data/test.db`, không chạm `dev.db`): `AuthService`, `ReservationService`, `ParkingService` (kèm transaction, idempotency `requestId`, phân quyền và hết hạn giữ chỗ) và `SimulationEngine` (toán học cổng sạc/đội xe & đóng Hub UC14). |
+| **Unit & Integration Tests** | **Vitest** + `@vitest/coverage-v8` (`npm test`) | 4 bộ test tự động (24 test cases) trên SQLite test riêng (`server/data/test.db`, không chạm `dev.db`): `AuthService` (xác thực, theme & CRUD xe điện cá nhân), `ReservationService`, `ParkingService` (kèm transaction, idempotency `requestId`, phân quyền và hết hạn giữ chỗ) và `SimulationEngine` (toán học cổng sạc/đội xe & đóng Hub UC14). |
 | **Production Build Verification** | Vite (`npm run build`) | Kiểm tra đóng gói toàn bộ frontend React + TypeScript không lỗi. |
 | **System / E2E Manual Demo** | Kịch bản 6 phút ([KICH_BAN_VIDEO_DEMO.md](submission-4/KICH_BAN_VIDEO_DEMO.md)) | Toàn bộ 14 UC trên trình duyệt (Student + Operator), đồng bộ polling 3 giây, chế độ Sáng/Tối và nhánh lỗi thiết bị giả lập. |
 
@@ -26,7 +26,7 @@
 
 | Nhóm / UC | Mã TC tiêu biểu | Kịch bản kiểm thử trọng tâm | Trạng thái |
 | --- | --- | --- | --- |
-| **Auth & Theme** | `TC-AUTH-01..05` | Đăng ký tài khoản Student, chống trùng email, đăng nhập đúng/sai mật khẩu, cập nhật theme. | Automated (Vitest) |
+| **Auth & Theme** | `TC-AUTH-01..09` | Đăng ký tài khoản Student, chống trùng email, đăng nhập đúng/sai mật khẩu, cập nhật theme; CRUD xe điện cá nhân (`GET/POST/PATCH/DELETE`), chuẩn hóa & chống trùng biển số, xác thực quyền sở hữu (`ownerId`) và chặn đổi chuẩn đầu cắm / xóa xe khi đang có đặt chỗ đỗ hoặc lịch sạc còn hiệu lực. | Automated (Vitest) |
 | **UC01** | `TC-UC01-01..04` | Lọc phương tiện theo loại xe & mức pin tối thiểu; chuyển sang đặt dịch vụ. | Manual E2E |
 | **UC02** | `TC-UC02-01..05` | Đặt xe thành công, chống gửi lặp `requestId`, chặn đặt trùng khi xe đã `RESERVED`, chặn sinh viên đang có đặt xe hiệu lực. | Vitest `01..03`, còn lại kiểm thử thủ công. |
 | **UC03** | `TC-UC03-01..04` | Hủy đặt xe còn hạn → trả xe về `AVAILABLE`; chặn hủy đặt xe của người khác (`FORBIDDEN`); chống gửi lặp hủy. | Vitest `01..02`, còn lại kiểm thử thủ công. |

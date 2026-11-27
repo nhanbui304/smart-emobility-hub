@@ -77,20 +77,101 @@ function ReservationCard({
   const [mode, setMode] = useState<Mode>("idle");
   const [pickUpPreview, setPickUpPreview] = useState<PickUpPreview | null>(null);
   const [cancelPreview, setCancelPreview] = useState<CancellationPreview | null>(null);
+  const [qrOpen, setQrOpen] = useState(false);
+  const [qrInput, setQrInput] = useState("");
+  const [qrStatus, setQrStatus] = useState<"none" | "matched" | "mismatch">("none");
+  const [camActive, setCamActive] = useState(false);
+  const [camNotice, setCamNotice] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<unknown>(null);
   const [notice, setNotice] = useState<string | null>(null);
   // requestId sinh một lần cho mỗi lần mở màn hình xác nhận; chỉ giữ lại khi mất mạng.
   const requestId = useRef(newRequestId());
 
+  function stopCamera() {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+    setCamActive(false);
+  }
+
+  useEffect(() => () => stopCamera(), []);
+
   function renewIfRejected(e: unknown) {
     if (!(e instanceof ApiError) || e.code !== "NETWORK_ERROR") requestId.current = newRequestId();
   }
 
   function close() {
+    stopCamera();
     setMode("idle");
     setPickUpPreview(null);
     setCancelPreview(null);
+    setQrOpen(false);
+    setQrInput("");
+    setQrStatus("none");
+    setCamNotice(null);
+  }
+
+  function verifyQrPayload(raw: string, expectedCode: string) {
+    const cleaned = raw.trim().toUpperCase();
+    setQrInput(cleaned);
+    if (!cleaned) {
+      setQrStatus("none");
+      return;
+    }
+    const expectedPlate = sharedVehiclePlate(expectedCode).toUpperCase();
+    const matched =
+      cleaned === expectedCode.toUpperCase() ||
+      cleaned === `EMOBILITY:${expectedCode.toUpperCase()}` ||
+      cleaned === expectedPlate;
+    setQrStatus(matched ? "matched" : "mismatch");
+    if (matched) stopCamera();
+  }
+
+  async function toggleCamera(expectedCode: string) {
+    if (camActive) {
+      stopCamera();
+      return;
+    }
+    setCamNotice(null);
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCamNotice("Trình duyệt không hỗ trợ mở camera trực tiếp; bạn có thể bấm nút giả lập quét tem QR bên dưới.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      streamRef.current = stream;
+      setCamActive(true);
+      requestAnimationFrame(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          void videoRef.current.play().catch(() => {});
+        }
+      });
+      const Detector = (window as unknown as { BarcodeDetector?: new (opts: { formats: string[] }) => { detect: (el: HTMLVideoElement) => Promise<Array<{ rawValue?: string }>> } }).BarcodeDetector;
+      if (Detector) {
+        const detector = new Detector({ formats: ["qr_code"] });
+        const scanLoop = async () => {
+          if (!streamRef.current || !videoRef.current) return;
+          try {
+            const codes = await detector.detect(videoRef.current);
+            if (codes[0]?.rawValue) {
+              verifyQrPayload(codes[0].rawValue, expectedCode);
+              return;
+            }
+          } catch {
+            // ignore frame error
+          }
+          if (streamRef.current) setTimeout(() => void scanLoop(), 350);
+        };
+        setTimeout(() => void scanLoop(), 500);
+      }
+    } catch {
+      setCamNotice("Không truy cập được camera trên thiết bị này; hãy dùng nút giả lập quét tem QR bên dưới khi demo.");
+    }
   }
 
   async function openPickUp() {
@@ -226,14 +307,106 @@ function ReservationCard({
       <ErrorMessage error={err} />
 
       {mode === "pickup" && pickUpPreview && (
-        <div className="space-y-2 rounded-xl bg-surface p-3 text-sm dark:bg-white/5">
-          <p className="font-semibold">Xác nhận nhận xe {pickUpPreview.vehicleCode}</p>
-          <p>Mức pin: {pickUpPreview.batteryLevel}%</p>
+        <div className="space-y-3 rounded-xl bg-surface p-3.5 text-sm dark:bg-white/5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="font-semibold">
+                Xác nhận nhận xe {pickUpPreview.vehicleCode}{" "}
+                <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
+                  ({sharedVehiclePlate(pickUpPreview.vehicleCode)})
+                </span>
+              </p>
+              <p className="text-xs text-neutral-600 dark:text-neutral-300">Mức pin hiện tại: {pickUpPreview.batteryLevel}%</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (qrOpen) stopCamera();
+                setQrOpen((v) => !v);
+              }}
+              className="cursor-pointer rounded-xl border border-brand/30 bg-white px-3 py-1.5 text-xs font-semibold text-brand transition hover:border-brand hover:bg-emerald-50 dark:border-lime/30 dark:bg-white/5 dark:text-lime dark:hover:bg-lime/10"
+            >
+              {qrOpen ? "Ẩn quét QR" : "Quét QR thân xe (Tùy chọn)"}
+            </button>
+          </div>
+
+          {qrOpen && (
+            <div className="space-y-2.5 rounded-xl border border-neutral-200 bg-white p-3 text-xs dark:border-white/10 dark:bg-neutral-900">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-semibold text-neutral-700 dark:text-neutral-200">
+                  Đối chiếu nhanh tem QR trên cổ xe
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => void toggleCamera(pickUpPreview.vehicleCode)}
+                    className="cursor-pointer rounded-lg border border-neutral-200 px-2.5 py-1 font-medium text-neutral-700 transition hover:bg-neutral-50 dark:border-white/15 dark:text-neutral-200 dark:hover:bg-white/5"
+                  >
+                    {camActive ? "Tắt camera" : "Mở camera"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => verifyQrPayload(`EMOBILITY:${pickUpPreview.vehicleCode}`, pickUpPreview.vehicleCode)}
+                    className="cursor-pointer rounded-lg bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-800 transition hover:bg-emerald-100 dark:bg-lime/15 dark:text-lime"
+                  >
+                    Giả lập quét đúng ({pickUpPreview.vehicleCode})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => verifyQrPayload("EMOBILITY:EB-999", pickUpPreview.vehicleCode)}
+                    className="cursor-pointer rounded-lg bg-neutral-100 px-2.5 py-1 font-medium text-neutral-600 transition hover:bg-neutral-200 dark:bg-white/10 dark:text-neutral-300"
+                  >
+                    Thử quét nhầm xe
+                  </button>
+                </div>
+              </div>
+
+              {camActive && (
+                <div className="relative overflow-hidden rounded-xl border border-brand/40 bg-black">
+                  <video ref={videoRef} muted playsInline className="h-44 w-full object-cover" />
+                  <div className="pointer-events-none absolute inset-4 rounded-xl border-2 border-dashed border-lime/80" />
+                </div>
+              )}
+
+              {camNotice && (
+                <p className="rounded-lg bg-amber-50 px-2.5 py-1.5 text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
+                  {camNotice}
+                </p>
+              )}
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={qrInput}
+                  onChange={(e) => verifyQrPayload(e.target.value, pickUpPreview.vehicleCode)}
+                  placeholder={`Nhập hoặc quét mã QR (vd: ${pickUpPreview.vehicleCode})`}
+                  className="flex-1 rounded-lg border border-neutral-200 bg-surface px-2.5 py-1.5 font-mono text-xs outline-none focus:border-brand dark:border-white/15 dark:bg-white/5"
+                />
+              </div>
+
+              {qrStatus === "matched" && (
+                <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 font-semibold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-lime">
+                  ✓ Đã xác nhận khớp tem QR của xe {pickUpPreview.vehicleCode}. Bạn có thể mở khóa ngay!
+                </p>
+              )}
+              {qrStatus === "mismatch" && (
+                <p className="rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 font-semibold text-red-700 dark:border-red-500/30 dark:bg-red-500/15 dark:text-red-300">
+                  ✕ Mã QR không khớp với xe đã đặt ({pickUpPreview.vehicleCode}). Đã tạm khóa nút Mở khóa để tránh nhận nhầm xe!
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="flex gap-2">
             <Button variant="outline" onClick={close} disabled={busy}>
               Đóng
             </Button>
-            <Button fullWidth loading={busy} onClick={() => void confirmPickUp()}>
+            <Button
+              fullWidth
+              loading={busy}
+              disabled={qrStatus === "mismatch"}
+              onClick={() => void confirmPickUp()}
+            >
               Mở khóa và nhận xe
             </Button>
           </div>

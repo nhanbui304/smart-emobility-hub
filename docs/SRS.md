@@ -15,13 +15,13 @@ Smart E-Mobility Hub kết nối **5 Mobility Hub** trong Khu đô thị ĐHQG-H
 
 | Tác nhân | Vai trò hệ thống (`role`) | Quyền chính |
 | --- | --- | --- |
-| **Student** | `STUDENT` | Đăng ký/đăng nhập, đổi giao diện sáng/tối, thực hiện UC01–UC09, xem trạng thái Hub và danh sách lượt đặt của bản thân. |
+| **Student** | `STUDENT` | Đăng ký/đăng nhập, đổi giao diện sáng/tối, xem trạng thái Hub & danh sách lượt đặt cá nhân; tách rõ **2 phân nhóm người dùng (Submission #1)**: **(1) *Sinh viên thuê xe dùng chung*** (`UC01–UC05`: tìm xe, đặt/hủy đặt xe, mở khóa nhận xe, trả xe) và **(2) *Sinh viên có xe điện cá nhân*** (Quản lý xe điện cá nhân + `UC01`, `UC06–UC09`: tìm chỗ đỗ/cổng sạc, đặt chỗ đỗ, yêu cầu sạc ngay, đặt/đổi/hủy lịch sạc). |
 | **Operator** | `OPERATOR` | Đăng nhập, đổi giao diện, thực hiện UC10–UC14, nhận cảnh báo theo ngưỡng và điều phối tài nguyên toàn mạng lưới. |
 | **System Scheduler / Vehicle Simulator** | Tác vụ nền | Tự động giải phóng lượt giữ/đặt quá hạn (2.3.1, 2.3.2), cập nhật cảnh báo Hub (2.3.3), giả lập thiết bị xe & cảm biến mỗi giây. |
 
 ## 3. Yêu cầu chức năng (Functional Requirements)
 
-- **Nhóm Xác thực & Hệ thống:** Register Student Account, Sign In / Sign Out, Customize Interface Mode, View Hub and Resource Status, View My Reservations.
+- **Nhóm Xác thực, Phương tiện cá nhân & Hệ thống:** Register Student Account, Sign In / Sign Out, Customize Interface Mode, Manage Private Vehicles (`/api/auth/me/vehicles` — `GET/POST/PATCH/DELETE` quản lý xe điện cá nhân), View Hub and Resource Status, View My Reservations.
 - **Luồng Sinh viên (UC01–UC09):**
   - `UC01` Find Suitable Mobility Option · `UC02` Reserve Shared Vehicle · `UC03` Cancel Vehicle Reservation · `UC04` Pick Up Shared Vehicle · `UC05` Return Shared Vehicle · `UC06` Reserve Parking Space (+ Cancel Parking Reservation) · `UC07` Request Immediate Charging (+ Cancel Charging Request) · `UC08` Reserve Charging Slot · `UC09` View / Reschedule / Cancel Charging Reservation.
 - **Luồng Nhân viên vận hành (UC10–UC14):**
@@ -44,7 +44,7 @@ Smart E-Mobility Hub kết nối **5 Mobility Hub** trong Khu đô thị ĐHQG-H
 
 | Mã UC / FR | API Route (`server/src/routes/`) | Controller & Service (`server/src/`) | Trang UI (`client/src/pages/`) | Test Case chính |
 | --- | --- | --- | --- | --- |
-| **Auth & Theme** | `/api/auth/*` (`authRoutes.ts`) | `AuthController` → `AuthService` | `auth/LoginPage`, `auth/RegisterPage`, `SettingsPage` | `TC-AUTH-01..05` (Vitest) |
+| **Auth, Theme & Private Vehicles** | `/api/auth/*`, `/api/auth/me/vehicles` (`GET/POST/PATCH/DELETE`, `authRoutes.ts`) | `AuthController` → `AuthService` | `auth/LoginPage`, `auth/RegisterPage`, `SettingsPage`, `student/MyVehiclePage` (`PrivateVehiclesCard`) | `TC-AUTH-01..09` (Vitest) |
 | **View Hub Status** | `/api/hubs/*` (`hubRoutes.ts`) | `HubController` → `HubService` | `student/HomePage` | `TC-HUB-01..02` |
 | **My Reservations** | `/api/me/*` (`myReservationsRoutes.ts`) | `MyReservationsController` → `MyReservationsService` | `student/MyReservationsPage` | `TC-MYRES-01` |
 | **UC01** | `/api/search/*` (`searchRoutes.ts`) | `SearchController` → `SearchService` | `student/HomePage` | `TC-UC01-01..04` |
